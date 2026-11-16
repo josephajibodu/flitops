@@ -44,7 +44,7 @@ class WorkerController extends Controller
         Server $server,
         Worker $worker,
     ): RedirectResponse {
-        if ($worker->runs_octane) {
+        if ($worker->serves_site) {
             return redirect()->back()->with('error', "This process is managed by the site's Octane setting. Switch Octane off in the site's settings to remove it.");
         }
 
@@ -59,7 +59,7 @@ class WorkerController extends Controller
     {
         $this->authorize('manageProcesses', $server);
 
-        if ($worker->runs_octane) {
+        if ($worker->serves_site) {
             return redirect()->back()->with('error', "This process is managed by the site's Octane setting. Switch Octane off in the site's settings to remove it.");
         }
 

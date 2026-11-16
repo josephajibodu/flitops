@@ -41,7 +41,7 @@ export interface Site {
     auto_deploy: boolean;
     single_page_app: boolean;
     octane_server: 'frankenphp' | null;
-    octane_port: number | null;
+    app_port: number | null;
     server?: Server;
     latest_deployment?: Deployment;
     deployments?: Deployment[];

@@ -70,7 +70,7 @@ class SiteResource extends JsonResource
             'auto_deploy' => $this->auto_deploy,
             'single_page_app' => $this->single_page_app,
             'octane_server' => $this->octane_server?->value,
-            'octane_port' => $this->octane_port,
+            'app_port' => $this->app_port,
             'server' => new ServerResource($this->whenLoaded('server')),
             'latest_deployment' => new DeploymentResource($this->whenLoaded('latestDeployment')),
             'deployments' => DeploymentResource::collection($this->whenLoaded('deployments')),

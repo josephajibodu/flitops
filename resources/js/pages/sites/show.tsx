@@ -265,7 +265,7 @@ export default function SitesShow({
                                     {siteData.octane_server && (
                                         <DetailRow
                                             label="Octane"
-                                            value={`FrankenPHP, port ${siteData.octane_port}`}
+                                            value={`FrankenPHP, port ${siteData.app_port}`}
                                         />
                                     )}
                                     <DetailRow

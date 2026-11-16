@@ -26,7 +26,7 @@ class Worker extends Model
         'numprocs',
         'redirect_stderr',
         'restart_on_deploy',
-        'runs_octane',
+        'serves_site',
         'status',
         'name',
     ];
@@ -41,7 +41,7 @@ class Worker extends Model
             'auto_restart' => 'boolean',
             'redirect_stderr' => 'boolean',
             'restart_on_deploy' => 'boolean',
-            'runs_octane' => 'boolean',
+            'serves_site' => 'boolean',
         ];
     }
 

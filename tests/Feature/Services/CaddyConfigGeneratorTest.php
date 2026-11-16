@@ -102,7 +102,7 @@ it('hands a Laravel site on Octane to its Octane process, serving files that exi
     $site = Site::factory()->forServer($this->server)->create([
         'domain' => 'myapp.com',
         'octane_server' => OctaneServer::FrankenPhp,
-        'octane_port' => 8100,
+        'app_port' => 8100,
     ]);
 
     $config = app(CaddyConfigGenerator::class)->generate($site, caddySiteDomain($site), ssl: true);

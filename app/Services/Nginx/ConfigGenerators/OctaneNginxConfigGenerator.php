@@ -56,7 +56,7 @@ class OctaneNginxConfigGenerator extends BaseNginxConfigGenerator
         proxy_buffer_size 32k;
         proxy_buffers 16 16k;
 
-        proxy_pass http://127.0.0.1:{$site->octane_port}\$suffix;
+        proxy_pass http://127.0.0.1:{$site->app_port}\$suffix;
     }
 
 {$this->getHiddenFilesProtection()}

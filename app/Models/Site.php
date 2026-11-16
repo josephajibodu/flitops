@@ -48,7 +48,7 @@ class Site extends Model
         'build_command',
         'single_page_app',
         'octane_server',
-        'octane_port',
+        'app_port',
         'status',
         'error_message',
         'uptime_status',
@@ -89,7 +89,7 @@ class Site extends Model
             'auto_deploy' => 'boolean',
             'single_page_app' => 'boolean',
             'octane_server' => OctaneServer::class,
-            'octane_port' => 'integer',
+            'app_port' => 'integer',
             'deployment_started_at' => 'datetime',
             'deployment_finished_at' => 'datetime',
             'env_content' => 'encrypted',
@@ -145,7 +145,7 @@ class Site extends Model
     {
         return $this->project_type === ProjectType::Laravel
             && $this->octane_server !== null
-            && $this->octane_port !== null;
+            && $this->app_port !== null;
     }
 
     /**
@@ -157,7 +157,7 @@ class Site extends Model
     {
         $php = 'php'.($this->php_version ?: '8.4');
 
-        return "{$php} artisan octane:start --server={$this->octane_server->value} --host=127.0.0.1 --port={$this->octane_port}";
+        return "{$php} artisan octane:start --server={$this->octane_server->value} --host=127.0.0.1 --port={$this->app_port}";
     }
 
     /**
@@ -452,14 +452,14 @@ class Site extends Model
     }
 
     /**
-     * The supervised process that runs Laravel Octane for this site, while
-     * Octane is switched on.
+     * The supervised process that serves this site's requests on its app
+     * port, such as Laravel Octane while Octane is switched on.
      *
      * @return HasOne<Worker, $this>
      */
-    public function octaneWorker(): HasOne
+    public function servingWorker(): HasOne
     {
-        return $this->hasOne(Worker::class)->where('runs_octane', true);
+        return $this->hasOne(Worker::class)->where('serves_site', true);
     }
 
     public function nginxFiles(): HasMany

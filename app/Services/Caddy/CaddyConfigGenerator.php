@@ -141,7 +141,7 @@ CADDY;
 			not path *.php */
 		}
 		file_server @octaneStatic
-		reverse_proxy 127.0.0.1:{$site->octane_port}
+		reverse_proxy 127.0.0.1:{$site->app_port}
 	}
 CADDY;
     }

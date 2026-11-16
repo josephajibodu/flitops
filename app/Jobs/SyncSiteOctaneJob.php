@@ -93,7 +93,7 @@ BASH;
      */
     private function turnOn(Site $site, SshService $sshService, CreateWorker $createWorker): void
     {
-        $worker = $site->octaneWorker;
+        $worker = $site->servingWorker;
 
         if ($worker === null) {
             throw new RuntimeException('The Octane process for this site is missing.');
@@ -121,7 +121,7 @@ BASH;
 
         try {
             try {
-                $connection->exec('bash -c '.$this->escapeForShell($this->waitForPortScript($site->octane_port)), 60);
+                $connection->exec('bash -c '.$this->escapeForShell($this->waitForPortScript($site->app_port)), 60);
             } catch (SshCommandException) {
                 throw new RuntimeException("Octane didn't start. Open the site's Processes page and read the Octane process's log.");
             }
@@ -151,7 +151,7 @@ BASH;
             Log::error('Octane could not be switched back off after a failed switch-on', ['site_id' => $site->id, 'message' => $exception->getMessage()]);
 
             $site->update(['octane_server' => null]);
-            $site->octaneWorker()->update(['status' => 'failed']);
+            $site->servingWorker()->update(['status' => 'failed']);
 
             return false;
         }
@@ -170,14 +170,14 @@ BASH;
 
         $site->server->webServer()->syncSite($site);
 
-        $worker = $site->octaneWorker()->first();
+        $worker = $site->servingWorker()->first();
 
         if ($worker !== null) {
             $destroyWorker->execute($worker);
             $worker->delete();
         }
 
-        $site->update(['octane_port' => null]);
+        $site->update(['app_port' => null]);
     }
 
     /**

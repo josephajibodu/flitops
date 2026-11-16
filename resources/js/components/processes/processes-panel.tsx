@@ -522,7 +522,7 @@ export function ProcessesPanel({
                                                     </DropdownMenuTrigger>
                                                     <DropdownMenuContent align="end">
                                                         {canManageProcesses &&
-                                                            !w.runs_octane && (
+                                                            !w.serves_site && (
                                                                 <DropdownMenuItem
                                                                     onClick={() =>
                                                                         openEditWorker(
@@ -593,7 +593,7 @@ export function ProcessesPanel({
                                                                     <ArrowsClockwiseIcon className="h-4 w-4" />
                                                                     Restart
                                                                 </DropdownMenuItem>
-                                                                {!w.runs_octane && (
+                                                                {!w.serves_site && (
                                                                     <>
                                                                         <DropdownMenuSeparator />
                                                                         <DropdownMenuItem

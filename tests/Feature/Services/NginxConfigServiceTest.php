@@ -287,7 +287,7 @@ describe('NginxConfigService', function () {
                 'domain' => 'octane.test',
                 'project_type' => ProjectType::Laravel,
                 'octane_server' => OctaneServer::FrankenPhp,
-                'octane_port' => 8100,
+                'app_port' => 8100,
             ]);
 
             $domain = $site->domains()->where('is_primary', true)->firstOrFail();
@@ -305,7 +305,7 @@ describe('NginxConfigService', function () {
                 'domain' => 'symfony-octane.test',
                 'project_type' => ProjectType::Symfony,
                 'octane_server' => OctaneServer::FrankenPhp,
-                'octane_port' => 8100,
+                'app_port' => 8100,
             ]);
 
             $domain = $site->domains()->where('is_primary', true)->firstOrFail();

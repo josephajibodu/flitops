@@ -47,14 +47,14 @@ function octaneSite(Server $server, array $attributes = []): Site
  */
 function siteRunningOctane(Server $server): Site
 {
-    $site = octaneSite($server, ['octane_server' => OctaneServer::FrankenPhp, 'octane_port' => 8100]);
+    $site = octaneSite($server, ['octane_server' => OctaneServer::FrankenPhp, 'app_port' => 8100]);
 
     Worker::factory()->forSite($site)->create([
         'name' => 'Octane',
         'command' => $site->octaneCommand(),
         'user' => $site->systemUser(),
         'restart_on_deploy' => true,
-        'runs_octane' => true,
+        'serves_site' => true,
         'status' => 'pending',
     ]);
 
@@ -83,11 +83,11 @@ describe('switching Octane on and off', function () {
 
         $site->refresh();
         expect($site->octane_server)->toBe(OctaneServer::FrankenPhp)
-            ->and($site->octane_port)->toBe(8100);
+            ->and($site->app_port)->toBe(8100);
 
         $this->assertDatabaseHas('workers', [
             'site_id' => $site->id,
-            'runs_octane' => true,
+            'serves_site' => true,
             'restart_on_deploy' => true,
             'command' => 'php8.3 artisan octane:start --server=frankenphp --host=127.0.0.1 --port=8100',
         ]);
@@ -96,13 +96,13 @@ describe('switching Octane on and off', function () {
 
     it('gives a second Octane site on the same server the next port', function () {
         Queue::fake([SyncSiteOctaneJob::class]);
-        octaneSite($this->server, ['octane_server' => OctaneServer::FrankenPhp, 'octane_port' => 8100]);
+        octaneSite($this->server, ['octane_server' => OctaneServer::FrankenPhp, 'app_port' => 8100]);
         $site = octaneSite($this->server);
 
         $this->actingAs($this->user)
             ->put(route('servers.sites.update', [$this->team, $this->server, $site]), ['octane_server' => 'frankenphp']);
 
-        expect($site->fresh()->octane_port)->toBe(8101);
+        expect($site->fresh()->app_port)->toBe(8101);
     });
 
     it('refuses to switch Octane on, saving nothing, when the site cannot run it', function (Closure $arrange, string $message) {
@@ -114,7 +114,7 @@ describe('switching Octane on and off', function () {
             ->assertSessionHasErrors(['octane_server' => $message]);
 
         expect($site->fresh()->octane_server)->toBeNull()
-            ->and($site->fresh()->octane_port)->toBeNull();
+            ->and($site->fresh()->app_port)->toBeNull();
         $this->assertDatabaseMissing('workers', ['site_id' => $site->id]);
         Queue::assertNotPushed(SyncSiteOctaneJob::class);
     })->with([
@@ -136,7 +136,7 @@ describe('switching Octane on and off', function () {
 
         Queue::assertNotPushed(SyncSiteOctaneJob::class);
     })->with([
-        'already on' => [['octane_server' => OctaneServer::FrankenPhp, 'octane_port' => 8100], 'frankenphp'],
+        'already on' => [['octane_server' => OctaneServer::FrankenPhp, 'app_port' => 8100], 'frankenphp'],
         'already off, nothing left behind' => [[], null],
     ]);
 
@@ -144,7 +144,7 @@ describe('switching Octane on and off', function () {
         Queue::fake([SyncSiteOctaneJob::class]);
         $site = siteRunningOctane($this->server);
         $site->update(['octane_server' => null]);
-        $site->octaneWorker()->update(['status' => 'failed']);
+        $site->servingWorker()->update(['status' => 'failed']);
 
         $this->actingAs($this->user)
             ->put(route('servers.sites.update', [$this->team, $this->server, $site]), ['octane_server' => null])
@@ -182,7 +182,7 @@ describe('the Octane process on the Processes page', function () {
     it('cannot be edited by hand', function () {
         Queue::fake([UpdateWorkerJob::class]);
         $site = siteRunningOctane($this->server);
-        $worker = $site->octaneWorker;
+        $worker = $site->servingWorker;
 
         $this->actingAs($this->user)
             ->put(route('servers.workers.update', [$this->team, $this->server, $worker]), [
@@ -200,7 +200,7 @@ describe('the Octane process on the Processes page', function () {
 
     it('cannot be deleted by hand', function () {
         Queue::fake([DestroyWorkerJob::class]);
-        $worker = siteRunningOctane($this->server)->octaneWorker;
+        $worker = siteRunningOctane($this->server)->servingWorker;
 
         $this->actingAs($this->user)
             ->delete(route('servers.workers.destroy', [$this->team, $this->server, $worker]))
@@ -220,7 +220,7 @@ describe('SyncSiteOctaneJob', function () {
 
         runSyncSiteOctaneJob($site);
 
-        expect($site->octaneWorker()->value('status'))->toBe('active')
+        expect($site->servingWorker()->value('status'))->toBe('active')
             ->and($site->fresh()->usesOctane())->toBeTrue()
             ->and(mainConfigOf($site))->toContain('proxy_pass http://127.0.0.1:8100');
     });
@@ -236,8 +236,8 @@ describe('SyncSiteOctaneJob', function () {
 
         $site->refresh();
         expect($site->octane_server)->toBeNull()
-            ->and($site->octane_port)->toBeNull()
-            ->and($site->octaneWorker()->exists())->toBeFalse();
+            ->and($site->app_port)->toBeNull()
+            ->and($site->servingWorker()->exists())->toBeFalse();
         Notification::assertSentTo($this->user, SiteOctaneFailed::class);
     });
 
@@ -261,7 +261,7 @@ describe('SyncSiteOctaneJob', function () {
         runSyncSiteOctaneJob($site);
 
         expect($site->fresh()->octane_server)->toBeNull()
-            ->and($site->octaneWorker()->value('status'))->toBe('failed');
+            ->and($site->servingWorker()->value('status'))->toBe('failed');
         Notification::assertSentTo($this->user, SiteOctaneFailed::class, fn (SiteOctaneFailed $notification) => ! $notification->cleanupFinished);
     });
 
@@ -274,8 +274,8 @@ describe('SyncSiteOctaneJob', function () {
 
         runSyncSiteOctaneJob($site);
 
-        expect($site->octaneWorker()->exists())->toBeFalse()
-            ->and($site->fresh()->octane_port)->toBeNull()
+        expect($site->servingWorker()->exists())->toBeFalse()
+            ->and($site->fresh()->app_port)->toBeNull()
             ->and(mainConfigOf($site))->toContain('fastcgi_pass');
     });
 });
@@ -286,7 +286,7 @@ it('restarts the Octane process when the environment is saved with a restart', f
     fakeHostSsh($commands, $uploads);
     $site = siteRunningOctane($this->server);
     $site->update(['env_content' => "APP_KEY=secret\n"]);
-    $worker = $site->octaneWorker;
+    $worker = $site->servingWorker;
     $worker->update(['status' => 'active']);
 
     (new SyncEnvironmentJob($site, restartQueue: true))->handle(app(SshService::class));

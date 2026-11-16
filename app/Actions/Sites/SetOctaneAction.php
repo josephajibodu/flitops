@@ -63,10 +63,10 @@ class SetOctaneAction
 
             $site->update([
                 'octane_server' => $octaneServer,
-                'octane_port' => $site->octane_port ?? $this->freePort($server),
+                'app_port' => $site->app_port ?? $this->freePort($server),
             ]);
 
-            if (! $site->octaneWorker()->exists()) {
+            if (! $site->servingWorker()->exists()) {
                 $server->workers()->create([
                     'site_id' => $site->id,
                     'name' => 'Octane',
@@ -77,7 +77,7 @@ class SetOctaneAction
                     'auto_restart' => true,
                     'redirect_stderr' => true,
                     'restart_on_deploy' => true,
-                    'runs_octane' => true,
+                    'serves_site' => true,
                     'status' => 'pending',
                 ]);
             }
@@ -92,18 +92,18 @@ class SetOctaneAction
      */
     private function hasLeftovers(Site $site): bool
     {
-        return $site->octane_port !== null || $site->octaneWorker()->exists();
+        return $site->app_port !== null || $site->servingWorker()->exists();
     }
 
     /**
-     * The lowest port in the Octane range that no other site on the server
+     * The lowest port in the app port range that no other site on the server
      * has taken.
      */
     private function freePort(Server $server): int
     {
-        $taken = $server->sites()->whereNotNull('octane_port')->pluck('octane_port')->map(fn ($port): int => (int) $port)->all();
+        $taken = $server->sites()->whereNotNull('app_port')->pluck('app_port')->map(fn ($port): int => (int) $port)->all();
 
-        for ($port = (int) config('server.octane_ports.first'); $port <= (int) config('server.octane_ports.last'); $port++) {
+        for ($port = (int) config('server.app_ports.first'); $port <= (int) config('server.app_ports.last'); $port++) {
             if (! in_array($port, $taken, true)) {
                 return $port;
             }

@@ -94,10 +94,10 @@ class SyncEnvironmentJob implements ShouldQueue
             $connection->disconnect();
 
             if ($this->restartQueue && $site->usesOctane()) {
-                $octaneWorker = $site->octaneWorker;
+                $servingWorker = $site->servingWorker;
 
-                if ($octaneWorker !== null && in_array($octaneWorker->status, ['active', 'crashed'], true)) {
-                    app(ControlWorker::class)->execute($octaneWorker, WorkerControlAction::Restart);
+                if ($servingWorker !== null && in_array($servingWorker->status, ['active', 'crashed'], true)) {
+                    app(ControlWorker::class)->execute($servingWorker, WorkerControlAction::Restart);
                 }
             }
 
