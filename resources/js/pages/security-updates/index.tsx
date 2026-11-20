@@ -140,7 +140,7 @@ function AdvisoryCard({ advisory }: { advisory: Advisory }) {
 
     return (
         <section className="rounded-2xl bg-card shadow-card">
-            <div className="space-y-3 border-b px-6 py-5">
+            <div className="space-y-3 px-6 py-5">
                 <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
                     <CardTitle>{advisory.title}</CardTitle>
                     <StatusBadge
