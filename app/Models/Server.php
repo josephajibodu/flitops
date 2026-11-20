@@ -202,6 +202,16 @@ class Server extends Model
         return $this->hasMany(ServerAction::class);
     }
 
+    /**
+     * Where this server stands on each published security advisory.
+     *
+     * @return HasMany<ServerSecurityCheck, $this>
+     */
+    public function securityChecks(): HasMany
+    {
+        return $this->hasMany(ServerSecurityCheck::class);
+    }
+
     public function databases(): HasMany
     {
         return $this->hasMany(ServerDatabase::class, 'server_id');
