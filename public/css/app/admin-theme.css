@@ -1,0 +1,481 @@
+/*
+ * Flitops admin: the same calm, Shopify-inspired skin over Filament as the
+ * IHADHL admin (iha-dhl-backend): grey canvas, dark top bar, soft white
+ * cards and dark primary buttons, with a matching dark mode. Class names are
+ * Filament 5's.
+ *
+ * Plain CSS layered on top of Filament's compiled stylesheet, so it needs no
+ * Tailwind build. Every selector is prefixed with `html:root` so it outranks
+ * Filament's utilities, including its `dark:` variants. Colours live in the
+ * tokens below; `.dark` swaps them. After editing, publish it with
+ * `php artisan filament:assets`.
+ */
+
+:root {
+    --flitops-canvas: #f1f1f1;
+    --flitops-sidebar: #ebebeb;
+    --flitops-surface: #ffffff;
+    --flitops-surface-subdued: #f7f7f7;
+    --flitops-topbar: #1a1a1a;
+    --flitops-ink: #303030;
+    --flitops-ink-strong: #1a1a1a;
+    --flitops-ink-subdued: #616161;
+    --flitops-icon: #4a4a4a;
+    --flitops-group-label: #737373;
+    --flitops-nav-hover: #f1f1f1;
+    --flitops-nav-active: #ffffff;
+    --flitops-input-border: rgb(138 138 138 / 0.6);
+    --flitops-focus: #303030;
+    --flitops-card-shadow:
+        0 1px 0 0 rgb(26 26 26 / 0.07), inset 0 1px 0 0 rgb(204 204 204 / 0.5),
+        inset 0 -1px 0 0 rgb(0 0 0 / 0.17), inset -1px 0 0 0 rgb(0 0 0 / 0.13),
+        inset 1px 0 0 0 rgb(0 0 0 / 0.13);
+
+    --flitops-btn-primary: #303030;
+    --flitops-btn-primary-hover: #1a1a1a;
+    --flitops-btn-primary-text: #ffffff;
+    --flitops-btn-primary-shadow:
+        0 -1px 0 1px rgb(0 0 0 / 0.8) inset, 0 0 0 1px #303030 inset,
+        0 0.5px 0 1.5px rgb(255 255 255 / 0.25) inset;
+    --flitops-btn-secondary: #ffffff;
+    --flitops-btn-secondary-hover: #fafafa;
+    --flitops-btn-secondary-shadow:
+        0 -1px 0 0 #b5b5b5 inset, 0 0 0 1px rgb(0 0 0 / 0.1) inset,
+        0 0.5px 0 1.5px #ffffff inset;
+
+    --flitops-badge-success-bg: #cdfee1;
+    --flitops-badge-success-text: #0c5132;
+    --flitops-badge-warning-bg: #ffef9d;
+    --flitops-badge-warning-text: #4f4700;
+    --flitops-badge-danger-bg: #fedad9;
+    --flitops-badge-danger-text: #8e0b21;
+    --flitops-badge-info-bg: #e0f0ff;
+    --flitops-badge-info-text: #00527c;
+    --flitops-badge-neutral-bg: #e3e3e3;
+    --flitops-badge-neutral-text: #616161;
+}
+
+:root.dark {
+    --flitops-canvas: #141414;
+    --flitops-sidebar: #1a1a1a;
+    --flitops-surface: #1f1f1f;
+    --flitops-surface-subdued: #262626;
+    --flitops-topbar: #0a0a0a;
+    --flitops-ink: #e3e3e3;
+    --flitops-ink-strong: #ffffff;
+    --flitops-ink-subdued: #a3a3a3;
+    --flitops-icon: #b5b5b5;
+    --flitops-group-label: #8a8a8a;
+    --flitops-nav-hover: #242424;
+    --flitops-nav-active: #2a2a2a;
+    --flitops-input-border: rgb(255 255 255 / 0.2);
+    --flitops-focus: #e3e3e3;
+    --flitops-card-shadow: 0 0 0 1px rgb(255 255 255 / 0.08), inset 0 1px 0 0 rgb(255 255 255 / 0.04);
+
+    --flitops-btn-primary: #f1f1f1;
+    --flitops-btn-primary-hover: #ffffff;
+    --flitops-btn-primary-text: #1a1a1a;
+    --flitops-btn-primary-shadow: 0 -1px 0 0 rgb(0 0 0 / 0.25) inset, 0 0 0 1px rgb(255 255 255 / 0.9) inset;
+    --flitops-btn-secondary: #2a2a2a;
+    --flitops-btn-secondary-hover: #303030;
+    --flitops-btn-secondary-shadow: 0 0 0 1px rgb(255 255 255 / 0.12) inset, 0 1px 0 0 rgb(255 255 255 / 0.06) inset;
+
+    --flitops-badge-success-bg: rgb(41 132 90 / 0.25);
+    --flitops-badge-success-text: #6fdfa2;
+    --flitops-badge-warning-bg: rgb(255 184 0 / 0.18);
+    --flitops-badge-warning-text: #ffd55a;
+    --flitops-badge-danger-bg: rgb(199 10 36 / 0.25);
+    --flitops-badge-danger-text: #ff9a9a;
+    --flitops-badge-info-bg: rgb(0 148 213 / 0.2);
+    --flitops-badge-info-text: #7ccbf5;
+    --flitops-badge-neutral-bg: rgb(255 255 255 / 0.1);
+    --flitops-badge-neutral-text: #e3e3e3;
+}
+
+html:root .fi-body {
+    background-color: var(--flitops-canvas);
+    color: var(--flitops-ink);
+    font-size: 13px;
+    -webkit-font-smoothing: antialiased;
+}
+
+html:root .fi-main {
+    padding-top: 0.5rem;
+}
+
+/* Top bar */
+
+html:root .fi-topbar,
+html:root .fi-sidebar-header {
+    background-color: var(--flitops-topbar);
+    box-shadow: none;
+}
+
+html:root .fi-topbar {
+    color: #fff;
+}
+
+html:root .fi-topbar .fi-icon-btn,
+html:root .fi-sidebar-header .fi-icon-btn {
+    color: rgb(255 255 255 / 0.8);
+}
+
+html:root .fi-topbar .fi-icon-btn:hover,
+html:root .fi-sidebar-header .fi-icon-btn:hover {
+    color: #fff;
+    background-color: rgb(255 255 255 / 0.1);
+}
+
+html:root .fi-topbar .fi-global-search-field .fi-input-wrp {
+    background-color: rgb(255 255 255 / 0.1);
+    box-shadow: 0 0 0 1px rgb(255 255 255 / 0.15);
+}
+
+html:root .fi-topbar .fi-global-search-field .fi-input-wrp:focus-within {
+    box-shadow: 0 0 0 2px rgb(255 255 255 / 0.5) !important;
+}
+
+html:root .fi-topbar .fi-global-search-field input {
+    color: #fff;
+}
+
+html:root .fi-topbar .fi-global-search-field input::placeholder {
+    color: rgb(255 255 255 / 0.5);
+}
+
+html:root .fi-topbar .fi-global-search-field .fi-input-wrp-prefix svg {
+    color: rgb(255 255 255 / 0.6);
+}
+
+html:root .fi-topbar .fi-user-avatar {
+    box-shadow: 0 0 0 1px rgb(255 255 255 / 0.25);
+}
+
+html:root .fi-topbar .fi-logo,
+html:root .fi-sidebar-header .fi-logo {
+    color: #fff;
+}
+
+/* Sidebar */
+
+html:root .fi-sidebar,
+html:root .fi-sidebar-nav {
+    background-color: var(--flitops-sidebar);
+    box-shadow: none;
+}
+
+html:root .fi-sidebar-nav {
+    row-gap: 1rem;
+    padding: 1rem 0.75rem;
+}
+
+html:root .fi-sidebar-nav-groups {
+    row-gap: 1rem;
+}
+
+html:root .fi-sidebar-group-btn {
+    padding: 0.25rem 0.625rem;
+}
+
+html:root .fi-sidebar-group-label {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-size: 0.75rem;
+    font-weight: 600;
+    line-height: 1rem;
+    color: var(--flitops-group-label);
+}
+
+html:root .fi-sidebar-group-items {
+    row-gap: 0.25rem;
+}
+
+html:root .fi-sidebar-item-btn {
+    border-radius: 0.5rem;
+    padding: 0.375rem 0.625rem;
+}
+
+html:root .fi-sidebar-item-btn:hover,
+html:root .fi-sidebar-item-btn:focus-visible {
+    background-color: var(--flitops-nav-hover);
+}
+
+html:root .fi-sidebar-item-label {
+    font-size: 13px;
+    font-weight: 600;
+    line-height: 1.42857;
+    color: var(--flitops-ink);
+}
+
+html:root .fi-sidebar-item-icon {
+    color: var(--flitops-icon);
+}
+
+html:root .fi-sidebar-item.fi-active > .fi-sidebar-item-btn,
+html:root .fi-sidebar-item.fi-active > .fi-sidebar-item-btn:hover {
+    background-color: var(--flitops-nav-active);
+}
+
+html:root .fi-sidebar-item.fi-active .fi-sidebar-item-label,
+html:root .fi-sidebar-item.fi-active .fi-sidebar-item-icon {
+    color: var(--flitops-ink-strong);
+}
+
+html:root .fi-sidebar-sub-group-items .fi-sidebar-item-label {
+    font-weight: 500;
+    color: var(--flitops-ink-subdued);
+}
+
+/* Page header */
+
+html:root .fi-header-heading {
+    font-size: 1.25rem;
+    line-height: 1.75rem;
+    font-weight: 700;
+    letter-spacing: -0.025em;
+    color: var(--flitops-ink);
+}
+
+html:root .fi-header-subheading {
+    font-size: 13px;
+    color: var(--flitops-ink-subdued);
+}
+
+/* Cards: sections, tables, widgets */
+
+html:root .fi-section:not(.fi-aside):not(.fi-section-not-contained),
+html:root .fi-section.fi-aside > .fi-section-content-ctn,
+html:root .fi-ta-ctn,
+html:root .fi-wi-stats-overview-stat,
+html:root .fi-fo-repeater-item,
+html:root .fi-sc-tabs:not(.fi-contained) {
+    border-radius: 0.75rem;
+    background-color: var(--flitops-surface);
+    box-shadow: var(--flitops-card-shadow);
+}
+
+html:root .fi-section,
+html:root .fi-ta-ctn {
+    font-size: 14px;
+    line-height: 20px;
+    color: var(--flitops-ink);
+}
+
+html:root .fi-ta-ctn {
+    position: relative;
+    overflow: hidden;
+}
+
+/*
+ * The card's outline is an inner shadow, which the grey header row would
+ * paint over at its left and right ends. Drawing the outline again on a layer
+ * above the rows keeps it unbroken.
+ */
+html:root .fi-ta-ctn::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+    border-radius: inherit;
+    box-shadow: var(--flitops-card-shadow);
+    pointer-events: none;
+}
+
+html:root .fi-section-header-heading {
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: var(--flitops-ink);
+}
+
+html:root .fi-section-header-description {
+    font-size: 13px;
+    color: var(--flitops-ink-subdued);
+}
+
+html:root .fi-section:not(.fi-aside):not(.fi-section-not-contained) > .fi-section-header {
+    padding-bottom: 0;
+}
+
+html:root .fi-section:not(.fi-aside):not(.fi-section-not-contained) > .fi-section-content-ctn {
+    border-top-width: 0;
+}
+
+/* Form fields */
+
+html:root .fi-fo-field-label-content {
+    font-size: 13px;
+    font-weight: 500;
+    line-height: 1.42857;
+    color: var(--flitops-ink);
+}
+
+html:root .fi-fo-field .fi-sc-text {
+    color: var(--flitops-ink-subdued);
+}
+
+html:root .fi-input-wrp {
+    border-radius: 0.5rem;
+}
+
+html:root .fi-input-wrp:not(.fi-invalid) {
+    box-shadow: 0 0 0 1px var(--flitops-input-border);
+}
+
+html:root .fi-input-wrp:not(.fi-invalid):focus-within {
+    box-shadow: 0 0 0 2px var(--flitops-focus) !important;
+}
+
+/* Buttons: dark, softly bevelled primary like Polaris (light in dark mode) */
+
+html:root .fi-btn {
+    border-radius: 0.5rem;
+    font-size: 13px;
+    font-weight: 600;
+}
+
+html:root .fi-btn.fi-color-primary:not(.fi-outlined) {
+    background-color: var(--flitops-btn-primary);
+    color: var(--flitops-btn-primary-text);
+    box-shadow: var(--flitops-btn-primary-shadow);
+}
+
+html:root .fi-btn.fi-color-primary:not(.fi-outlined):hover {
+    background-color: var(--flitops-btn-primary-hover);
+}
+
+html:root .fi-btn.fi-color-primary:not(.fi-outlined) .fi-btn-label,
+html:root .fi-btn.fi-color-primary:not(.fi-outlined) .fi-btn-icon {
+    color: var(--flitops-btn-primary-text);
+}
+
+html:root .fi-btn.fi-color-gray:not(.fi-outlined) {
+    background-color: var(--flitops-btn-secondary);
+    color: var(--flitops-ink);
+    box-shadow: var(--flitops-btn-secondary-shadow);
+}
+
+html:root .fi-btn.fi-color-gray:not(.fi-outlined):hover {
+    background-color: var(--flitops-btn-secondary-hover);
+}
+
+html:root .fi-btn.fi-color-gray:not(.fi-outlined) .fi-btn-label,
+html:root .fi-btn.fi-color-gray:not(.fi-outlined) .fi-btn-icon {
+    color: var(--flitops-ink);
+}
+
+/* Tables */
+
+html:root .fi-ta-header-cell {
+    background-color: var(--flitops-surface-subdued);
+    padding-top: 0.625rem;
+    padding-bottom: 0.625rem;
+}
+
+html:root .fi-ta-header-cell,
+html:root .fi-ta-header-cell span,
+html:root .fi-ta-header-cell button {
+    font-size: 0.75rem;
+    font-weight: 500;
+    color: var(--flitops-ink-subdued);
+}
+
+html:root .fi-ta-text-item-label {
+    font-size: 14px;
+}
+
+html:root .fi-ta-row {
+    transition: background-color 150ms ease;
+}
+
+html:root .fi-ta-row:hover {
+    background-color: var(--flitops-surface-subdued);
+}
+
+/* Badges: soft Polaris-style pills */
+
+html:root .fi-badge {
+    border-radius: 0.5rem;
+    padding: 0.125rem 0.5rem;
+    font-size: 0.75rem;
+    font-weight: 500;
+    box-shadow: none;
+}
+
+html:root .fi-badge span,
+html:root .fi-badge .fi-badge-icon {
+    color: inherit;
+}
+
+html:root .fi-badge.fi-color-success {
+    background-color: var(--flitops-badge-success-bg);
+    color: var(--flitops-badge-success-text);
+}
+
+html:root .fi-badge.fi-color-warning {
+    background-color: var(--flitops-badge-warning-bg);
+    color: var(--flitops-badge-warning-text);
+}
+
+html:root .fi-badge.fi-color-danger {
+    background-color: var(--flitops-badge-danger-bg);
+    color: var(--flitops-badge-danger-text);
+}
+
+html:root .fi-badge.fi-color-info {
+    background-color: var(--flitops-badge-info-bg);
+    color: var(--flitops-badge-info-text);
+}
+
+html:root .fi-badge.fi-color-gray,
+html:root .fi-badge.fi-color-primary {
+    background-color: var(--flitops-badge-neutral-bg);
+    color: var(--flitops-badge-neutral-text);
+}
+
+/* Stats */
+
+html:root .fi-wi-stats-overview-stat-label {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--flitops-ink-subdued);
+}
+
+html:root .fi-wi-stats-overview-stat-value {
+    font-size: 1.5rem;
+    line-height: 2rem;
+    font-weight: 700;
+    color: var(--flitops-ink);
+}
+
+/* Auth screens */
+
+html:root .fi-simple-layout {
+    background-color: var(--flitops-canvas);
+}
+
+html:root .fi-simple-main {
+    border-radius: 1rem;
+    background-color: var(--flitops-surface);
+    box-shadow: var(--flitops-card-shadow);
+}
+
+html:root .fi-simple-header-heading {
+    font-size: 1.25rem;
+    line-height: 1.75rem;
+    font-weight: 700;
+    color: var(--flitops-ink);
+}
+
+html:root .fi-simple-main .fi-logo {
+    color: var(--flitops-ink);
+}
+
+/* Logs keep their line breaks. */
+
+.flitops-log {
+    white-space: pre-wrap;
+    font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+    font-size: 0.75rem;
+    line-height: 1.25rem;
+}
