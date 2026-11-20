@@ -10,6 +10,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasManyThrough;
 
 class Team extends Model
 {
@@ -68,6 +69,16 @@ class Team extends Model
     public function servers(): HasMany
     {
         return $this->hasMany(Server::class);
+    }
+
+    public function sites(): HasManyThrough
+    {
+        return $this->hasManyThrough(Site::class, Server::class);
+    }
+
+    public function activityLogs(): HasMany
+    {
+        return $this->hasMany(ActivityLog::class);
     }
 
     public function providerAccounts(): HasMany
