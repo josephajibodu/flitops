@@ -9,6 +9,7 @@ use App\Models\Team;
 use App\Models\User;
 use App\Notifications\SecurityAdvisoryPublished;
 use App\Services\SecurityAdvisories\SecurityAdvisory;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Collection;
 
 /**
@@ -18,22 +19,31 @@ use Illuminate\Support\Collection;
  *
  * Safe to run again: servers already listed are left alone, and a team is
  * only told again when it has newly affected servers.
+ *
+ * Staff can narrow it to chosen teams or chosen servers from the admin panel;
+ * chosen servers the advisory can't affect are skipped and counted.
  */
 class PublishSecurityAdvisoryAction
 {
     /**
-     * @return array{teams: int, servers: int}
+     * @param  list<int>|null  $teamIds  only these teams' servers; null for every team
+     * @param  list<int>|null  $serverIds  only these servers; null for every server
+     * @return array{teams: int, servers: int, unaffected: int}
      */
-    public function execute(SecurityAdvisory $advisory): array
+    public function execute(SecurityAdvisory $advisory, ?array $teamIds = null, ?array $serverIds = null): array
     {
         $teamsNotified = 0;
         $serversAdded = 0;
 
-        Server::query()
+        [$affected, $unaffected] = Server::query()
             ->with('team')
             ->whereNotNull('team_id')
+            ->when($teamIds !== null, fn (Builder $query): Builder => $query->whereIn('team_id', $teamIds))
+            ->when($serverIds !== null, fn (Builder $query): Builder => $query->whereIn('id', $serverIds))
             ->get()
-            ->filter(fn (Server $server): bool => $advisory->appliesTo($server))
+            ->partition(fn (Server $server): bool => $advisory->appliesTo($server));
+
+        $affected
             ->groupBy('team_id')
             ->each(function (Collection $servers) use ($advisory, &$teamsNotified, &$serversAdded): void {
                 $newlyListed = $servers->filter(fn (Server $server): bool => $server->securityChecks()
@@ -53,7 +63,7 @@ class PublishSecurityAdvisoryAction
                 $serversAdded += $newlyListed->count();
             });
 
-        return ['teams' => $teamsNotified, 'servers' => $serversAdded];
+        return ['teams' => $teamsNotified, 'servers' => $serversAdded, 'unaffected' => $unaffected->count()];
     }
 
     /**
