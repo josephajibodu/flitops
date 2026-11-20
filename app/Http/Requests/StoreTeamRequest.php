@@ -2,7 +2,9 @@
 
 namespace App\Http\Requests;
 
+use App\Models\Team;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 
 class StoreTeamRequest extends FormRequest
 {
@@ -16,7 +18,7 @@ class StoreTeamRequest extends FormRequest
     {
         return [
             'name' => ['required', 'string', 'max:255'],
-            'slug' => ['nullable', 'string', 'max:255', 'regex:/^[a-z0-9][a-z0-9.\-]*$/', 'unique:teams,slug'],
+            'slug' => ['nullable', 'string', 'max:255', 'regex:/^[a-z0-9][a-z0-9.\-]*$/', 'unique:teams,slug', Rule::notIn(Team::RESERVED_SLUGS)],
         ];
     }
 
@@ -26,6 +28,7 @@ class StoreTeamRequest extends FormRequest
         return [
             'slug.regex' => 'The handle must only contain lowercase letters, numbers, dots, and dashes.',
             'slug.unique' => 'That handle is already taken.',
+            'slug.not_in' => 'That handle is already taken.',
         ];
     }
 }

@@ -94,7 +94,7 @@ class TeamController extends Controller
         $slug = $base;
         $i = 2;
 
-        while (Team::where('slug', $slug)->exists()) {
+        while (Team::slugIsTaken($slug)) {
             $slug = "{$base}-{$i}";
             $i++;
         }

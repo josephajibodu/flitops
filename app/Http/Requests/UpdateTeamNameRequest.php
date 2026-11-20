@@ -24,7 +24,15 @@ class UpdateTeamNameRequest extends FormRequest
 
         return [
             'name' => ['required', 'string', 'max:255'],
-            'slug' => ['nullable', 'string', 'max:255', 'regex:/^[a-z0-9][a-z0-9.\-]*$/', Rule::unique('teams', 'slug')->ignore($team->id)],
+            'slug' => ['nullable', 'string', 'max:255', 'regex:/^[a-z0-9][a-z0-9.\-]*$/', Rule::unique('teams', 'slug')->ignore($team->id), Rule::notIn(Team::RESERVED_SLUGS)],
+        ];
+    }
+
+    /** @return array<string, string> */
+    public function messages(): array
+    {
+        return [
+            'slug.not_in' => 'That handle is already taken.',
         ];
     }
 }

@@ -16,12 +16,28 @@ class Team extends Model
     /** @use HasFactory<TeamFactory> */
     use HasFactory;
 
+    /**
+     * Handles a team can't take, because the team's pages live at /{handle}
+     * and these addresses belong to Flitops itself.
+     *
+     * @var list<string>
+     */
+    public const RESERVED_SLUGS = ['admin'];
+
     protected $fillable = [
         'user_id',
         'name',
         'slug',
         'personal_team',
     ];
+
+    /**
+     * Whether another team already has this handle, or Flitops keeps it.
+     */
+    public static function slugIsTaken(string $slug): bool
+    {
+        return in_array($slug, self::RESERVED_SLUGS, true) || self::query()->where('slug', $slug)->exists();
+    }
 
     public function getRouteKeyName(): string
     {

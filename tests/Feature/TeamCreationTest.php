@@ -37,3 +37,21 @@ it('judges team creation by the user\'s own plan, not the current team\'s', func
         ->post('/teams', ['name' => 'Side Project'])
         ->assertForbidden();
 });
+
+it('refuses the handle the admin panel lives at', function () {
+    $user = User::factory()->onPlan(Plan::Team)->create();
+
+    $this->actingAs($user)
+        ->post('/teams', ['name' => 'Admin', 'slug' => 'admin'])
+        ->assertSessionHasErrors(['slug' => 'That handle is already taken.']);
+
+    expect(Team::query()->where('slug', 'admin')->exists())->toBeFalse();
+});
+
+it('gives a team named Admin a handle other than the admin panel\'s', function () {
+    $user = User::factory()->onPlan(Plan::Team)->create();
+
+    $this->actingAs($user)->post('/teams', ['name' => 'Admin']);
+
+    expect(Team::query()->where('name', 'Admin')->sole()->slug)->toBe('admin-2');
+});
