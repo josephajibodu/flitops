@@ -75,6 +75,17 @@ class UserFactory extends Factory
     }
 
     /**
+     * A Flitops staff member who can open the admin panel: flagged as an
+     * admin, with two-factor sign-in turned on.
+     */
+    public function platformAdmin(): static
+    {
+        return $this->withTwoFactor()->state(fn (array $attributes) => [
+            'is_admin' => true,
+        ]);
+    }
+
+    /**
      * Make the user a member of the given team with the given built-in role.
      */
     public function memberOf(Team $team, TeamRoleKey $roleKey = TeamRoleKey::Developer): static

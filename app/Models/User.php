@@ -5,6 +5,8 @@ namespace App\Models;
 use App\Enums\Plan;
 use App\Enums\TeamPermission;
 use Database\Factories\UserFactory;
+use Filament\Models\Contracts\FilamentUser;
+use Filament\Panel;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -14,7 +16,7 @@ use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Fortify\TwoFactorAuthenticatable;
 
-class User extends Authenticatable implements MustVerifyEmail
+class User extends Authenticatable implements FilamentUser, MustVerifyEmail
 {
     /** @use HasFactory<UserFactory> */
     use HasFactory, Notifiable, TwoFactorAuthenticatable;
@@ -74,7 +76,19 @@ class User extends Authenticatable implements MustVerifyEmail
             'password' => 'hashed',
             'two_factor_confirmed_at' => 'datetime',
             'plan' => Plan::class,
+            'is_admin' => 'boolean',
         ];
+    }
+
+    /**
+     * Flitops staff can open the admin panel, and only once two-factor
+     * sign-in is on, because the panel shows every customer's servers.
+     * `is_admin` is a platform role, separate from team roles: it gives no
+     * extra powers inside a customer's team.
+     */
+    public function canAccessPanel(Panel $panel): bool
+    {
+        return $this->is_admin && $this->hasEnabledTwoFactorAuthentication();
     }
 
     // Team relationships
