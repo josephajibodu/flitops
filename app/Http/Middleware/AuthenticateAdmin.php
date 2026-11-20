@@ -21,7 +21,7 @@ class AuthenticateAdmin extends Authenticate
         $user = Filament::auth()->user();
 
         abort_if(
-            $user instanceof User && $user->is_admin && ! $user->hasEnabledTwoFactorAuthentication(),
+            $user instanceof User && $user->is_admin && $user->needsTwoFactorForAdmin(),
             403,
             'Turn on two-factor sign-in in your security settings to use the admin panel.',
         );

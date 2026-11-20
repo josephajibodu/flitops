@@ -88,7 +88,17 @@ class User extends Authenticatable implements FilamentUser, MustVerifyEmail
      */
     public function canAccessPanel(Panel $panel): bool
     {
-        return $this->is_admin && $this->hasEnabledTwoFactorAuthentication();
+        return $this->is_admin && ! $this->needsTwoFactorForAdmin();
+    }
+
+    /**
+     * Whether this admin still has to turn on two-factor sign-in before the
+     * panel opens. Local development skips the rule, so test accounts can
+     * open the panel without an authenticator app.
+     */
+    public function needsTwoFactorForAdmin(): bool
+    {
+        return ! app()->isLocal() && ! $this->hasEnabledTwoFactorAuthentication();
     }
 
     // Team relationships

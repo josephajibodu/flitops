@@ -33,7 +33,7 @@ class ManageAdminCommand extends Command
 
         $this->components->info("{$user->email} can now open the admin panel at /admin.");
 
-        if (! $user->hasEnabledTwoFactorAuthentication()) {
+        if ($user->needsTwoFactorForAdmin()) {
             $this->components->warn('They need to turn on two-factor sign-in in their settings before the panel will open.');
         }
 

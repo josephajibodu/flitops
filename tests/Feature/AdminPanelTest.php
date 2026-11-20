@@ -46,6 +46,14 @@ it('tells staff without two-factor sign-in to turn it on', function () {
         ->assertSeeText('Turn on two-factor sign-in in your security settings to use the admin panel.');
 });
 
+it('lets staff without two-factor sign-in in when running locally', function () {
+    app()->detectEnvironment(fn (): string => 'local');
+    $staff = User::factory()->create();
+    $staff->forceFill(['is_admin' => true])->save();
+
+    $this->actingAs($staff)->get('/admin')->assertOk();
+});
+
 it('opens every admin page for staff', function () {
     $team = Team::factory()->forUser(User::factory()->create())->create();
     $server = Server::factory()->forTeam($team)->active()->create(['web_server' => 'nginx']);
