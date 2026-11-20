@@ -19,7 +19,6 @@ use App\Filament\Resources\Teams\TeamResource;
 use App\Filament\Support\StatusBadge;
 use App\Models\Server;
 use BackedEnum;
-use Filament\Actions\ViewAction;
 use Filament\Infolists\Components\TextEntry;
 use Filament\Schemas\Components\Section;
 use Filament\Schemas\Schema;
@@ -114,7 +113,7 @@ class ServerResource extends ReadOnlyResource
             ->columns([
                 TextColumn::make('name')->searchable()->sortable(),
                 TextColumn::make('team.name')->label('Team')->searchable(),
-                TextColumn::make('provider')->formatStateUsing(fn (Server $record): string => $record->provider->label())->description(fn (Server $record): ?string => $record->region),
+                TextColumn::make('provider')->formatStateUsing(fn (Server $record): string => collect([$record->provider->label(), $record->region])->filter()->implode(' · ')),
                 TextColumn::make('ip_address')->label('IP')->fontFamily('mono')->searchable()->placeholder('–'),
                 StatusBadge::column('status'),
                 StatusBadge::column('connection_status')->label('Connection'),
@@ -124,9 +123,6 @@ class ServerResource extends ReadOnlyResource
                 SelectFilter::make('status')->options(collect(ServerStatus::cases())->mapWithKeys(fn (ServerStatus $status): array => [$status->value => $status->label()])),
                 SelectFilter::make('provider')->options(collect(Provider::cases())->mapWithKeys(fn (Provider $provider): array => [$provider->value => $provider->label()])),
                 SelectFilter::make('team')->relationship('team', 'name')->searchable()->preload(),
-            ])
-            ->recordActions([
-                ViewAction::make(),
             ]);
     }
 

@@ -3,9 +3,9 @@
 namespace App\Filament\Resources\Servers\Pages;
 
 use App\Filament\Resources\Servers\ServerResource;
-use Filament\Resources\Pages\ViewRecord;
+use App\Filament\Resources\ViewAdminRecord;
 
-class ViewServer extends ViewRecord
+class ViewServer extends ViewAdminRecord
 {
     protected static string $resource = ServerResource::class;
 }

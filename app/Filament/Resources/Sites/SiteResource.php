@@ -15,7 +15,6 @@ use App\Filament\Support\StatusBadge;
 use App\Models\Site;
 use App\Models\Team;
 use BackedEnum;
-use Filament\Actions\ViewAction;
 use Filament\Infolists\Components\IconEntry;
 use Filament\Infolists\Components\TextEntry;
 use Filament\Schemas\Components\Section;
@@ -116,9 +115,6 @@ class SiteResource extends ReadOnlyResource
                         $data['value'] ?? null,
                         fn (Builder $query, string $teamId): Builder => $query->whereHas('server', fn (Builder $server): Builder => $server->where('team_id', $teamId)),
                     )),
-            ])
-            ->recordActions([
-                ViewAction::make(),
             ]);
     }
 

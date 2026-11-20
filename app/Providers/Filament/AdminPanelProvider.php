@@ -4,6 +4,7 @@ namespace App\Providers\Filament;
 
 use App\Http\Middleware\AuthenticateAdmin;
 use App\Models\User;
+use Filament\Enums\GlobalSearchPosition;
 use Filament\Http\Middleware\AuthenticateSession;
 use Filament\Http\Middleware\DisableBladeIconComponents;
 use Filament\Http\Middleware\DispatchServingFilamentEvent;
@@ -31,6 +32,45 @@ use Illuminate\View\Middleware\ShareErrorsFromSession;
  */
 class AdminPanelProvider extends PanelProvider
 {
+    /**
+     * Shopify's admin greys, so the panel matches the customer app.
+     *
+     * @var array<int, string>
+     */
+    private const array GREY = [
+        50 => '#F7F7F7',
+        100 => '#F1F1F1',
+        200 => '#E3E3E3',
+        300 => '#CCCCCC',
+        400 => '#B5B5B5',
+        500 => '#8A8A8A',
+        600 => '#616161',
+        700 => '#4A4A4A',
+        800 => '#303030',
+        900 => '#1A1A1A',
+        950 => '#0A0A0A',
+    ];
+
+    /**
+     * Shopify's buttons and active states are near-black rather than a
+     * colour, so "primary" is ink. Filament puts buttons on shade 600.
+     *
+     * @var array<int, string>
+     */
+    private const array INK = [
+        50 => '#F7F7F7',
+        100 => '#F1F1F1',
+        200 => '#E3E3E3',
+        300 => '#8A8A8A',
+        400 => '#4A4A4A',
+        500 => '#303030',
+        600 => '#303030',
+        700 => '#1A1A1A',
+        800 => '#1A1A1A',
+        900 => '#0A0A0A',
+        950 => '#0A0A0A',
+    ];
+
     public function panel(Panel $panel): Panel
     {
         return $panel
@@ -39,13 +79,19 @@ class AdminPanelProvider extends PanelProvider
             ->path('admin')
             ->renderHook(PanelsRenderHook::HEAD_END, fn (): View => view('filament.brand-styles'))
             ->brandName('Flitops Admin')
-            ->brandLogo(asset('images/admin/flitops-logo.svg'))
-            ->darkModeBrandLogo(asset('images/admin/flitops-logo-on-dark.svg'))
-            ->brandLogoHeight('1.75rem')
+            ->brandLogo(asset('images/admin/flitops-logo-on-dark.svg'))
+            ->brandLogoHeight('1.5rem')
             ->favicon(asset('favicon.svg'))
+            ->darkMode(false)
+            ->topbar(false)
+            ->globalSearch(position: GlobalSearchPosition::Sidebar)
+            ->globalSearchKeyBindings(['command+k', 'ctrl+k'])
+            ->sidebarWidth('13.75rem')
+            ->collapsibleNavigationGroups(false)
             ->colors([
-                'primary' => Color::Blue,
-                'gray' => Color::Neutral,
+                'primary' => self::INK,
+                'gray' => self::GREY,
+                'info' => Color::Blue,
             ])
             ->maxContentWidth(Width::Full)
             ->navigationGroups([

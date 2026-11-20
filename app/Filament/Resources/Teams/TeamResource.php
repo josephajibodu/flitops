@@ -12,7 +12,6 @@ use App\Filament\Resources\Teams\RelationManagers\MembersRelationManager;
 use App\Filament\Resources\Users\UserResource;
 use App\Models\Team;
 use BackedEnum;
-use Filament\Actions\ViewAction;
 use Filament\Infolists\Components\IconEntry;
 use Filament\Infolists\Components\TextEntry;
 use Filament\Schemas\Components\Section;
@@ -81,9 +80,6 @@ class TeamResource extends ReadOnlyResource
                 TextColumn::make('servers_count')->label('Servers')->counts('servers')->sortable()->alignEnd(),
                 IconColumn::make('personal_team')->label('Personal')->boolean()->toggleable(isToggledHiddenByDefault: true),
                 TextColumn::make('created_at')->label('Created')->dateTime('j M Y')->sortable(),
-            ])
-            ->recordActions([
-                ViewAction::make(),
             ]);
     }
 

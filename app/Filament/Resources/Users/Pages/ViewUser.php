@@ -3,9 +3,9 @@
 namespace App\Filament\Resources\Users\Pages;
 
 use App\Filament\Resources\Users\UserResource;
-use Filament\Resources\Pages\ViewRecord;
+use App\Filament\Resources\ViewAdminRecord;
 
-class ViewUser extends ViewRecord
+class ViewUser extends ViewAdminRecord
 {
     protected static string $resource = UserResource::class;
 }

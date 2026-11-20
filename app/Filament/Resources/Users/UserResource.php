@@ -8,7 +8,6 @@ use App\Filament\Resources\Users\Pages\ViewUser;
 use App\Filament\Resources\Users\RelationManagers\TeamsRelationManager;
 use App\Models\User;
 use BackedEnum;
-use Filament\Actions\ViewAction;
 use Filament\Infolists\Components\IconEntry;
 use Filament\Infolists\Components\TextEntry;
 use Filament\Schemas\Components\Section;
@@ -79,9 +78,6 @@ class UserResource extends ReadOnlyResource
             ])
             ->filters([
                 TernaryFilter::make('is_admin')->label('Flitops staff'),
-            ])
-            ->recordActions([
-                ViewAction::make(),
             ]);
     }
 

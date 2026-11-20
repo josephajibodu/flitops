@@ -10,7 +10,6 @@ use App\Filament\Resources\Sites\SiteResource;
 use App\Filament\Support\StatusBadge;
 use App\Models\Deployment;
 use BackedEnum;
-use Filament\Actions\ViewAction;
 use Filament\Infolists\Components\TextEntry;
 use Filament\Schemas\Components\Section;
 use Filament\Schemas\Schema;
@@ -18,6 +17,7 @@ use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Str;
 use UnitEnum;
 
@@ -33,6 +33,14 @@ class DeploymentResource extends ReadOnlyResource
     protected static string|UnitEnum|null $navigationGroup = 'Infrastructure';
 
     protected static ?int $navigationSort = 3;
+
+    /**
+     * A deployment's page is titled with the site it went to.
+     */
+    public static function getRecordTitle(?Model $record): string
+    {
+        return $record instanceof Deployment ? "Deployment to {$record->site->domain}" : 'Deployment';
+    }
 
     public static function infolist(Schema $schema): Schema
     {
@@ -76,9 +84,6 @@ class DeploymentResource extends ReadOnlyResource
                 SelectFilter::make('status')
                     ->options(collect(DeploymentStatus::cases())->mapWithKeys(fn (DeploymentStatus $status): array => [$status->value => $status->label()]))
                     ->default(DeploymentStatus::Failed->value),
-            ])
-            ->recordActions([
-                ViewAction::make(),
             ]);
     }
 

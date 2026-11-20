@@ -3,9 +3,9 @@
 namespace App\Filament\Resources\Teams\Pages;
 
 use App\Filament\Resources\Teams\TeamResource;
-use Filament\Resources\Pages\ViewRecord;
+use App\Filament\Resources\ViewAdminRecord;
 
-class ViewTeam extends ViewRecord
+class ViewTeam extends ViewAdminRecord
 {
     protected static string $resource = TeamResource::class;
 }

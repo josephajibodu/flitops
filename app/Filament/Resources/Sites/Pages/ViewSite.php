@@ -3,9 +3,9 @@
 namespace App\Filament\Resources\Sites\Pages;
 
 use App\Filament\Resources\Sites\SiteResource;
-use Filament\Resources\Pages\ViewRecord;
+use App\Filament\Resources\ViewAdminRecord;
 
-class ViewSite extends ViewRecord
+class ViewSite extends ViewAdminRecord
 {
     protected static string $resource = SiteResource::class;
 }

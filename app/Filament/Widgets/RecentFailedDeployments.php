@@ -27,6 +27,7 @@ class RecentFailedDeployments extends TableWidget
             ->defaultSort('created_at', 'desc')
             ->poll('30s')
             ->paginated([5])
+            ->searchable(false)
             ->emptyStateHeading('No failed deployments')
             ->columns(DeploymentResource::columns())
             ->recordUrl(fn (Deployment $record): string => DeploymentResource::getUrl('view', ['record' => $record]));
