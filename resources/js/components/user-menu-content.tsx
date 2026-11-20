@@ -1,5 +1,5 @@
 import { Link, router } from '@inertiajs/react';
-import { GearIcon, SignOutIcon } from '@phosphor-icons/react';
+import { GearIcon, ShieldCheckIcon, SignOutIcon } from '@phosphor-icons/react';
 
 import {
     DropdownMenuGroup,
@@ -10,6 +10,7 @@ import {
 import { UserInfo } from '@/components/user-info';
 import { useMobileNavigation } from '@/hooks/use-mobile-navigation';
 import { logout } from '@/routes';
+import { dashboard as adminDashboard } from '@/routes/filament/admin/pages';
 import { edit } from '@/routes/profile';
 import { type User } from '@/types';
 
@@ -45,6 +46,14 @@ export function UserMenuContent({ user }: UserMenuContentProps) {
                         Settings
                     </Link>
                 </DropdownMenuItem>
+                {user.is_admin && (
+                    <DropdownMenuItem asChild>
+                        <a className="w-full cursor-pointer" href={adminDashboard.url()}>
+                            <ShieldCheckIcon />
+                            Flitops admin
+                        </a>
+                    </DropdownMenuItem>
+                )}
             </DropdownMenuGroup>
             <DropdownMenuSeparator />
             <DropdownMenuItem asChild>
