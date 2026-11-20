@@ -8,6 +8,7 @@ import {
     HardDrivesIcon,
     HouseIcon,
     KeyIcon,
+    ShieldCheckIcon,
 } from '@phosphor-icons/react';
 
 import { useTeamPath } from '@/hooks/use-team-path';
@@ -43,6 +44,18 @@ export function useMainNav(): {
                         href: teamPath('/servers'),
                         icon: HardDrivesIcon,
                         keywords: ['machines', 'vps', 'hosts', 'droplets'],
+                    },
+                    {
+                        title: 'Security updates',
+                        href: teamPath('/security-updates'),
+                        icon: ShieldCheckIcon,
+                        keywords: [
+                            'security',
+                            'vulnerability',
+                            'patch',
+                            'advisory',
+                            'cve',
+                        ],
                     },
                 ],
             },
