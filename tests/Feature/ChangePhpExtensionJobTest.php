@@ -91,6 +91,27 @@ it('removes the package when asked to', function () {
     expect($this->phpService->fresh()->type_data['extensions'])->toBe([]);
 });
 
+it('moves the server to packages.sury.org before installing an extension', function () {
+    $commands = [];
+    fakePhpPackageServer("php8.3-fpm installed\nphp8.3-imagick installed\n", $commands);
+
+    (new ChangePhpExtensionJob($this->phpService, PhpExtension::Imagick, true))->handle(app(ChangePhpExtension::class));
+
+    $movedAt = collect($commands)->search(fn (string $command) => str_contains($command, 'https://packages.sury.org/php/'));
+    $installedAt = array_search('sudo DEBIAN_FRONTEND=noninteractive apt-get install -y php8.3-imagick', $commands, true);
+    expect($movedAt)->toBeInt();
+    expect($installedAt)->toBeGreaterThan($movedAt);
+});
+
+it('removes an extension without touching the package sources', function () {
+    $commands = [];
+    fakePhpPackageServer("php8.3-fpm installed\n", $commands);
+
+    (new ChangePhpExtensionJob($this->phpService, PhpExtension::Soap, false))->handle(app(ChangePhpExtension::class));
+
+    expect(collect($commands)->filter(fn (string $command) => str_contains($command, 'packages.sury.org') || str_contains($command, ' update')))->toBeEmpty();
+});
+
 it('marks the change failed and keeps the recorded extensions when apt fails', function () {
     fakePhpPackageServer('', failOn: 'apt-get install');
 

@@ -28,7 +28,8 @@ class InstallPhpVersion
     ];
 
     public function __construct(
-        private SshService $sshService
+        private SshService $sshService,
+        private MovePhpToSuryRepository $movePhpToSuryRepository,
     ) {}
 
     public function execute(Server $server, string $version): void
@@ -40,9 +41,7 @@ class InstallPhpVersion
         $connection = $this->sshService->connect($server);
 
         try {
-            $connection->sudo('DEBIAN_FRONTEND=noninteractive apt-get install -y software-properties-common', 60);
-            $connection->sudo('add-apt-repository -y ppa:ondrej/php', 300);
-            $connection->sudo('apt-get update', 120);
+            $this->movePhpToSuryRepository->onConnection($connection);
 
             $packages = [
                 "php{$version}-fpm",

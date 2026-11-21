@@ -4,12 +4,52 @@ namespace App\Services\Provisioning;
 
 class PhpService
 {
+    /**
+     * Point apt at packages.sury.org for PHP, the way its README does, and
+     * drop the ondrej/php PPA that Flitops used to add. Ondřej Surý froze
+     * that PPA in November 2026 and now publishes the same packages only at
+     * packages.sury.org. Runs as root and is safe to run again: on a server
+     * that's already set up it changes nothing.
+     *
+     * The PPA files removed are the ones `add-apt-repository` creates. If the
+     * PPA is still listed somewhere else afterwards, the script stops and says
+     * where, rather than editing a file it doesn't own.
+     */
+    private const SURY_REPOSITORY_SCRIPT = <<<'SH'
+        set -e
+
+        apt_sources() {
+            apt-get indextargets --no-release-info --format '$(REPO_URI) $(SOURCESENTRY)' 2>/dev/null |
+                grep -E "^https?://$1/? " | sed -e 's/^[^ ]* //' -e 's/:[0-9]*$//' | sort -u
+        }
+
+        if [ -z "$(apt_sources 'packages\.sury\.org/php')" ]; then
+            if [ ! -f /usr/share/keyrings/debsuryorg-archive-keyring.gpg ]; then
+                keyring=$(mktemp)
+                curl -fsSL -o "$keyring" https://packages.sury.org/debsuryorg-archive-keyring.deb
+                dpkg -i "$keyring"
+                rm -f "$keyring"
+            fi
+
+            . /etc/os-release
+            printf '%s\n' 'Types: deb' 'URIs: https://packages.sury.org/php/' "Suites: $VERSION_CODENAME" 'Components: main' \
+                'Signed-By: /usr/share/keyrings/debsuryorg-archive-keyring.gpg' > /etc/apt/sources.list.d/php.sources
+        fi
+
+        rm -f /etc/apt/sources.list.d/ondrej-ubuntu-php-* /etc/apt/trusted.gpg.d/ondrej-ubuntu-php.gpg*
+
+        leftover=$(apt_sources 'ppa\.launchpad(content)?\.net/ondrej/php/ubuntu')
+        if [ -n "$leftover" ]; then
+            echo "The ondrej/php PPA is still listed in $leftover. Remove it there, then try again." >&2
+            exit 1
+        fi
+        SH;
+
     public function install(ProvisioningContext $context, string $phpVersion): void
     {
-        // Base tools needed for the PPA.
-        $context->packages->ensureInstalled('software-properties-common');
+        $context->packages->ensureInstalled('curl');
 
-        $context->runner->runQuietly('add-apt-repository -y ppa:ondrej/php', 300);
+        $context->runner->runQuietly(self::suryRepositoryCommand(), 300);
         $context->packages->setup();
 
         $packages = [
@@ -64,5 +104,14 @@ CONF;
         $context->files->put($path, $poolConfig);
 
         $context->services->restart("php{$phpVersion}-fpm");
+    }
+
+    /**
+     * The shell command that sets up packages.sury.org as the server's PHP
+     * source. Run it as root.
+     */
+    public static function suryRepositoryCommand(): string
+    {
+        return 'sh -c '.escapeshellarg(self::SURY_REPOSITORY_SCRIPT);
     }
 }

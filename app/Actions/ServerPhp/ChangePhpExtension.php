@@ -10,7 +10,8 @@ use RuntimeException;
 class ChangePhpExtension
 {
     public function __construct(
-        private SshService $sshService
+        private SshService $sshService,
+        private MovePhpToSuryRepository $movePhpToSuryRepository,
     ) {}
 
     /**
@@ -32,7 +33,7 @@ class ChangePhpExtension
             $package = $extension->package($phpVersion);
 
             if ($install) {
-                $connection->sudo('apt-get update', 120);
+                $this->movePhpToSuryRepository->onConnection($connection);
                 $connection->sudo("DEBIAN_FRONTEND=noninteractive apt-get install -y {$package}", 600);
             } else {
                 $connection->sudo("DEBIAN_FRONTEND=noninteractive apt-get remove -y {$package}", 300);
