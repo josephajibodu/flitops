@@ -37,6 +37,14 @@ class Nginx2RootAdvisory implements SecurityAdvisory
 
     private const APT = 'apt-get -o DPkg::Lock::Timeout=120';
 
+    /**
+     * Fetch the package lists. A package source renaming itself stops apt
+     * until someone accepts the new name, as the ondrej/php PPA did when it
+     * was marked deprecated. Only a changed name is accepted here: package
+     * signatures are still checked.
+     */
+    private const UPDATE_COMMAND = self::APT.' update --allow-releaseinfo-change-label';
+
     private const UPGRADE_COMMAND = 'DEBIAN_FRONTEND=noninteractive '.self::APT.' -o Dpkg::Options::=--force-confold install --only-upgrade -y nginx nginx-common nginx-core';
 
     public function key(): string
@@ -114,7 +122,7 @@ class Nginx2RootAdvisory implements SecurityAdvisory
             throw new RuntimeException("Ubuntu {$release} no longer gets this fix for free, so there is nothing to install.");
         }
 
-        $this->run($connection, self::APT.' update', 300, $log);
+        $this->run($connection, self::UPDATE_COMMAND, 300, $log);
         $this->run($connection, self::UPGRADE_COMMAND, 600, $log);
 
         try {
@@ -150,8 +158,8 @@ class Nginx2RootAdvisory implements SecurityAdvisory
             ],
             [
                 'title' => 'Fetch the latest package list',
-                'explanation' => 'This asks Ubuntu which updates are available. It doesn\'t install anything yet.',
-                'command' => 'sudo apt-get update',
+                'explanation' => 'This asks Ubuntu which updates are available. It doesn\'t install anything yet. The extra option accepts a package source that has only changed its name, such as the PHP source now labelled "deprecated"; without it apt stops with "changed its \'Label\' value".',
+                'command' => 'sudo apt-get update --allow-releaseinfo-change-label',
             ],
             [
                 'title' => 'Upgrade nginx only',

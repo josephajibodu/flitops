@@ -246,6 +246,19 @@ it('upgrades nginx, tests its configuration and restarts it', function () {
         ->and(strpos($ran, 'nginx -t'))->toBeLessThan(strpos($ran, 'systemctl restart nginx'));
 });
 
+it('accepts a package source that only changed its name, so a renamed PPA does not stop the update', function () {
+    $commands = [];
+    $uploads = [];
+    fakeHostSsh($commands, $uploads, nginxOnNoble('patched'));
+    $check = ServerSecurityCheck::factory()->for($this->server)->status(SecurityCheckStatus::Fixing)->create();
+
+    app()->call([new FixServerSecurityJob($check), 'handle']);
+
+    expect(implode("\n", $commands))
+        ->toContain('apt-get -o DPkg::Lock::Timeout=120 update --allow-releaseinfo-change-label')
+        ->not->toContain('--allow-releaseinfo-change ');
+});
+
 it('leaves nginx running when the new version rejects the configuration', function () {
     $commands = [];
     $connection = Mockery::mock(SshConnection::class)->makePartial();
