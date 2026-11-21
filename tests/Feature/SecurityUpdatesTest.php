@@ -12,6 +12,7 @@ use App\Models\Team;
 use App\Models\User;
 use App\Notifications\SecurityAdvisoryPublished;
 use App\Services\SecurityAdvisories\Nginx2RootAdvisory;
+use App\Services\SecurityAdvisories\PhpAfterShellAdvisory;
 use App\Services\Ssh\SshConnection;
 use App\Services\Ssh\SshService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -41,6 +42,26 @@ function nginxOnNoble(string $comparison, string $runningProgram = '/usr/sbin/ng
     return [
         'os-release' => "24.04\n",
         'dpkg-query' => '1.24.0-2ubuntu7.20',
+        'compare-versions' => "{$comparison}\n",
+        '/proc/' => $runningProgram,
+    ];
+}
+
+/**
+ * Answers for the PHP advisory's commands on a server with PHP 8.3, where
+ * PHP 8.2 was removed but left its settings behind.
+ *
+ * @return array<string, string>
+ */
+function php83Installed(string $comparison, string $runningProgram = '/usr/sbin/php-fpm8.3'): array
+{
+    return [
+        'dpkg-query' => implode("\n", [
+            'installed php8.3-cli 8.3.30-1+ubuntu24.04.1+deb.sury.org+1',
+            'installed php8.3-common 8.3.30-1+ubuntu24.04.1+deb.sury.org+1',
+            'installed php8.3-fpm 8.3.30-1+ubuntu24.04.1+deb.sury.org+1',
+            'config-files php8.2-fpm 8.2.30-1+ubuntu24.04.1+deb.sury.org+1',
+        ])."\n",
         'compare-versions' => "{$comparison}\n",
         '/proc/' => $runningProgram,
     ];
@@ -284,4 +305,99 @@ it('leaves nginx running when the new version rejects the configuration', functi
         ->detail->toContain('nginx was not restarted')
         ->detail->toContain('unknown directive "brotli"')
         ->and(implode("\n", $commands))->not->toContain('systemctl restart nginx');
+});
+
+it('lists every active server with PHP for the PHP advisory, web or not', function () {
+    Notification::fake();
+    $workerServer = Server::factory()->forTeam($this->team)->active()->worker()->create();
+    $databaseServer = Server::factory()->forTeam($this->team)->active()->database()->create();
+    $provisioningServer = Server::factory()->forTeam($this->team)->provisioning()->create();
+
+    $this->artisan('flitops:security:publish', ['advisory' => PhpAfterShellAdvisory::KEY])->assertSuccessful();
+
+    expect(ServerSecurityCheck::where('advisory', PhpAfterShellAdvisory::KEY)->pluck('server_id')->sort()->values()->all())
+        ->toBe([$this->server->id, $workerServer->id])
+        ->and($databaseServer->securityChecks()->exists())->toBeFalse()
+        ->and($provisioningServer->securityChecks()->exists())->toBeFalse();
+    Notification::assertSentTo($this->owner, SecurityAdvisoryPublished::class);
+});
+
+it('finds what the server\'s PHP needs', function (array $answers, SecurityCheckStatus $expected) {
+    $commands = [];
+    $uploads = [];
+    fakeHostSsh($commands, $uploads, $answers);
+    $check = ServerSecurityCheck::factory()->for($this->server)->create(['advisory' => PhpAfterShellAdvisory::KEY]);
+
+    expect(runSecurityCheck($check)->status)->toBe($expected);
+})->with([
+    'older PHP' => [php83Installed('vulnerable'), SecurityCheckStatus::NeedsFix],
+    'fixed PHP, old PHP-FPM still running' => [php83Installed('patched', '/usr/sbin/php-fpm8.3 (deleted)'), SecurityCheckStatus::NeedsRestart],
+    'fixed PHP running' => [php83Installed('patched'), SecurityCheckStatus::Covered],
+    'no PHP installed' => [['dpkg-query' => ''], SecurityCheckStatus::Covered],
+]);
+
+it('compares each installed PHP version with its own fix, including the one backported to PHP 8.1', function () {
+    $commands = [];
+    $uploads = [];
+    fakeHostSsh($commands, $uploads, [
+        'dpkg-query' => implode("\n", [
+            'installed php8.1-fpm 8.1.34-9+ubuntu24.04.1+deb.sury.org+1',
+            'installed php8.4-cli 8.4.27-1+ubuntu24.04.1+deb.sury.org+1',
+            'installed php8.4-fpm 8.4.27-1+ubuntu24.04.1+deb.sury.org+1',
+        ]),
+        'compare-versions' => 'vulnerable',
+    ]);
+
+    $check = runSecurityCheck(ServerSecurityCheck::factory()->for($this->server)->create(['advisory' => PhpAfterShellAdvisory::KEY]));
+
+    expect($check->detail)->toBe('PHP 8.1 has 8.1.34-9 installed and needs 8.1.34-13 or later; PHP 8.4 has 8.4.27-1 installed and needs 8.4.28 or later.')
+        ->and(implode("\n", $commands))
+        ->toContain("dpkg --compare-versions '8.1.34-9+ubuntu24.04.1+deb.sury.org+1' ge '8.1.34-13'")
+        ->toContain("dpkg --compare-versions '8.4.27-1+ubuntu24.04.1+deb.sury.org+1' ge '8.4.28'");
+});
+
+it('upgrades only the installed PHP packages, then tests and restarts PHP-FPM', function () {
+    $commands = [];
+    $uploads = [];
+    fakeHostSsh($commands, $uploads, php83Installed('patched'));
+    $check = ServerSecurityCheck::factory()->for($this->server)->status(SecurityCheckStatus::Fixing)->create(['advisory' => PhpAfterShellAdvisory::KEY]);
+
+    app()->call([new FixServerSecurityJob($check), 'handle']);
+
+    $ran = implode("\n", $commands);
+    expect($check->fresh())
+        ->status->toBe(SecurityCheckStatus::Covered)
+        ->fixed_at->not->toBeNull()
+        ->and(collect($commands)->first(fn (string $command): bool => str_contains($command, 'install --only-upgrade')))
+        ->toEndWith('install --only-upgrade --no-remove -y php8.3-cli php8.3-common php8.3-fpm')
+        ->and($ran)->toContain('apt-get -o DPkg::Lock::Timeout=120 update --allow-releaseinfo-change-label')
+        ->and(strpos($ran, 'install --only-upgrade'))->toBeLessThan(strpos($ran, 'php-fpm8.3 -t'))
+        ->and(strpos($ran, 'php-fpm8.3 -t'))->toBeLessThan(strpos($ran, 'systemctl restart php8.3-fpm'));
+});
+
+it('leaves PHP-FPM running when the new version rejects its configuration', function () {
+    $commands = [];
+    $connection = Mockery::mock(SshConnection::class)->makePartial();
+    $connection->shouldReceive('exec')->andReturnUsing(function (string $command) use (&$commands) {
+        $commands[] = $command;
+
+        if (str_contains($command, 'php-fpm8.3 -t')) {
+            throw new SshCommandException($command, 78, 'ERROR: [pool www] the owner "deploy" does not exist');
+        }
+
+        return str_contains($command, 'dpkg-query') ? php83Installed('patched')['dpkg-query'] : '';
+    });
+    $connection->shouldReceive('disconnect');
+    $sshService = Mockery::mock(SshService::class);
+    $sshService->shouldReceive('connect')->andReturn($connection);
+    app()->instance(SshService::class, $sshService);
+    $check = ServerSecurityCheck::factory()->for($this->server)->status(SecurityCheckStatus::Fixing)->create(['advisory' => PhpAfterShellAdvisory::KEY]);
+
+    app()->call([new FixServerSecurityJob($check), 'handle']);
+
+    expect($check->fresh())
+        ->status->toBe(SecurityCheckStatus::FixFailed)
+        ->detail->toContain('it was not restarted')
+        ->detail->toContain('the owner "deploy" does not exist')
+        ->and(implode("\n", $commands))->not->toContain('systemctl restart php8.3-fpm');
 });

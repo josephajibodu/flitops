@@ -13,6 +13,7 @@ class SecurityAdvisoryCatalogue
      * @var list<class-string<SecurityAdvisory>>
      */
     private const ADVISORIES = [
+        PhpAfterShellAdvisory::class,
         Nginx2RootAdvisory::class,
     ];
 
