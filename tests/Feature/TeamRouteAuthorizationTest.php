@@ -1,5 +1,6 @@
 <?php
 
+use App\Enums\SecurityCheckStatus;
 use App\Models\Backup;
 use App\Models\CronJob;
 use App\Models\DatabaseUser;
@@ -8,6 +9,7 @@ use App\Models\ProviderAccount;
 use App\Models\Server;
 use App\Models\ServerConnection;
 use App\Models\ServerDatabase;
+use App\Models\ServerSecurityCheck;
 use App\Models\Site;
 use App\Models\SiteNginxFile;
 use App\Models\SiteNginxHistory;
@@ -39,10 +41,12 @@ const VIEWER_ALLOWED_WRITE_ROUTES = [
     'source-control.destroy',
     'source-control.repositories.sync',
 
-    // Re-check the SSH connection or re-read metrics. Both only read from the
-    // server, so they belong with "view".
+    // Re-check the SSH connection, re-read metrics or check a server against a
+    // security advisory. These only read from the server, so they belong with
+    // "view".
     'servers.test-connection',
     'servers.metrics.refresh',
+    'security-updates.check',
 
     // Anyone may leave a team they belong to; it only takes their own access away.
     'teams.leave',
@@ -94,6 +98,7 @@ function teamRouteParameters(Team $team, User $viewer): array
             'storage_provider_id' => $storageProvider->id,
         ]),
         'database_user' => DatabaseUser::factory()->for($server)->create(),
+        'securityCheck' => ServerSecurityCheck::factory()->for($server)->status(SecurityCheckStatus::NeedsFix)->create(),
         'hosted_connection' => ServerConnection::factory()->create([
             'server_id' => $server->id,
             'client_server_id' => Server::factory()->create(['team_id' => $team->id])->id,
