@@ -112,6 +112,23 @@ it('rejects php_version not installed on the server', function () {
     $response->assertSessionHasErrors('php_version');
 });
 
+it('checks a new site against the server in the address, not a server sent in the form', function () {
+    Queue::fake();
+    $this->server->createService(ServiceType::Php, '8.3', true);
+    $otherServer = Server::factory()->forTeam($this->team)->create(['status' => ServerStatus::Active]);
+    $otherServer->createService(ServiceType::Php, '8.4', true);
+
+    $response = $this->actingAs($this->user)
+        ->post("/{$this->team->slug}/servers/{$this->server->id}/sites", [
+            'server_id' => $otherServer->id,
+            'domain' => 'example.com',
+            'php_version' => '8.4',
+        ]);
+
+    $response->assertSessionHasErrors('php_version');
+    expect(Site::query()->count())->toBe(0);
+});
+
 it('shows site create page with source control accounts but without prefetched repositories', function () {
     SourceControlAccount::factory()
         ->forUser($this->user)

@@ -35,11 +35,6 @@ class StoreSiteRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'server_id' => [
-                'required',
-                'integer',
-                Rule::exists('servers', 'id')->where('team_id', $this->route('team')->id),
-            ],
             'domain' => [
                 'nullable',
                 'required_without:site_name',
@@ -125,8 +120,6 @@ class StoreSiteRequest extends FormRequest
     public function messages(): array
     {
         return [
-            'server_id.required' => 'Please select a server.',
-            'server_id.exists' => 'The selected server is invalid or does not belong to you.',
             'domain.regex' => 'Please enter a valid domain name (e.g., example.com).',
             'site_name.regex' => 'Site name can only contain letters, numbers, and hyphens.',
             'package_manager.in' => 'Package manager must be one of: none, npm, pnpm, yarn, bun.',
@@ -148,11 +141,7 @@ class StoreSiteRequest extends FormRequest
      */
     private function reachableDatabaseServerIds(): array
     {
-        $server = Server::query()
-            ->where('team_id', $this->route('team')->id)
-            ->find($this->input('server_id'));
-
-        return $server?->reachableDatabaseServerIds() ?? [];
+        return $this->targetServer()->reachableDatabaseServerIds();
     }
 
     /**
@@ -160,13 +149,7 @@ class StoreSiteRequest extends FormRequest
      */
     private function getServerInstalledPhpVersions(): array
     {
-        $server = Server::find($this->input('server_id'));
-
-        if (! $server) {
-            return PhpVersion::values();
-        }
-
-        $versions = $server->installedServices()
+        $versions = $this->targetServer()->installedServices()
             ->where('type', 'php')
             ->get()
             ->map(fn ($s) => $s->installed_version ?? $s->version)
@@ -180,5 +163,13 @@ class StoreSiteRequest extends FormRequest
         }
 
         return $versions;
+    }
+
+    /**
+     * The server the site is being created on, from the URL.
+     */
+    private function targetServer(): Server
+    {
+        return $this->route('server');
     }
 }
