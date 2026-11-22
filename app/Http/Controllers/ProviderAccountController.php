@@ -11,7 +11,6 @@ use App\Jobs\ValidateProviderJob;
 use App\Models\ProviderAccount;
 use App\Models\Team;
 use App\Services\Providers\ProviderManager;
-use Illuminate\Http\Client\RequestException;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Inertia\Inertia;
@@ -131,7 +130,6 @@ class ProviderAccountController extends Controller
 
             $label = $providerAccount->provider->label();
             $status = $exception instanceof ProviderApiException ? $exception->statusCode : null;
-            $status ??= $exception instanceof RequestException ? $exception->response->status() : null;
 
             return response()->json([
                 'message' => in_array($status, [401, 403], true)

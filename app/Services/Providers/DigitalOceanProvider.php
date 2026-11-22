@@ -8,12 +8,14 @@ use App\Data\ProviderServerResult;
 use App\Data\ProviderServerStatus;
 use App\Data\ProviderSize;
 use App\Exceptions\ProviderApiException;
+use App\Services\Providers\Concerns\BuildsProviderClient;
 use Illuminate\Http\Client\PendingRequest;
 use Illuminate\Support\Collection;
-use Illuminate\Support\Facades\Http;
 
 class DigitalOceanProvider implements ProviderContract
 {
+    use BuildsProviderClient;
+
     private string $apiToken = '';
 
     /**
@@ -26,17 +28,13 @@ class DigitalOceanProvider implements ProviderContract
 
     public function __construct()
     {
-        $this->http = Http::baseUrl('https://api.digitalocean.com/v2')
-            ->timeout(30)
-            ->retry(3, 100);
+        $this->http = $this->providerClient('https://api.digitalocean.com/v2');
     }
 
     public function setCredentials(array $credentials): void
     {
         $this->apiToken = $credentials['api_token'] ?? '';
-        $this->http = Http::baseUrl('https://api.digitalocean.com/v2')
-            ->timeout(30)
-            ->retry(3, 100)
+        $this->http = $this->providerClient('https://api.digitalocean.com/v2')
             ->withToken($this->apiToken);
     }
 
