@@ -12,6 +12,7 @@ use App\Enums\ServerStatus;
 use App\Enums\ServerType;
 use App\Enums\ServiceStatus;
 use App\Enums\ServiceType;
+use App\Enums\WebServer;
 use App\Events\ServerStatusChanged;
 use App\Services\WebServer\CaddyWebServer;
 use App\Services\WebServer\NginxWebServer;
@@ -85,6 +86,7 @@ class Server extends Model
         return [
             'provider' => Provider::class,
             'type' => ServerType::class,
+            'web_server' => WebServer::class,
             'status' => ServerStatus::class,
             'provisioning_step' => ProvisioningStep::class,
             'connection_status' => ConnectionStatus::class,
@@ -464,7 +466,7 @@ class Server extends Model
     public function webServer(): WebServerContract
     {
         return match ($this->web_server) {
-            'caddy' => app(CaddyWebServer::class),
+            WebServer::Caddy => app(CaddyWebServer::class),
             default => app(NginxWebServer::class),
         };
     }
@@ -575,11 +577,7 @@ class Server extends Model
     public function restartableServices(): array
     {
         return array_values(array_filter([
-            match ($this->web_server) {
-                'nginx' => ServiceType::Nginx,
-                'caddy' => ServiceType::Caddy,
-                default => null,
-            },
+            $this->web_server?->serviceType(),
             $this->hasPhp() ? ServiceType::Php : null,
             match ($this->database_type) {
                 'mysql', 'mariadb' => ServiceType::Mysql,

@@ -8,6 +8,7 @@ use App\Enums\ServerStatus;
 use App\Enums\ServerType;
 use App\Enums\ServiceStatus;
 use App\Enums\ServiceType;
+use App\Enums\WebServer;
 use App\Jobs\InstallStackJob;
 use App\Models\Server;
 use App\Models\Team;
@@ -409,7 +410,7 @@ it('records Caddy as the web server when chosen', function () {
 
     $server = Server::where('name', 'caddy-server')->firstOrFail();
 
-    expect($server->web_server)->toBe('caddy');
+    expect($server->web_server)->toBe(WebServer::Caddy);
     expect($server->installedServices()->pluck('type')->all())
         ->toEqualCanonicalizing([ServiceType::Php, ServiceType::Caddy]);
 });

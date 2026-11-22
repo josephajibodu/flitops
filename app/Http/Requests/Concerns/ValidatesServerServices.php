@@ -4,6 +4,7 @@ namespace App\Http\Requests\Concerns;
 
 use App\Enums\PhpVersion;
 use App\Enums\ServerType;
+use App\Enums\WebServer;
 use Illuminate\Validation\Rule;
 
 /**
@@ -25,7 +26,7 @@ trait ValidatesServerServices
 
         $defaults = [
             'php_version' => $preset['php'] ? PhpVersion::default()->value : null,
-            'web_server' => $preset['web_server'] ? 'nginx' : null,
+            'web_server' => $preset['web_server'] ? WebServer::default()->value : null,
             'database_type' => $preset['database'] ? 'mysql' : null,
             'redis' => $preset['redis'],
         ];
@@ -44,7 +45,7 @@ trait ValidatesServerServices
         return [
             'type' => ['required', 'string', Rule::in(array_map(fn (ServerType $type) => $type->value, ServerType::selectable()))],
             'php_version' => ['nullable', 'string', Rule::in(PhpVersion::values())],
-            'web_server' => ['nullable', 'string', Rule::in(['nginx', 'caddy']), Rule::prohibitedIf(fn (): bool => $this->input('php_version') === null)],
+            'web_server' => ['nullable', 'string', Rule::in(WebServer::values()), Rule::prohibitedIf(fn (): bool => $this->input('php_version') === null)],
             'database_type' => ['nullable', 'string', Rule::in(['mysql', 'postgresql', 'mariadb'])],
             'redis' => ['required', 'boolean'],
         ];

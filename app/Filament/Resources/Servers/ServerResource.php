@@ -88,7 +88,7 @@ class ServerResource extends ReadOnlyResource
                         TextEntry::make('type')->formatStateUsing(fn (Server $record): ?string => StatusBadge::label($record->type))->placeholder('–'),
                         TextEntry::make('ubuntu_version')->label('Ubuntu')->placeholder('–'),
                         TextEntry::make('php_version')->label('PHP')->placeholder('–'),
-                        TextEntry::make('web_server')->label('Web server')->placeholder('–'),
+                        TextEntry::make('web_server')->label('Web server')->formatStateUsing(fn (Server $record): ?string => StatusBadge::label($record->web_server))->placeholder('–'),
                         TextEntry::make('database_type')->label('Database')->placeholder('–'),
                         TextEntry::make('node_version')->label('Node')->formatStateUsing(fn (Server $record): ?string => StatusBadge::label($record->node_version))->placeholder('–'),
                         TextEntry::make('timezone')->placeholder('–'),
