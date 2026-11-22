@@ -272,8 +272,10 @@ return [
                 'tries' => 1,
                 // Auto-balancing force-kills a busy worker this long after
                 // scaling it down, so it must outlast every job-level timeout
-                // on the default queue (IssueSslForDomainJob: 420s).
-                'timeout' => 600,
+                // on the ssh and default queues, with a margin: the longest
+                // is CheckCertificateExpiryJob at 600s. Keep it below the
+                // redis connection's retry_after (3660s).
+                'timeout' => 660,
             ],
         ],
 
