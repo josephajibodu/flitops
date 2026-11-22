@@ -263,6 +263,25 @@ it('persists the popup flag in session when the redirect endpoint receives popup
         ->and(session('source_control_redirect'))->toBe('/team/servers/1/sites/create');
 });
 
+it('only sends the user back to a page on this site after connecting', function (string $redirect) {
+    $driver = Mockery::mock(GithubProvider::class);
+    $driver->shouldReceive('scopes')->andReturnSelf();
+    $driver->shouldReceive('redirect')->andReturn(redirect('https://github.test/oauth'));
+
+    Socialite::shouldReceive('driver')->with('github')->andReturn($driver);
+
+    $this->actingAs($this->user)
+        ->get('/auth/github/redirect?redirect='.urlencode($redirect));
+
+    expect(session('source_control_redirect'))->toBe(route('source-control.index', $this->team));
+})->with([
+    'another site' => 'https://evil.example/login',
+    'a protocol-relative address' => '//evil.example/login',
+    'a backslash browsers read as another site' => '/\\evil.example/login',
+    'a script' => 'javascript:alert(1)',
+    'a relative path without a slash' => 'evil.example',
+]);
+
 it('leaves the popup flag false when the redirect endpoint is called without popup', function () {
     $driver = Mockery::mock(GithubProvider::class);
     $driver->shouldReceive('scopes')->andReturnSelf();
