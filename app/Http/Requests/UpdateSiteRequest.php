@@ -3,6 +3,7 @@
 namespace App\Http\Requests;
 
 use App\Enums\OctaneServer;
+use App\Enums\PhpVersion;
 use App\Models\Server;
 use App\Models\Site;
 use Illuminate\Contracts\Validation\ValidationRule;
@@ -70,7 +71,7 @@ class UpdateSiteRequest extends FormRequest
         $server = $this->route('server');
 
         if (! $server instanceof Server) {
-            return ['8.1', '8.2', '8.3', '8.4', '8.5'];
+            return PhpVersion::values();
         }
 
         $versions = $server->installedServices()
@@ -82,6 +83,6 @@ class UpdateSiteRequest extends FormRequest
             ->values()
             ->all();
 
-        return ! empty($versions) ? $versions : ['8.1', '8.2', '8.3', '8.4', '8.5'];
+        return ! empty($versions) ? $versions : PhpVersion::values();
     }
 }

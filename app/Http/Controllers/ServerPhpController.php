@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Actions\ServerPhp\InstallPhpVersion;
 use App\Actions\ServerPhp\SetDefaultPhpVersion;
 use App\Enums\PhpExtension;
+use App\Enums\PhpVersion;
 use App\Enums\ServiceStatus;
 use App\Enums\ServiceType;
 use App\Events\ServerPhpUpdated;
@@ -24,8 +25,6 @@ use Inertia\Response;
 
 class ServerPhpController extends Controller
 {
-    private const AVAILABLE_VERSIONS = ['8.1', '8.2', '8.3', '8.4', '8.5'];
-
     public function index(Team $team, Server $server): Response
     {
         $this->authorize('view', $server);
@@ -74,7 +73,7 @@ class ServerPhpController extends Controller
             'phpServices' => Inertia::live($phpServices, on: $phpUpdated),
             'installedVersions' => Inertia::live($installedVersions, on: $phpUpdated),
             'defaultVersion' => Inertia::live($defaultVersion, on: $phpUpdated),
-            'availableVersions' => self::AVAILABLE_VERSIONS,
+            'availableVersions' => PhpVersion::values(),
             'settings' => Inertia::live($settings, on: $phpUpdated),
             'settingsSyncStatus' => Inertia::live($settingsSyncStatus, on: $phpUpdated),
             'settingsSyncError' => Inertia::live($settingsSyncError, on: $phpUpdated),

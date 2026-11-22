@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests;
 
+use App\Enums\PhpVersion;
 use App\Models\Server;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
@@ -42,7 +43,7 @@ class SetDefaultPhpVersionRequest extends FormRequest
         $server = $this->route('server');
 
         if (! $server instanceof Server) {
-            return ['8.1', '8.2', '8.3', '8.4', '8.5'];
+            return PhpVersion::values();
         }
 
         $versions = $server->installedServices()
@@ -54,6 +55,6 @@ class SetDefaultPhpVersionRequest extends FormRequest
             ->values()
             ->all();
 
-        return ! empty($versions) ? $versions : ['8.1', '8.2', '8.3', '8.4', '8.5'];
+        return ! empty($versions) ? $versions : PhpVersion::values();
     }
 }
