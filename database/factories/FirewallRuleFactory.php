@@ -2,11 +2,13 @@
 
 namespace Database\Factories;
 
+use App\Enums\FirewallRuleStatus;
+use App\Models\FirewallRule;
 use App\Models\Server;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
- * @extends \Illuminate\Database\Eloquent\Factories\Factory<\App\Models\FirewallRule>
+ * @extends Factory<FirewallRule>
  */
 class FirewallRuleFactory extends Factory
 {
@@ -26,7 +28,7 @@ class FirewallRuleFactory extends Factory
             'source' => '0.0.0.0/0',
             'mask' => null,
             'note' => null,
-            'status' => 'active',
+            'status' => FirewallRuleStatus::Active,
         ];
     }
 }
