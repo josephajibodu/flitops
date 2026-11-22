@@ -7,6 +7,7 @@ use App\Actions\Servers\CreateServerAction;
 use App\Actions\Servers\DeleteServerAction;
 use App\Data\CustomServerData;
 use App\Data\ServerData;
+use App\Enums\PhpVersion;
 use App\Enums\Provider;
 use App\Enums\ProvisioningStep;
 use App\Enums\ServerStatus;
@@ -73,6 +74,8 @@ class ServerController extends Controller
                 'description' => $type->description(),
                 'services' => $type->defaultServices(),
             ], ServerType::selectable()),
+            'phpVersions' => PhpVersion::options(),
+            'defaultPhpVersion' => PhpVersion::default()->value,
         ]);
     }
 

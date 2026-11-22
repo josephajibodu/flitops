@@ -2,6 +2,7 @@
 
 namespace App\Jobs;
 
+use App\Enums\PhpVersion;
 use App\Models\Site;
 use App\Services\SiteProvisioning\SiteIsolationService;
 use App\Services\Ssh\SshService;
@@ -29,7 +30,7 @@ class MoveSitePhpPoolJob implements ShouldQueue
     public function handle(SshService $sshService, SiteIsolationService $isolation): void
     {
         $site = $this->site;
-        $newVersion = $site->php_version ?? '8.4';
+        $newVersion = $site->php_version ?? PhpVersion::siteFallback()->value;
 
         $connection = $sshService->connect($site->server);
 
