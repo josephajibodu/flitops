@@ -293,9 +293,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
                     ->name('servers.sites.nginx.rename');
                 Route::delete('servers/{server}/sites/{site}/nginx/{nginxFile}', [SiteNginxController::class, 'destroy'])
                     ->name('servers.sites.nginx.destroy');
-                Route::get('servers/{server}/sites/{site}/nginx-history/{historyId}', [SiteNginxController::class, 'history'])
+                Route::get('servers/{server}/sites/{site}/nginx-history/{nginxHistory}', [SiteNginxController::class, 'history'])
                     ->name('servers.sites.nginx.history.show');
-                Route::post('servers/{server}/sites/{site}/nginx-history/{historyId}/restore', [SiteNginxController::class, 'restore'])
+                Route::post('servers/{server}/sites/{site}/nginx-history/{nginxHistory}/restore', [SiteNginxController::class, 'restore'])
                     ->name('servers.sites.nginx.history.restore');
                 Route::post('servers/{server}/sites/{site}/nginx/refresh', [SiteNginxController::class, 'refresh'])
                     ->name('servers.sites.nginx.refresh');

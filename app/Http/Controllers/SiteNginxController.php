@@ -16,6 +16,7 @@ use App\Jobs\SyncSiteNginxFilesJob;
 use App\Models\Server;
 use App\Models\Site;
 use App\Models\SiteNginxFile;
+use App\Models\SiteNginxHistory;
 use App\Models\Team;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
@@ -58,7 +59,7 @@ class SiteNginxController extends Controller
             ->values()
             ->all();
 
-        $history = $site->nginxHistory()
+        $history = $site->nginxHistories()
             ->with('user:id,name')
             ->limit(50)
             ->get()
@@ -212,19 +213,17 @@ class SiteNginxController extends Controller
         return redirect()->back()->with('success', 'File queued for removal.');
     }
 
-    public function history(Request $request, Team $team, Server $server, Site $site, int $historyId): JsonResponse
+    public function history(Request $request, Team $team, Server $server, Site $site, SiteNginxHistory $nginxHistory): JsonResponse
     {
         $this->authorize('view', $site);
 
-        $entry = $site->nginxHistory()->findOrFail($historyId);
-
         return response()->json([
-            'old_content' => $entry->old_content,
-            'new_content' => $entry->new_content,
+            'old_content' => $nginxHistory->old_content,
+            'new_content' => $nginxHistory->new_content,
         ]);
     }
 
-    public function restore(Request $request, Team $team, Server $server, Site $site, int $historyId): RedirectResponse
+    public function restore(Request $request, Team $team, Server $server, Site $site, SiteNginxHistory $nginxHistory): RedirectResponse
     {
         $this->authorize('editWebServerConfig', $site);
 
@@ -232,13 +231,11 @@ class SiteNginxController extends Controller
             return redirect()->back()->with('error', 'Server must be active and connected.');
         }
 
-        $entry = $site->nginxHistory()->findOrFail($historyId);
-
-        if ($entry->new_content === null) {
+        if ($nginxHistory->new_content === null) {
             return redirect()->back()->with('error', 'Cannot restore from a delete event.');
         }
 
-        $file = $site->nginxFiles()->find($entry->site_nginx_file_id);
+        $file = $site->nginxFiles()->find($nginxHistory->site_nginx_file_id);
 
         if ($file === null) {
             return redirect()->back()->with('error', 'This file has been deleted. Create it again to bring it back.');
@@ -246,7 +243,7 @@ class SiteNginxController extends Controller
 
         $oldContent = $file->content;
         $file->update([
-            'content' => $entry->new_content,
+            'content' => $nginxHistory->new_content,
             'sync_status' => 'pending',
             'sync_error' => null,
         ]);

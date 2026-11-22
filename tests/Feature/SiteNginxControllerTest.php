@@ -224,6 +224,15 @@ it('returns history content via json endpoint', function () {
         ->assertJson(['old_content' => '# old', 'new_content' => '# new']);
 });
 
+it('does not show another site\'s nginx history through this site\'s address', function () {
+    $otherSite = Site::factory()->create(['server_id' => $this->server->id]);
+    $history = SiteNginxHistory::factory()->forSite($otherSite)->create();
+
+    $this->actingAs($this->user)
+        ->getJson("/{$this->team->slug}/servers/{$this->server->id}/sites/{$this->site->id}/nginx-history/{$history->id}")
+        ->assertNotFound();
+});
+
 it('redirects with error when server is not ready on store', function () {
     $this->server->update(['connection_status' => ConnectionStatus::Failed]);
 

@@ -467,7 +467,7 @@ class Site extends Model
         return $this->hasMany(SiteNginxFile::class);
     }
 
-    public function nginxHistory(): HasMany
+    public function nginxHistories(): HasMany
     {
         return $this->hasMany(SiteNginxHistory::class)->latest('created_at');
     }
