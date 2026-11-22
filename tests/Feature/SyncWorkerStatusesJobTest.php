@@ -1,6 +1,7 @@
 <?php
 
 use App\Enums\ServerStatus;
+use App\Enums\WorkerStatus;
 use App\Events\ServerProcessesUpdated;
 use App\Jobs\SyncWorkerStatusesJob;
 use App\Models\Server;
@@ -36,11 +37,11 @@ function supervisorStatusService(Server $server, string $output): SshService
 }
 
 it('updates worker statuses to match what supervisor is running', function () {
-    $stoppedByHand = Worker::factory()->create(['server_id' => $this->server->id, 'status' => 'active']);
-    $startedByHand = Worker::factory()->create(['server_id' => $this->server->id, 'status' => 'stopped']);
-    $gaveUp = Worker::factory()->create(['server_id' => $this->server->id, 'status' => 'active']);
-    $oneProcessCrashing = Worker::factory()->create(['server_id' => $this->server->id, 'status' => 'active', 'numprocs' => 2]);
-    $recovered = Worker::factory()->create(['server_id' => $this->server->id, 'status' => 'crashed']);
+    $stoppedByHand = Worker::factory()->create(['server_id' => $this->server->id, 'status' => WorkerStatus::Active]);
+    $startedByHand = Worker::factory()->create(['server_id' => $this->server->id, 'status' => WorkerStatus::Stopped]);
+    $gaveUp = Worker::factory()->create(['server_id' => $this->server->id, 'status' => WorkerStatus::Active]);
+    $oneProcessCrashing = Worker::factory()->create(['server_id' => $this->server->id, 'status' => WorkerStatus::Active, 'numprocs' => 2]);
+    $recovered = Worker::factory()->create(['server_id' => $this->server->id, 'status' => WorkerStatus::Crashed]);
 
     $output = <<<TXT
     flitops-worker-{$stoppedByHand->id}                 STOPPED   Nov 01 10:00 AM
@@ -55,18 +56,18 @@ it('updates worker statuses to match what supervisor is running', function () {
 
     (new SyncWorkerStatusesJob($this->server))->handle(supervisorStatusService($this->server, $output));
 
-    expect($stoppedByHand->fresh()->status)->toBe('stopped');
-    expect($startedByHand->fresh()->status)->toBe('active');
-    expect($gaveUp->fresh()->status)->toBe('crashed');
-    expect($oneProcessCrashing->fresh()->status)->toBe('crashed');
-    expect($recovered->fresh()->status)->toBe('active');
+    expect($stoppedByHand->fresh()->status)->toBe(WorkerStatus::Stopped);
+    expect($startedByHand->fresh()->status)->toBe(WorkerStatus::Active);
+    expect($gaveUp->fresh()->status)->toBe(WorkerStatus::Crashed);
+    expect($oneProcessCrashing->fresh()->status)->toBe(WorkerStatus::Crashed);
+    expect($recovered->fresh()->status)->toBe(WorkerStatus::Active);
 
     Event::assertDispatched(ServerProcessesUpdated::class, fn (ServerProcessesUpdated $event) => $event->serverId === $this->server->id);
 });
 
 it('leaves workers alone while flitops is changing them or when supervisor does not list them', function () {
-    $restarting = Worker::factory()->create(['server_id' => $this->server->id, 'status' => 'restarting']);
-    $unlisted = Worker::factory()->create(['server_id' => $this->server->id, 'status' => 'active']);
+    $restarting = Worker::factory()->create(['server_id' => $this->server->id, 'status' => WorkerStatus::Restarting]);
+    $unlisted = Worker::factory()->create(['server_id' => $this->server->id, 'status' => WorkerStatus::Active]);
 
     $output = "flitops-worker-{$restarting->id}   STOPPED   Nov 01 10:00 AM\n";
 
@@ -74,14 +75,14 @@ it('leaves workers alone while flitops is changing them or when supervisor does 
 
     (new SyncWorkerStatusesJob($this->server))->handle(supervisorStatusService($this->server, $output));
 
-    expect($restarting->fresh()->status)->toBe('restarting');
-    expect($unlisted->fresh()->status)->toBe('active');
+    expect($restarting->fresh()->status)->toBe(WorkerStatus::Restarting);
+    expect($unlisted->fresh()->status)->toBe(WorkerStatus::Active);
 
     Event::assertNotDispatched(ServerProcessesUpdated::class);
 });
 
 it('keeps the saved statuses when the server cannot be reached', function () {
-    $worker = Worker::factory()->create(['server_id' => $this->server->id, 'status' => 'active']);
+    $worker = Worker::factory()->create(['server_id' => $this->server->id, 'status' => WorkerStatus::Active]);
 
     $sshService = mock(SshService::class)
         ->shouldReceive('connect')
@@ -93,7 +94,7 @@ it('keeps the saved statuses when the server cannot be reached', function () {
 
     (new SyncWorkerStatusesJob($this->server))->handle($sshService);
 
-    expect($worker->fresh()->status)->toBe('active');
+    expect($worker->fresh()->status)->toBe(WorkerStatus::Active);
 
     Event::assertNotDispatched(ServerProcessesUpdated::class);
 });

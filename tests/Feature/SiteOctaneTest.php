@@ -8,6 +8,7 @@ use App\Enums\Plan;
 use App\Enums\ProjectType;
 use App\Enums\ServiceType;
 use App\Enums\SiteStatus;
+use App\Enums\WorkerStatus;
 use App\Jobs\DestroyWorkerJob;
 use App\Jobs\SyncEnvironmentJob;
 use App\Jobs\SyncSiteOctaneJob;
@@ -55,7 +56,7 @@ function siteRunningOctane(Server $server): Site
         'user' => $site->systemUser(),
         'restart_on_deploy' => true,
         'serves_site' => true,
-        'status' => 'pending',
+        'status' => WorkerStatus::Pending,
     ]);
 
     return $site;
@@ -144,7 +145,7 @@ describe('switching Octane on and off', function () {
         Queue::fake([SyncSiteOctaneJob::class]);
         $site = siteRunningOctane($this->server);
         $site->update(['octane_server' => null]);
-        $site->servingWorker()->update(['status' => 'failed']);
+        $site->servingWorker()->update(['status' => WorkerStatus::Failed]);
 
         $this->actingAs($this->user)
             ->put(route('servers.sites.update', [$this->team, $this->server, $site]), ['octane_server' => null])
@@ -206,7 +207,7 @@ describe('the Octane process on the Processes page', function () {
             ->delete(route('servers.workers.destroy', [$this->team, $this->server, $worker]))
             ->assertSessionHas('error', "This process is managed by the site's Octane setting. Switch Octane off in the site's settings to remove it.");
 
-        expect($worker->fresh()->status)->toBe('pending');
+        expect($worker->fresh()->status)->toBe(WorkerStatus::Pending);
         Queue::assertNotPushed(DestroyWorkerJob::class);
     });
 });
@@ -220,7 +221,7 @@ describe('SyncSiteOctaneJob', function () {
 
         runSyncSiteOctaneJob($site);
 
-        expect($site->servingWorker()->value('status'))->toBe('active')
+        expect($site->servingWorker()->value('status'))->toBe(WorkerStatus::Active)
             ->and($site->fresh()->usesOctane())->toBeTrue()
             ->and(mainConfigOf($site))->toContain('proxy_pass http://127.0.0.1:8100');
     });
@@ -261,7 +262,7 @@ describe('SyncSiteOctaneJob', function () {
         runSyncSiteOctaneJob($site);
 
         expect($site->fresh()->octane_server)->toBeNull()
-            ->and($site->servingWorker()->value('status'))->toBe('failed');
+            ->and($site->servingWorker()->value('status'))->toBe(WorkerStatus::Failed);
         Notification::assertSentTo($this->user, SiteOctaneFailed::class, fn (SiteOctaneFailed $notification) => ! $notification->cleanupFinished);
     });
 
@@ -287,7 +288,7 @@ it('restarts the Octane process when the environment is saved with a restart', f
     $site = siteRunningOctane($this->server);
     $site->update(['env_content' => "APP_KEY=secret\n"]);
     $worker = $site->servingWorker;
-    $worker->update(['status' => 'active']);
+    $worker->update(['status' => WorkerStatus::Active]);
 
     (new SyncEnvironmentJob($site, restartQueue: true))->handle(app(SshService::class));
 

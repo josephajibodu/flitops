@@ -8,6 +8,7 @@ use App\Enums\DeploymentStatus;
 use App\Enums\ProjectType;
 use App\Enums\SiteDomainType;
 use App\Enums\SiteStatus;
+use App\Enums\WorkerStatus;
 use App\Jobs\IsolateSiteJob;
 use App\Models\CronJob;
 use App\Models\Site;
@@ -334,7 +335,7 @@ class IsolateSiteAction
     private function writeProcessFiles(): void
     {
         $prefix = config('supervisor.file_prefix');
-        $workersWithFiles = $this->workers->reject(fn (Worker $worker): bool => in_array($worker->status, ['pending', 'failed', 'deleting'], true));
+        $workersWithFiles = $this->workers->reject(fn (Worker $worker): bool => in_array($worker->status, [WorkerStatus::Pending, WorkerStatus::Failed, WorkerStatus::Deleting], true));
 
         foreach ($workersWithFiles as $worker) {
             $this->installAsRoot($this->connection, $worker->supervisorConfig("{$prefix}-{$worker->id}"), config('supervisor.conf_path')."/{$prefix}-{$worker->id}.conf");
@@ -351,7 +352,7 @@ class IsolateSiteAction
         $this->connection->exec('sudo supervisorctl reread', 30);
         $this->connection->exec('sudo supervisorctl update', 60);
 
-        foreach ($workersWithFiles->where('status', 'stopped') as $worker) {
+        foreach ($workersWithFiles->where('status', WorkerStatus::Stopped) as $worker) {
             $this->connection->exec('sudo supervisorctl stop '.$this->escapeForShell("{$prefix}-{$worker->id}:*"), 30);
         }
     }

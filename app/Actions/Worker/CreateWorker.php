@@ -3,6 +3,7 @@
 namespace App\Actions\Worker;
 
 use App\Actions\Database\EscapesShell;
+use App\Enums\WorkerStatus;
 use App\Jobs\CreateWorkerJob;
 use App\Models\Server;
 use App\Models\Worker;
@@ -37,7 +38,7 @@ class CreateWorker
             'auto_restart' => $input['auto_restart'] ?? true,
             'redirect_stderr' => $input['redirect_stderr'] ?? true,
             'restart_on_deploy' => ($input['restart_on_deploy'] ?? false) && ($input['site_id'] ?? null) !== null,
-            'status' => 'pending',
+            'status' => WorkerStatus::Pending,
         ]);
 
         CreateWorkerJob::dispatch($worker);
@@ -65,7 +66,7 @@ class CreateWorker
             $connection->sudo('supervisorctl reread', 30);
             $connection->sudo('supervisorctl update', 30);
 
-            $status = $worker->auto_start ? 'active' : 'stopped';
+            $status = $worker->auto_start ? WorkerStatus::Active : WorkerStatus::Stopped;
             $worker->update(['status' => $status]);
         } finally {
             $connection->disconnect();

@@ -2,6 +2,7 @@
 
 namespace App\Actions\Worker;
 
+use App\Enums\WorkerStatus;
 use App\Events\ServerProcessesUpdated;
 use App\Jobs\DestroyWorkerJob;
 use App\Models\Worker;
@@ -16,7 +17,7 @@ class DestroyWorker
 
     public function delete(Worker $worker): void
     {
-        $worker->update(['status' => 'deleting']);
+        $worker->update(['status' => WorkerStatus::Deleting]);
         event(new ServerProcessesUpdated($worker->server_id));
         DestroyWorkerJob::dispatch($worker);
     }

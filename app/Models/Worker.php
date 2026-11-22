@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Enums\WorkerStatus;
 use App\Rules\AllowedProcessUser;
 use App\Rules\NoControlCharacters;
 use Database\Factories\WorkerFactory;
@@ -42,6 +43,7 @@ class Worker extends Model
             'redirect_stderr' => 'boolean',
             'restart_on_deploy' => 'boolean',
             'serves_site' => 'boolean',
+            'status' => WorkerStatus::class,
         ];
     }
 

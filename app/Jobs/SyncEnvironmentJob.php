@@ -6,6 +6,7 @@ use App\Actions\Database\EscapesShell;
 use App\Actions\Database\KeepsSecretsOffCommandLine;
 use App\Actions\Worker\ControlWorker;
 use App\Enums\WorkerControlAction;
+use App\Enums\WorkerStatus;
 use App\Models\Site;
 use App\Services\Ssh\SshConnection;
 use App\Services\Ssh\SshService;
@@ -96,7 +97,7 @@ class SyncEnvironmentJob implements ShouldQueue
             if ($this->restartQueue && $site->usesOctane()) {
                 $servingWorker = $site->servingWorker;
 
-                if ($servingWorker !== null && in_array($servingWorker->status, ['active', 'crashed'], true)) {
+                if ($servingWorker !== null && in_array($servingWorker->status, [WorkerStatus::Active, WorkerStatus::Crashed], true)) {
                     app(ControlWorker::class)->execute($servingWorker, WorkerControlAction::Restart);
                 }
             }

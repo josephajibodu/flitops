@@ -4,6 +4,7 @@ use App\Enums\DeploymentStatus;
 use App\Enums\ProjectType;
 use App\Enums\ServerStatus;
 use App\Enums\SiteStatus;
+use App\Enums\WorkerStatus;
 use App\Events\DeploymentOutput;
 use App\Events\DeploymentStatusChanged;
 use App\Events\ServerProcessesUpdated;
@@ -491,10 +492,10 @@ it('removes the private script directory even when the run throws', function () 
 });
 
 it('restarts the site workers marked to restart after a deploy, but not stopped ones', function () {
-    $running = Worker::factory()->forSite($this->site)->create(['status' => 'active', 'restart_on_deploy' => true]);
-    $crashed = Worker::factory()->forSite($this->site)->create(['status' => 'crashed', 'restart_on_deploy' => true]);
-    $stopped = Worker::factory()->forSite($this->site)->create(['status' => 'stopped', 'restart_on_deploy' => true]);
-    $notMarked = Worker::factory()->forSite($this->site)->create(['status' => 'active', 'restart_on_deploy' => false]);
+    $running = Worker::factory()->forSite($this->site)->create(['status' => WorkerStatus::Active, 'restart_on_deploy' => true]);
+    $crashed = Worker::factory()->forSite($this->site)->create(['status' => WorkerStatus::Crashed, 'restart_on_deploy' => true]);
+    $stopped = Worker::factory()->forSite($this->site)->create(['status' => WorkerStatus::Stopped, 'restart_on_deploy' => true]);
+    $notMarked = Worker::factory()->forSite($this->site)->create(['status' => WorkerStatus::Active, 'restart_on_deploy' => false]);
 
     $deployment = Deployment::factory()->pending()->forSite($this->site)->create();
 
@@ -516,14 +517,14 @@ it('restarts the site workers marked to restart after a deploy, but not stopped 
         "supervisorctl signal TERM flitops-worker-{$crashed->id}:*",
         "supervisorctl start flitops-worker-{$crashed->id}:*",
     ]);
-    expect($crashed->fresh()->status)->toBe('active');
-    expect($stopped->fresh()->status)->toBe('stopped');
+    expect($crashed->fresh()->status)->toBe(WorkerStatus::Active);
+    expect($stopped->fresh()->status)->toBe(WorkerStatus::Stopped);
 
     Event::assertDispatched(ServerProcessesUpdated::class, fn (ServerProcessesUpdated $event) => $event->serverId === $this->server->id);
 });
 
 it('fully restarts a worker with auto restart off after a deploy, because it would not come back after exiting', function () {
-    $worker = Worker::factory()->forSite($this->site)->create(['status' => 'active', 'restart_on_deploy' => true, 'auto_restart' => false]);
+    $worker = Worker::factory()->forSite($this->site)->create(['status' => WorkerStatus::Active, 'restart_on_deploy' => true, 'auto_restart' => false]);
 
     $deployment = Deployment::factory()->pending()->forSite($this->site)->create();
 
@@ -543,7 +544,7 @@ it('fully restarts a worker with auto restart off after a deploy, because it wou
 });
 
 it('finishes the deployment and logs a warning when a worker cannot be restarted', function () {
-    $worker = Worker::factory()->forSite($this->site)->create(['name' => 'queue', 'status' => 'active', 'restart_on_deploy' => true]);
+    $worker = Worker::factory()->forSite($this->site)->create(['name' => 'queue', 'status' => WorkerStatus::Active, 'restart_on_deploy' => true]);
 
     $deployment = Deployment::factory()->pending()->forSite($this->site)->create();
 

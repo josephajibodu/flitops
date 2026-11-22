@@ -4,6 +4,7 @@ namespace App\Jobs\Concerns;
 
 use App\Enums\DeploymentStatus;
 use App\Enums\SiteStatus;
+use App\Enums\WorkerStatus;
 use App\Events\DeploymentOutput as DeploymentOutputEvent;
 use App\Events\DeploymentStatusChanged;
 use App\Events\ServerProcessesUpdated;
@@ -97,7 +98,7 @@ trait ManagesDeploymentLifecycle
         $workers = Worker::query()
             ->where('site_id', $site->id)
             ->where('restart_on_deploy', true)
-            ->whereIn('status', ['active', 'crashed'])
+            ->whereIn('status', [WorkerStatus::Active, WorkerStatus::Crashed])
             ->get();
 
         if ($workers->isEmpty()) {
@@ -109,7 +110,7 @@ trait ManagesDeploymentLifecycle
 
             try {
                 $this->restartWorker($connection, $worker);
-                $worker->update(['status' => 'active']);
+                $worker->update(['status' => WorkerStatus::Active]);
             } catch (\Throwable $e) {
                 $this->logOutput("[WARNING] Could not restart worker \"{$worker->name}\": {$e->getMessage()}", 'error');
             }

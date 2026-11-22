@@ -2,6 +2,7 @@
 
 use App\Actions\Worker\CreateWorker;
 use App\Enums\ServerStatus;
+use App\Enums\WorkerStatus;
 use App\Jobs\CreateWorkerJob;
 use App\Models\Server;
 use App\Models\Worker;
@@ -14,7 +15,7 @@ it('runs action and sets worker status to active when auto_start is true', funct
     $server = Server::factory()->create(['status' => ServerStatus::Active]);
     $worker = Worker::factory()->create([
         'server_id' => $server->id,
-        'status' => 'pending',
+        'status' => WorkerStatus::Pending,
         'auto_start' => true,
     ]);
 
@@ -32,14 +33,14 @@ it('runs action and sets worker status to active when auto_start is true', funct
     $job->handle(app(CreateWorker::class));
 
     $worker->refresh();
-    expect($worker->status)->toBe('active');
+    expect($worker->status)->toBe(WorkerStatus::Active);
 });
 
 it('runs action and sets worker status to stopped when auto_start is false', function () {
     $server = Server::factory()->create(['status' => ServerStatus::Active]);
     $worker = Worker::factory()->create([
         'server_id' => $server->id,
-        'status' => 'pending',
+        'status' => WorkerStatus::Pending,
         'auto_start' => false,
     ]);
 
@@ -57,14 +58,14 @@ it('runs action and sets worker status to stopped when auto_start is false', fun
     $job->handle(app(CreateWorker::class));
 
     $worker->refresh();
-    expect($worker->status)->toBe('stopped');
+    expect($worker->status)->toBe(WorkerStatus::Stopped);
 });
 
 it('sets worker status to failed when execute throws', function () {
     $server = Server::factory()->create(['status' => ServerStatus::Active]);
     $worker = Worker::factory()->create([
         'server_id' => $server->id,
-        'status' => 'pending',
+        'status' => WorkerStatus::Pending,
     ]);
 
     $sshService = Mockery::mock(SshService::class);
@@ -80,5 +81,5 @@ it('sets worker status to failed when execute throws', function () {
     }
 
     $worker->refresh();
-    expect($worker->status)->toBe('failed');
+    expect($worker->status)->toBe(WorkerStatus::Failed);
 });

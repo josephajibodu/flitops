@@ -6,6 +6,7 @@ use App\Enums\OctaneServer;
 use App\Enums\PlanFeature;
 use App\Enums\ProjectType;
 use App\Enums\SiteStatus;
+use App\Enums\WorkerStatus;
 use App\Jobs\SyncSiteOctaneJob;
 use App\Models\Server;
 use App\Models\Site;
@@ -78,7 +79,7 @@ class SetOctaneAction
                     'redirect_stderr' => true,
                     'restart_on_deploy' => true,
                     'serves_site' => true,
-                    'status' => 'pending',
+                    'status' => WorkerStatus::Pending,
                 ]);
             }
         });
