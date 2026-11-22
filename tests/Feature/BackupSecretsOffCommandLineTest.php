@@ -3,6 +3,7 @@
 use App\Actions\Backups\RestoreDatabaseBackup;
 use App\Actions\Backups\RunDatabaseBackup;
 use App\Actions\Backups\RunSqliteBackup;
+use App\Enums\BackupStatus;
 use App\Exceptions\SshCommandException;
 use App\Models\Backup;
 use App\Models\Server;
@@ -57,7 +58,7 @@ function databaseBackupFor(string $databaseType, array $attributes = []): Backup
     return Backup::factory()->create([
         'server_database_id' => $serverDatabase->id,
         'storage_provider_id' => StorageProvider::factory()->create()->id,
-        'status' => 'pending',
+        'status' => BackupStatus::Pending,
         ...$attributes,
     ]);
 }
@@ -86,7 +87,7 @@ it('keeps database and storage secrets out of every backup command', function (s
 
     app(RunDatabaseBackup::class)->execute($backup);
 
-    expect($backup->fresh()->status)->toBe('completed');
+    expect($backup->fresh()->status)->toBe(BackupStatus::Completed);
     expectNoSecretsIn($commands);
 })->with(['mysql', 'mariadb', 'postgresql']);
 
@@ -126,12 +127,12 @@ it('removes the private credentials directory when the backup fails', function (
 
     expect(fn () => app(RunDatabaseBackup::class)->execute($backup))->toThrow(SshCommandException::class);
 
-    expect($backup->fresh()->status)->toBe('failed')
+    expect($backup->fresh()->status)->toBe(BackupStatus::Failed)
         ->and(end($commands))->toBe("rm -rf '/tmp/tmp.fleetops'");
 });
 
 it('keeps database and storage secrets out of the restore command', function (string $databaseType) {
-    $backup = databaseBackupFor($databaseType, ['status' => 'completed', 'storage_path' => 'backups/1/dump.sql.gz']);
+    $backup = databaseBackupFor($databaseType, ['status' => BackupStatus::Completed, 'storage_path' => 'backups/1/dump.sql.gz']);
 
     $uploads = [];
     $commands = [];
@@ -151,7 +152,7 @@ it('keeps storage secrets out of sqlite site backup commands', function () {
         'server_database_id' => null,
         'site_id' => $site->id,
         'storage_provider_id' => StorageProvider::factory()->create()->id,
-        'status' => 'pending',
+        'status' => BackupStatus::Pending,
     ]);
 
     $uploads = [];
@@ -160,7 +161,7 @@ it('keeps storage secrets out of sqlite site backup commands', function () {
 
     app(RunSqliteBackup::class)->execute($backup);
 
-    expect($backup->fresh()->status)->toBe('completed')
+    expect($backup->fresh()->status)->toBe(BackupStatus::Completed)
         ->and($uploads)->toHaveKey('/tmp/tmp.fleetops/aws-credentials');
     expectNoSecretsIn($commands);
 });

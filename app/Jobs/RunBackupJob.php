@@ -5,6 +5,7 @@ namespace App\Jobs;
 use App\Actions\Backups\EnsureBackupStorageIsReachable;
 use App\Actions\Backups\RunDatabaseBackup;
 use App\Actions\Backups\RunSqliteBackup;
+use App\Enums\BackupStatus;
 use App\Models\Backup;
 use App\Models\User;
 use App\Notifications\DatabaseBackupFailed;
@@ -59,7 +60,7 @@ class RunBackupJob implements ShouldQueue
         Log::error("RunBackupJob failed for backup {$this->backup->id}", [
             'backup_id' => $this->backup->id,
             'server_id' => $server->id,
-            'status' => $this->backup->status,
+            'status' => $this->backup->status->value,
             'exception' => get_class($exception),
             'message' => $this->backup->redactSecrets($exception->getMessage()),
         ]);
@@ -70,7 +71,7 @@ class RunBackupJob implements ShouldQueue
             return;
         }
 
-        if ($backup->status !== 'failed') {
+        if ($backup->status !== BackupStatus::Failed) {
             $backup->markAsFailed($exception);
         }
 

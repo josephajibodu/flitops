@@ -4,6 +4,7 @@ use App\Actions\Backups\RunSqliteBackup;
 use App\Actions\Sites\CleanupSiteExternalResourcesAction;
 use App\Actions\Sites\ProvisionSiteAction;
 use App\Actions\Sites\RunSiteCommand;
+use App\Enums\BackupStatus;
 use App\Enums\ConnectionStatus;
 use App\Enums\DeploymentStatus;
 use App\Enums\NginxFileSection;
@@ -488,7 +489,7 @@ it('snapshots an isolated sqlite database as the site user and uploads it as the
     $snapshot = collect($commands)->first(fn ($c) => str_contains($c, 'VACUUM INTO'));
     $siteUserPart = str($snapshot)->after("sudo -u '\\''example_com'\\''")->before(' | AWS_SHARED_CREDENTIALS_FILE')->toString();
 
-    expect($backup->fresh()->status)->toBe('completed')
+    expect($backup->fresh()->status)->toBe(BackupStatus::Completed)
         ->and($siteUserPart)->toContain('VACUUM INTO')
         ->and($siteUserPart)->toContain('/home/example_com/example.com/shared/database/database.sqlite')
         ->and($siteUserPart)->not->toContain('aws')

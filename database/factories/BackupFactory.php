@@ -2,13 +2,15 @@
 
 namespace Database\Factories;
 
+use App\Enums\BackupStatus;
+use App\Models\Backup;
 use App\Models\ServerDatabase;
 use App\Models\Site;
 use App\Models\StorageProvider;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
- * @extends \Illuminate\Database\Eloquent\Factories\Factory<\App\Models\Backup>
+ * @extends Factory<Backup>
  */
 class BackupFactory extends Factory
 {
@@ -22,7 +24,7 @@ class BackupFactory extends Factory
         return [
             'server_database_id' => ServerDatabase::factory(),
             'storage_provider_id' => StorageProvider::factory(),
-            'status' => 'pending',
+            'status' => BackupStatus::Pending,
             'triggered_by' => 'manual',
         ];
     }
@@ -30,7 +32,7 @@ class BackupFactory extends Factory
     public function completed(): static
     {
         return $this->state(fn (array $attributes) => [
-            'status' => 'completed',
+            'status' => BackupStatus::Completed,
             'storage_path' => 'backups/'.fake()->uuid().'.sql.gz',
             'size_bytes' => fake()->numberBetween(1024, 1024 * 1024 * 50),
             'verified_at' => now(),
@@ -42,7 +44,7 @@ class BackupFactory extends Factory
     public function failed(): static
     {
         return $this->state(fn (array $attributes) => [
-            'status' => 'failed',
+            'status' => BackupStatus::Failed,
             'error_message' => 'Something went wrong.',
             'started_at' => now()->subMinutes(2),
             'finished_at' => now(),

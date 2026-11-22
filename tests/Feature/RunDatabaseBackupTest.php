@@ -1,6 +1,7 @@
 <?php
 
 use App\Actions\Backups\RunDatabaseBackup;
+use App\Enums\BackupStatus;
 use App\Exceptions\SshCommandException;
 use App\Jobs\RunBackupJob;
 use App\Models\Backup;
@@ -64,13 +65,13 @@ it('completes a backup: dumps, verifies, uploads, and records the result', funct
     $backup = Backup::factory()->create([
         'server_database_id' => $this->serverDatabase->id,
         'storage_provider_id' => $this->storageProvider->id,
-        'status' => 'pending',
+        'status' => BackupStatus::Pending,
     ]);
 
     app(RunDatabaseBackup::class)->execute($backup);
 
     $backup->refresh();
-    expect($backup->status)->toBe('completed')
+    expect($backup->status)->toBe(BackupStatus::Completed)
         ->and($backup->storage_path)->not->toBeNull()
         ->and($backup->size_bytes)->toBe(2048)
         ->and($backup->verified_at)->not->toBeNull()
@@ -91,14 +92,14 @@ it('marks the backup failed when the dump itself fails, without uploading', func
     $backup = Backup::factory()->create([
         'server_database_id' => $this->serverDatabase->id,
         'storage_provider_id' => $this->storageProvider->id,
-        'status' => 'pending',
+        'status' => BackupStatus::Pending,
     ]);
 
     expect(fn () => app(RunDatabaseBackup::class)->execute($backup))
         ->toThrow(SshCommandException::class);
 
     $backup->refresh();
-    expect($backup->status)->toBe('failed')
+    expect($backup->status)->toBe(BackupStatus::Failed)
         ->and($backup->error_message)->not->toBeNull()
         ->and($backup->storage_path)->toBeNull();
 });
@@ -118,14 +119,14 @@ it('marks the backup failed and deletes the uploaded object when verification fa
     $backup = Backup::factory()->create([
         'server_database_id' => $this->serverDatabase->id,
         'storage_provider_id' => $this->storageProvider->id,
-        'status' => 'pending',
+        'status' => BackupStatus::Pending,
     ]);
 
     expect(fn () => app(RunDatabaseBackup::class)->execute($backup))
         ->toThrow(SshCommandException::class);
 
     $backup->refresh();
-    expect($backup->status)->toBe('failed');
+    expect($backup->status)->toBe(BackupStatus::Failed);
 });
 
 it('prunes completed backups beyond the schedule retention count', function () {
@@ -161,7 +162,7 @@ it('prunes completed backups beyond the schedule retention count', function () {
     $newBackup = Backup::factory()->create([
         'server_database_id' => $this->serverDatabase->id,
         'storage_provider_id' => $this->storageProvider->id,
-        'status' => 'pending',
+        'status' => BackupStatus::Pending,
     ]);
 
     app(RunDatabaseBackup::class)->execute($newBackup);

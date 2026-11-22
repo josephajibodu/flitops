@@ -3,6 +3,7 @@
 namespace App\Actions\Backups;
 
 use App\Contracts\StorageProviderContract;
+use App\Enums\BackupStatus;
 use App\Events\BackupStatusChanged;
 use App\Models\Backup;
 use App\Services\Ssh\SshConnection;
@@ -13,7 +14,7 @@ use App\Services\Ssh\SshConnection;
  */
 trait ManagesBackupLifecycle
 {
-    private function updateStatus(Backup $backup, string $status, array $extra = []): void
+    private function updateStatus(Backup $backup, BackupStatus $status, array $extra = []): void
     {
         $backup->update(['status' => $status, ...$extra]);
         event(new BackupStatusChanged($backup->targetServer()));
@@ -49,7 +50,7 @@ trait ManagesBackupLifecycle
         $retentionCount = $target->backupSchedule?->retention_count ?? 7;
 
         $completed = $target->backups()
-            ->where('status', 'completed')
+            ->where('status', BackupStatus::Completed)
             ->where('triggered_by', '!=', 'import')
             ->orderByDesc('finished_at')
             ->get();

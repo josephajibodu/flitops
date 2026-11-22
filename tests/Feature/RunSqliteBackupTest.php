@@ -1,6 +1,7 @@
 <?php
 
 use App\Actions\Backups\RunSqliteBackup;
+use App\Enums\BackupStatus;
 use App\Exceptions\SshCommandException;
 use App\Jobs\RunBackupJob;
 use App\Models\Backup;
@@ -74,7 +75,7 @@ it('queues a backup targeting the site', function () {
 
     expect($backup->site_id)->toBe($this->site->id)
         ->and($backup->server_database_id)->toBeNull()
-        ->and($backup->status)->toBe('pending');
+        ->and($backup->status)->toBe(BackupStatus::Pending);
     Queue::assertPushed(RunBackupJob::class, fn ($job) => $job->backup->is($backup));
 });
 
@@ -89,7 +90,7 @@ it('snapshots, uploads, verifies and records a completed backup', function () {
     app(RunSqliteBackup::class)->execute($backup);
 
     $backup->refresh();
-    expect($backup->status)->toBe('completed')
+    expect($backup->status)->toBe(BackupStatus::Completed)
         ->and($backup->storage_path)->toStartWith("backups/sites/{$this->site->id}/")
         ->and($backup->storage_path)->toEndWith('_database.sqlite.gz')
         ->and($backup->size_bytes)->toBe(4096)
@@ -123,7 +124,7 @@ it('marks the backup failed, removes the object and cleans up when the snapshot 
         ->toThrow(SshCommandException::class);
 
     $backup->refresh();
-    expect($backup->status)->toBe('failed')
+    expect($backup->status)->toBe(BackupStatus::Failed)
         ->and($backup->error_message)->not->toBeNull()
         ->and($backup->storage_path)->toBeNull()
         ->and(implode("\n", $commands))->not->toContain('PRAGMA integrity_check')
@@ -146,7 +147,7 @@ it('marks the backup failed when the integrity check fails', function () {
         ->toThrow(SshCommandException::class);
 
     $backup->refresh();
-    expect($backup->status)->toBe('failed')
+    expect($backup->status)->toBe(BackupStatus::Failed)
         ->and($backup->verified_at)->toBeNull();
 });
 

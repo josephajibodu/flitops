@@ -2,6 +2,7 @@
 
 use App\Actions\Backups\RestoreDatabaseBackup;
 use App\Actions\Backups\RunDatabaseBackup;
+use App\Enums\BackupStatus;
 use App\Enums\Plan;
 use App\Enums\ServerStatus;
 use App\Models\Backup;
@@ -148,7 +149,7 @@ describe('restore', function () {
         $backup = Backup::factory()->create([
             'server_database_id' => $this->serverDatabase->id,
             'storage_provider_id' => $this->storageProvider->id,
-            'status' => 'failed',
+            'status' => BackupStatus::Failed,
         ]);
 
         $response = $this->actingAs($this->user)
