@@ -2,6 +2,7 @@
 
 namespace App\Jobs;
 
+use App\Enums\ServerActionStatus;
 use App\Enums\ServiceType;
 use App\Events\ServerActionsUpdated;
 use App\Models\Server;
@@ -35,7 +36,7 @@ class RestartServiceJob implements ShouldQueue
 
     public function handle(SshService $sshService): void
     {
-        $this->updateActionStatus('running');
+        $this->updateActionStatus(ServerActionStatus::Running);
 
         try {
             $connection = $sshService->connect($this->server);
@@ -45,13 +46,13 @@ class RestartServiceJob implements ShouldQueue
 
             $connection->disconnect();
 
-            $this->updateActionStatus('finished', $output);
+            $this->updateActionStatus(ServerActionStatus::Finished, $output);
 
             Log::info("Service {$this->service->value} restarted on server {$this->server->id}");
         } catch (Throwable $e) {
             Log::error("Failed to restart {$this->service->value} on server {$this->server->id}: {$e->getMessage()}");
 
-            $this->updateActionStatus('failed', null, $e->getMessage());
+            $this->updateActionStatus(ServerActionStatus::Failed, null, $e->getMessage());
 
             throw $e;
         }
@@ -70,7 +71,7 @@ class RestartServiceJob implements ShouldQueue
         };
     }
 
-    private function updateActionStatus(string $status, ?string $output = null, ?string $error = null): void
+    private function updateActionStatus(ServerActionStatus $status, ?string $output = null, ?string $error = null): void
     {
         if (! $this->action) {
             return;
@@ -78,11 +79,11 @@ class RestartServiceJob implements ShouldQueue
 
         $data = ['status' => $status];
 
-        if ($status === 'running') {
+        if ($status === ServerActionStatus::Running) {
             $data['started_at'] = now();
         }
 
-        if ($status === 'finished' || $status === 'failed') {
+        if ($status === ServerActionStatus::Finished || $status === ServerActionStatus::Failed) {
             $data['finished_at'] = now();
         }
 

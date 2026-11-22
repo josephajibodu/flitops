@@ -10,6 +10,7 @@ use App\Data\ServerData;
 use App\Enums\PhpVersion;
 use App\Enums\Provider;
 use App\Enums\ProvisioningStep;
+use App\Enums\ServerActionStatus;
 use App\Enums\ServerStatus;
 use App\Enums\ServerType;
 use App\Enums\ServiceType;
@@ -323,7 +324,7 @@ class ServerController extends Controller
         $action = $server->actions()->create([
             'user_id' => auth()->id(),
             'action' => "restart_{$service->value}",
-            'status' => 'pending',
+            'status' => ServerActionStatus::Pending,
         ]);
 
         RestartServiceJob::dispatch($server, $service, $action);
@@ -350,7 +351,7 @@ class ServerController extends Controller
                 'value' => $service->value,
                 'label' => $service->label(),
                 'last_restart' => $action === null ? null : [
-                    'status' => $action->status,
+                    'status' => $action->status->value,
                     'error' => $action->error,
                     'at' => ($action->finished_at ?? $action->created_at)->toIso8601String(),
                 ],
