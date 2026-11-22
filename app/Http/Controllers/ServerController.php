@@ -7,12 +7,14 @@ use App\Actions\Servers\CreateServerAction;
 use App\Actions\Servers\DeleteServerAction;
 use App\Data\CustomServerData;
 use App\Data\ServerData;
+use App\Enums\DatabaseType;
 use App\Enums\PhpVersion;
 use App\Enums\Provider;
 use App\Enums\ProvisioningStep;
 use App\Enums\ServerStatus;
 use App\Enums\ServerType;
 use App\Enums\ServiceType;
+use App\Enums\WebServer;
 use App\Events\DeploymentStatusChanged;
 use App\Events\ServerActionsUpdated;
 use App\Events\ServerDeleted;
@@ -76,6 +78,10 @@ class ServerController extends Controller
             ], ServerType::selectable()),
             'phpVersions' => PhpVersion::options(),
             'defaultPhpVersion' => PhpVersion::default()->value,
+            'webServers' => WebServer::options(),
+            'defaultWebServer' => WebServer::default()->value,
+            'databaseTypes' => DatabaseType::options(),
+            'defaultDatabaseType' => DatabaseType::default()->value,
         ]);
     }
 
