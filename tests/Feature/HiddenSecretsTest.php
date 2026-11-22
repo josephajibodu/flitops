@@ -3,7 +3,6 @@
 use App\Models\DatabaseUser;
 use App\Models\EnvironmentVariable;
 use App\Models\ProviderAccount;
-use App\Models\Server;
 use App\Models\ServerCredential;
 use App\Models\Site;
 use App\Models\SourceControlAccount;
@@ -22,7 +21,6 @@ it('leaves secret fields out when a model is serialised', function (string $mode
         expect($model->getAttribute($attribute))->toBe($value);
     }
 })->with([
-    'server passwords' => [Server::class, ['sudo_password' => 'top-secret-1', 'database_password' => 'top-secret-2']],
     'database user password' => [DatabaseUser::class, ['password' => 'top-secret']],
     'environment variable value' => [EnvironmentVariable::class, ['value' => 'top-secret']],
     'server credential value' => [ServerCredential::class, ['value' => 'top-secret']],

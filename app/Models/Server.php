@@ -58,24 +58,12 @@ class Server extends Model
         'notes',
         'archived',
         'ssh_port',
-        'sudo_password',
-        'database_password',
         'local_public_key',
         'provisioned_at',
         'last_ssh_connection_at',
         'host_key_type',
         'host_key_fingerprint',
         'meta',
-    ];
-
-    /**
-     * The attributes that should be hidden for serialization.
-     *
-     * @var list<string>
-     */
-    protected $hidden = [
-        'sudo_password',
-        'database_password',
     ];
 
     /**
@@ -92,8 +80,6 @@ class Server extends Model
             'node_version' => NodeVersion::class,
             'node_status' => ServiceStatus::class,
             'archived' => 'boolean',
-            'sudo_password' => 'encrypted',
-            'database_password' => 'encrypted',
             'provisioned_at' => 'datetime',
             'last_ssh_connection_at' => 'datetime',
             'meta' => 'array',
