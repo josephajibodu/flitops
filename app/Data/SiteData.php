@@ -3,11 +3,14 @@
 namespace App\Data;
 
 use App\Enums\Framework;
+use App\Enums\PhpVersion;
 use App\Enums\ProjectType;
 use App\Enums\RepositoryProvider;
 
 readonly class SiteData
 {
+    public string $phpVersion;
+
     /**
      * @param  array<string>|null  $aliases
      */
@@ -24,14 +27,16 @@ readonly class SiteData
         public string $branch = 'main',
         public ProjectType $projectType = ProjectType::Laravel,
         public Framework $framework = Framework::Laravel,
-        public string $phpVersion = '8.3',
+        ?string $phpVersion = null,
         public ?int $serverDatabaseId = null,
         public ?string $packageManager = null,
         public ?string $buildCommand = null,
         public bool $singlePageApp = false,
         public bool $autoDeploy = false,
         public bool $isolated = true,
-    ) {}
+    ) {
+        $this->phpVersion = $phpVersion ?? PhpVersion::siteFallback()->value;
+    }
 
     /**
      * @param  array<string, mixed>  $data
@@ -60,7 +65,7 @@ readonly class SiteData
             branch: $data['branch'] ?? 'main',
             projectType: $projectType,
             framework: $framework ?? Framework::fromProjectType($projectType),
-            phpVersion: $data['php_version'] ?? '8.3',
+            phpVersion: $data['php_version'] ?? null,
             serverDatabaseId: $data['server_database_id'] ?? null,
             packageManager: $data['package_manager'] ?? null,
             buildCommand: $data['build_command'] ?? null,
