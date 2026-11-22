@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Enums\SshKeyStatus;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\Pivot;
@@ -39,6 +40,7 @@ class ServerSshKey extends Pivot
     protected function casts(): array
     {
         return [
+            'status' => SshKeyStatus::class,
             'synced_at' => 'datetime',
         ];
     }

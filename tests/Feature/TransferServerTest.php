@@ -6,6 +6,7 @@ use App\Data\ProviderServerStatus;
 use App\Enums\ActivityEvent;
 use App\Enums\Plan;
 use App\Enums\ServerStatus;
+use App\Enums\SshKeyStatus;
 use App\Enums\TeamRoleKey;
 use App\Events\ServerDeleted;
 use App\Jobs\RevokeSshKeyJob;
@@ -102,10 +103,10 @@ it('takes ssh keys off for people without server access in the new team and keep
     $otherServer = Server::factory()->forTeam($this->team)->create();
 
     $leftBehindKey->servers()->attach([
-        $this->server->id => ['status' => 'synced', 'system_user' => config('server.user')],
-        $otherServer->id => ['status' => 'synced', 'system_user' => config('server.user')],
+        $this->server->id => ['status' => SshKeyStatus::Synced, 'system_user' => config('server.user')],
+        $otherServer->id => ['status' => SshKeyStatus::Synced, 'system_user' => config('server.user')],
     ]);
-    $ownerKey->servers()->attach($this->server->id, ['status' => 'synced', 'system_user' => config('server.user')]);
+    $ownerKey->servers()->attach($this->server->id, ['status' => SshKeyStatus::Synced, 'system_user' => config('server.user')]);
 
     $this->actingAs($this->user);
 
@@ -121,8 +122,8 @@ it('only takes keys off the server user for people without admin server access i
     $key = SshKey::factory()->create(['user_id' => $developer->id]);
     $site = Site::factory()->forServer($this->server)->isolated('site-user')->create();
 
-    $key->servers()->attach($this->server->id, ['status' => 'synced', 'system_user' => config('server.user')]);
-    $key->servers()->attach($this->server->id, ['status' => 'synced', 'system_user' => 'site-user', 'site_id' => $site->id]);
+    $key->servers()->attach($this->server->id, ['status' => SshKeyStatus::Synced, 'system_user' => config('server.user')]);
+    $key->servers()->attach($this->server->id, ['status' => SshKeyStatus::Synced, 'system_user' => 'site-user', 'site_id' => $site->id]);
 
     $this->actingAs($this->user);
 

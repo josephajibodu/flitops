@@ -1,6 +1,7 @@
 <?php
 
 use App\Enums\Plan;
+use App\Enums\SshKeyStatus;
 use App\Enums\TeamRoleKey;
 use App\Jobs\RevokeSshKeyJob;
 use App\Models\Server;
@@ -264,7 +265,7 @@ describe('server access on a role change', function () {
         $sshKey = SshKey::factory()->create(['user_id' => $member->id]);
 
         foreach ($servers as $server) {
-            $sshKey->servers()->attach($server->id, ['status' => 'synced']);
+            $sshKey->servers()->attach($server->id, ['status' => SshKeyStatus::Synced]);
         }
 
         return [$member, $sshKey];
@@ -280,8 +281,8 @@ describe('server access on a role change', function () {
         Queue::assertPushed(RevokeSshKeyJob::class, 1);
         Queue::assertPushed(RevokeSshKeyJob::class, fn (RevokeSshKeyJob $job) => $job->server->is($this->teamServer) && $job->sshKeyId === $sshKey->id);
 
-        expect($sshKey->servers()->where('servers.id', $this->teamServer->id)->first()->pivot->status)->toBe('revoking')
-            ->and($sshKey->servers()->where('servers.id', $this->otherTeamServer->id)->first()->pivot->status)->toBe('synced');
+        expect($sshKey->servers()->where('servers.id', $this->teamServer->id)->first()->pivot->status)->toBe(SshKeyStatus::Revoking)
+            ->and($sshKey->servers()->where('servers.id', $this->otherTeamServer->id)->first()->pivot->status)->toBe(SshKeyStatus::Synced);
     })->with([TeamRoleKey::Developer, TeamRoleKey::Admin, TeamRoleKey::Owner]);
 
     it('leaves the member keys alone when they keep or gain admin server access', function (TeamRoleKey $from, TeamRoleKey $to) {
@@ -292,7 +293,7 @@ describe('server access on a role change', function () {
             ->assertSessionHasNoErrors();
 
         Queue::assertNotPushed(RevokeSshKeyJob::class);
-        expect($sshKey->servers()->first()->pivot->status)->toBe('synced');
+        expect($sshKey->servers()->first()->pivot->status)->toBe(SshKeyStatus::Synced);
     })->with([
         'developer to admin' => [TeamRoleKey::Developer, TeamRoleKey::Admin],
         'admin to owner' => [TeamRoleKey::Admin, TeamRoleKey::Owner],

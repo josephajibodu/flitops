@@ -2,6 +2,7 @@
 
 namespace App\Actions\SshKeys;
 
+use App\Enums\SshKeyStatus;
 use App\Jobs\SyncSshKeyJob;
 use App\Models\Server;
 use App\Models\ServerSshKey;
@@ -53,7 +54,7 @@ class SyncSshKeyAction
             ],
             [
                 'site_id' => $site?->id,
-                'status' => 'pending',
+                'status' => SshKeyStatus::Pending,
                 'synced_at' => null,
             ],
         );

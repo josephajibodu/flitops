@@ -2,6 +2,7 @@
 
 namespace App\Actions\Teams;
 
+use App\Enums\SshKeyStatus;
 use App\Jobs\RevokeSshKeyJob;
 use App\Models\Server;
 use App\Models\ServerSshKey;
@@ -31,7 +32,7 @@ class RevokeMemberServerAccess
         $servers = $team->servers()->get()->keyBy('id');
 
         foreach ($placements as $placement) {
-            $placement->update(['status' => 'revoking']);
+            $placement->update(['status' => SshKeyStatus::Revoking]);
 
             RevokeSshKeyJob::dispatch($sshKeys[$placement->ssh_key_id], $servers[$placement->server_id], $placement->system_user);
         }
