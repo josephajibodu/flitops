@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests;
 
+use App\Enums\PhpVersion;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
@@ -19,7 +20,7 @@ class InstallPhpVersionRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'version' => ['required', 'string', Rule::in(['8.1', '8.2', '8.3', '8.4', '8.5'])],
+            'version' => ['required', 'string', Rule::in(PhpVersion::values())],
         ];
     }
 

@@ -43,23 +43,22 @@ import {
     ServerTypeValue,
 } from '@/types/server';
 
+interface PhpVersionOption {
+    value: string;
+    label: string;
+}
+
 interface Props {
     providerAccounts: {
         data: ProviderAccount[];
     };
     generatedName: string;
     serverTypes: ServerTypeOption[];
+    phpVersions: PhpVersionOption[];
+    defaultPhpVersion: string;
 }
 
 type Mode = 'provider' | 'custom';
-
-const phpVersions = [
-    { value: '8.5', label: 'PHP 8.5' },
-    { value: '8.4', label: 'PHP 8.4' },
-    { value: '8.3', label: 'PHP 8.3' },
-    { value: '8.2', label: 'PHP 8.2' },
-    { value: '8.1', label: 'PHP 8.1' },
-];
 
 const webServers = [
     { value: 'nginx', label: 'Nginx' },
@@ -88,11 +87,15 @@ interface Stack {
  * Apply a type's preset: tick or untick each service, keeping the version or
  * engine the user already picked for services that stay ticked.
  */
-function applyPreset(option: ServerTypeOption, current: Stack): Stack {
+function applyPreset(
+    option: ServerTypeOption,
+    current: Stack,
+    defaultPhpVersion: string,
+): Stack {
     return {
         type: option.value,
         php_version: option.services.php
-            ? (current.php_version ?? '8.5')
+            ? (current.php_version ?? defaultPhpVersion)
             : null,
         web_server: option.services.web_server
             ? (current.web_server ?? 'nginx')
@@ -104,13 +107,15 @@ function applyPreset(option: ServerTypeOption, current: Stack): Stack {
     };
 }
 
-const defaultStack: Stack = {
-    type: 'app',
-    php_version: '8.5',
-    web_server: 'nginx',
-    database_type: 'mysql',
-    redis: true,
-};
+function makeDefaultStack(defaultPhpVersion: string): Stack {
+    return {
+        type: 'app',
+        php_version: defaultPhpVersion,
+        web_server: 'nginx',
+        database_type: 'mysql',
+        redis: true,
+    };
+}
 
 /** The state of fetching one provider account's regions and sizes. */
 type Catalog =
@@ -288,8 +293,11 @@ export default function ServersCreate({
     providerAccounts,
     generatedName,
     serverTypes,
+    phpVersions,
+    defaultPhpVersion,
 }: Props) {
     const teamPath = useTeamPath();
+    const defaultStack = makeDefaultStack(defaultPhpVersion);
     const serverLimit = usePlan()?.serverLimit ?? null;
     const accounts = providerAccounts.data;
     const { url } = usePage();
@@ -563,6 +571,8 @@ export default function ServersCreate({
 
                             <StackSection
                                 serverTypes={serverTypes}
+                                phpVersions={phpVersions}
+                                defaultPhpVersion={defaultPhpVersion}
                                 stack={providerForm.data}
                                 onChange={(stack) =>
                                     providerForm.setData({
@@ -714,6 +724,8 @@ export default function ServersCreate({
 
                             <StackSection
                                 serverTypes={serverTypes}
+                                phpVersions={phpVersions}
+                                defaultPhpVersion={defaultPhpVersion}
                                 stack={customForm.data}
                                 onChange={(stack) =>
                                     customForm.setData({
@@ -1175,6 +1187,8 @@ function CostBreakdown({ costs }: { costs: Costs }) {
 
 interface StackSectionProps {
     serverTypes: ServerTypeOption[];
+    phpVersions: PhpVersionOption[];
+    defaultPhpVersion: string;
     stack: Stack;
     onChange: (stack: Stack) => void;
     errors: Partial<Record<keyof Stack, string>>;
@@ -1182,6 +1196,8 @@ interface StackSectionProps {
 
 function StackSection({
     serverTypes,
+    phpVersions,
+    defaultPhpVersion,
     stack,
     onChange,
     errors,
@@ -1209,7 +1225,11 @@ function StackSection({
                     <RadioOption
                         key={option.value}
                         selected={stack.type === option.value}
-                        onSelect={() => onChange(applyPreset(option, stack))}
+                        onSelect={() =>
+                            onChange(
+                                applyPreset(option, stack, defaultPhpVersion),
+                            )
+                        }
                         title={option.label}
                         description={option.description}
                     />
