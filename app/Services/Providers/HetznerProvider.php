@@ -218,7 +218,7 @@ class HetznerProvider implements ProviderContract
             'image' => 'ubuntu-24.04',
             'ssh_keys' => [$sshKeyId],
             'start_after_create' => true,
-            'labels' => ['app' => 'serverforge'],
+            'labels' => ['app' => 'flitops'],
         ]);
 
         if (! $response->successful()) {
@@ -279,7 +279,7 @@ class HetznerProvider implements ProviderContract
         $response = $this->http->post('ssh_keys', [
             'name' => $name,
             'public_key' => $publicKey,
-            'labels' => ['app' => 'serverforge'],
+            'labels' => ['app' => 'flitops'],
         ]);
 
         if (! $response->successful()) {

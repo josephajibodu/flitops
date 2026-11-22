@@ -180,7 +180,7 @@ class VultrProvider implements ProviderContract
             'os_id' => 2284, // Ubuntu 24.04 LTS x64
             'sshkey_id' => [$sshKeyId],
             'backups' => 'disabled',
-            'tags' => ['serverforge'],
+            'tags' => ['flitops'],
         ]);
 
         if (! $response->successful()) {

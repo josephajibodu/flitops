@@ -121,7 +121,7 @@ class DigitalOceanProvider implements ProviderContract
             'backups' => false,
             'ipv6' => false,
             'monitoring' => true,
-            'tags' => ['serverforge'],
+            'tags' => ['flitops'],
         ]);
 
         if (! $response->successful()) {
