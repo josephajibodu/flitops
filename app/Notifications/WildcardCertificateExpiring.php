@@ -4,13 +4,17 @@ namespace App\Notifications;
 
 use Carbon\CarbonInterface;
 use Illuminate\Bus\Queueable;
+use Illuminate\Contracts\Queue\ShouldQueueAfterCommit;
 use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
 use Illuminate\Support\Str;
 
-class WildcardCertificateExpiring extends Notification
+class WildcardCertificateExpiring extends Notification implements ShouldQueueAfterCommit
 {
     use Queueable;
+
+    /** Drop the email quietly if its record was deleted before it was sent. */
+    public bool $deleteWhenMissingModels = true;
 
     /**
      * @param  string|null  $staleHostname  Set when a server is still serving an older copy than

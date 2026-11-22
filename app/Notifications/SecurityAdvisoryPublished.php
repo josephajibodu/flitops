@@ -5,12 +5,16 @@ namespace App\Notifications;
 use App\Models\Team;
 use App\Services\SecurityAdvisories\SecurityAdvisory;
 use Illuminate\Bus\Queueable;
+use Illuminate\Contracts\Queue\ShouldQueueAfterCommit;
 use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
 
-class SecurityAdvisoryPublished extends Notification
+class SecurityAdvisoryPublished extends Notification implements ShouldQueueAfterCommit
 {
     use Queueable;
+
+    /** Drop the email quietly if its record was deleted before it was sent. */
+    public bool $deleteWhenMissingModels = true;
 
     public function __construct(
         public Team $team,

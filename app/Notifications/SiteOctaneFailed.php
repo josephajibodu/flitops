@@ -4,12 +4,16 @@ namespace App\Notifications;
 
 use App\Models\Site;
 use Illuminate\Bus\Queueable;
+use Illuminate\Contracts\Queue\ShouldQueueAfterCommit;
 use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
 
-class SiteOctaneFailed extends Notification
+class SiteOctaneFailed extends Notification implements ShouldQueueAfterCommit
 {
     use Queueable;
+
+    /** Drop the email quietly if its record was deleted before it was sent. */
+    public bool $deleteWhenMissingModels = true;
 
     /**
      * @param  bool  $cleanupFinished  Whether Flitops managed to remove the Octane process after the failure.
