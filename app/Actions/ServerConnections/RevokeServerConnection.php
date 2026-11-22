@@ -6,6 +6,7 @@ use App\Actions\Database\EscapesShell;
 use App\Actions\Database\ManagesRemoteMysqlAccounts;
 use App\Actions\Database\QuotesMysql;
 use App\Actions\Database\RunsSqlPrivately;
+use App\Enums\CredentialType;
 use App\Enums\ServerConnectionStatus;
 use App\Jobs\RevokeServerConnectionJob;
 use App\Models\DatabaseUser;
@@ -78,6 +79,6 @@ class RevokeServerConnection
 
         $statements[] = 'FLUSH PRIVILEGES';
 
-        $this->runMysqlAsRoot($ssh, (string) $host->credential('database_password')?->value, $statements);
+        $this->runMysqlAsRoot($ssh, (string) $host->credential(CredentialType::DatabasePassword)?->value, $statements);
     }
 }

@@ -6,6 +6,7 @@ use App\Actions\Database\EscapesShell;
 use App\Actions\Database\KeepsSecretsOffCommandLine;
 use App\Contracts\StorageProviderContract;
 use App\Enums\BackupStatus;
+use App\Enums\CredentialType;
 use App\Events\BackupStatusChanged;
 use App\Exceptions\BackupFailedException;
 use App\Jobs\RunBackupJob;
@@ -56,7 +57,7 @@ class RunDatabaseBackup
             throw new BackupFailedException("The server isn't active and connected, so the backup couldn't start. Check its connection and try again.");
         }
 
-        $credential = $server->credential('database_password');
+        $credential = $server->credential(CredentialType::DatabasePassword);
         if (! $credential) {
             throw new RuntimeException("No database password credential for server {$server->id}.");
         }

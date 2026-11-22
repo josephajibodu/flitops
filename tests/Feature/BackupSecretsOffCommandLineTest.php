@@ -4,6 +4,7 @@ use App\Actions\Backups\RestoreDatabaseBackup;
 use App\Actions\Backups\RunDatabaseBackup;
 use App\Actions\Backups\RunSqliteBackup;
 use App\Enums\BackupStatus;
+use App\Enums\CredentialType;
 use App\Exceptions\SshCommandException;
 use App\Models\Backup;
 use App\Models\Server;
@@ -52,7 +53,7 @@ function bindBackupServices(SshConnection $connection): void
 function databaseBackupFor(string $databaseType, array $attributes = []): Backup
 {
     $server = Server::factory()->create(['database_type' => $databaseType]);
-    ServerCredential::create(['server_id' => $server->id, 'type' => 'database_password', 'value' => BACKUP_ROOT_PASSWORD]);
+    ServerCredential::create(['server_id' => $server->id, 'type' => CredentialType::DatabasePassword, 'value' => BACKUP_ROOT_PASSWORD]);
     $serverDatabase = ServerDatabase::factory()->create(['server_id' => $server->id, 'name' => 'app_production']);
 
     return Backup::factory()->create([

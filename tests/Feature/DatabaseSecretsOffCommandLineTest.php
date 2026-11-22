@@ -4,6 +4,7 @@ use App\Actions\Database\CreateDatabaseUser;
 use App\Actions\Database\CreateServerDatabase;
 use App\Actions\Database\DestroyDatabaseUser;
 use App\Actions\Database\UpdateDatabaseUser;
+use App\Enums\CredentialType;
 use App\Enums\ServerStatus;
 use App\Exceptions\SshCommandException;
 use App\Models\DatabaseUser;
@@ -22,7 +23,7 @@ const USER_PASSWORD = 'UserSecret-do-not-leak';
 function databaseServer(string $type): Server
 {
     $server = Server::factory()->create(['database_type' => $type, 'status' => ServerStatus::Active]);
-    ServerCredential::create(['server_id' => $server->id, 'type' => 'database_password', 'value' => ROOT_PASSWORD]);
+    ServerCredential::create(['server_id' => $server->id, 'type' => CredentialType::DatabasePassword, 'value' => ROOT_PASSWORD]);
 
     return $server;
 }

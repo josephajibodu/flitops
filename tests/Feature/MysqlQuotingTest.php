@@ -5,6 +5,7 @@ use App\Actions\Database\DestroyDatabaseUser;
 use App\Actions\Database\DestroyServerDatabase;
 use App\Actions\Database\QuotesMysql;
 use App\Actions\Database\UpdateDatabaseUser;
+use App\Enums\CredentialType;
 use App\Enums\ServerStatus;
 use App\Jobs\CreateDatabaseUserJob;
 use App\Models\DatabaseUser;
@@ -47,7 +48,7 @@ function recordMysqlStatements(array &$statements): void
 function mysqlServer(): Server
 {
     $server = Server::factory()->create(['database_type' => 'mysql', 'status' => ServerStatus::Active]);
-    ServerCredential::create(['server_id' => $server->id, 'type' => 'database_password', 'value' => 'rootsecret']);
+    ServerCredential::create(['server_id' => $server->id, 'type' => CredentialType::DatabasePassword, 'value' => 'rootsecret']);
 
     return $server;
 }

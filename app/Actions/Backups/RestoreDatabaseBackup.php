@@ -4,6 +4,7 @@ namespace App\Actions\Backups;
 
 use App\Actions\Database\EscapesShell;
 use App\Actions\Database\KeepsSecretsOffCommandLine;
+use App\Enums\CredentialType;
 use App\Events\BackupStatusChanged;
 use App\Exceptions\BackupFailedException;
 use App\Jobs\RestoreBackupJob;
@@ -43,7 +44,7 @@ class RestoreDatabaseBackup
             throw new RuntimeException("Backup {$backup->id} has no stored file to restore.");
         }
 
-        $credential = $server->credential('database_password');
+        $credential = $server->credential(CredentialType::DatabasePassword);
         if (! $credential) {
             throw new RuntimeException("No database password credential for server {$server->id}.");
         }

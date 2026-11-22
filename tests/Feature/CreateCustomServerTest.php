@@ -2,6 +2,7 @@
 
 use App\Actions\Servers\CreateCustomServerAction;
 use App\Data\CustomServerData;
+use App\Enums\CredentialType;
 use App\Enums\Plan;
 use App\Enums\Provider;
 use App\Enums\ServerStatus;
@@ -53,13 +54,13 @@ it('generates and stores a fresh keypair in server credentials', function () {
     $data = new CustomServerData(name: 'srv', ipAddress: '1.2.3.4');
     $server = app(CreateCustomServerAction::class)->execute($this->user, $this->team, $data);
 
-    $privateKey = $server->credential('private_key')?->value;
-    $publicKey = $server->credential('public_key')?->value;
+    $privateKey = $server->credential(CredentialType::PrivateKey)?->value;
+    $publicKey = $server->credential(CredentialType::PublicKey)?->value;
 
     expect($privateKey)->not->toBeNull()->toContain('OPENSSH PRIVATE KEY')
         ->and($publicKey)->not->toBeNull()->toStartWith('ssh-ed25519')
-        ->and($server->credential('sudo_password'))->not->toBeNull()
-        ->and($server->credential('database_password'))->not->toBeNull();
+        ->and($server->credential(CredentialType::SudoPassword))->not->toBeNull()
+        ->and($server->credential(CredentialType::DatabasePassword))->not->toBeNull();
 });
 
 it('does not dispatch InstallStackJob on creation', function () {
@@ -77,8 +78,8 @@ it('stores a different keypair for each server', function () {
     $serverA = app(CreateCustomServerAction::class)->execute($this->user, $this->team, $data);
     $serverB = app(CreateCustomServerAction::class)->execute($this->user, $this->team, $data);
 
-    expect($serverA->credential('public_key')?->value)
-        ->not->toBe($serverB->credential('public_key')?->value);
+    expect($serverA->credential(CredentialType::PublicKey)?->value)
+        ->not->toBe($serverB->credential(CredentialType::PublicKey)?->value);
 });
 
 // --- POST /servers/custom (storeCustom) ---
@@ -180,10 +181,10 @@ it('shows the setup page with the public key command for a pending custom server
     ]);
 
     $server->credentials()->createMany([
-        ['type' => 'private_key', 'value' => 'fake-private'],
+        ['type' => CredentialType::PrivateKey, 'value' => 'fake-private'],
         ['type' => 'public_key', 'value' => 'ssh-ed25519 AAAA fake-key flitops-worker'],
-        ['type' => 'sudo_password', 'value' => 'secret'],
-        ['type' => 'database_password', 'value' => 'secret'],
+        ['type' => CredentialType::SudoPassword, 'value' => 'secret'],
+        ['type' => CredentialType::DatabasePassword, 'value' => 'secret'],
     ]);
 
     $this->actingAs($this->user)

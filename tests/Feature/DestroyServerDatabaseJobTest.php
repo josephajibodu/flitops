@@ -1,6 +1,7 @@
 <?php
 
 use App\Actions\Database\DestroyServerDatabase;
+use App\Enums\CredentialType;
 use App\Enums\ServerStatus;
 use App\Events\ServerDatabasesUpdated;
 use App\Jobs\DestroyServerDatabaseJob;
@@ -23,7 +24,7 @@ it('removes the deleted database from every database user referencing it', funct
     ]);
     ServerCredential::create([
         'server_id' => $server->id,
-        'type' => 'database_password',
+        'type' => CredentialType::DatabasePassword,
         'value' => 'rootsecret',
     ]);
 

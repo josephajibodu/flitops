@@ -3,6 +3,7 @@
 namespace App\Actions\Servers;
 
 use App\Actions\Database\EscapesShell;
+use App\Enums\CredentialType;
 use App\Models\Server;
 use App\Services\Ssh\SshService;
 
@@ -25,7 +26,7 @@ class RevokeFlitopsAccessAction
 
     public function execute(Server $server): void
     {
-        $publicKey = $server->credential('public_key')?->value;
+        $publicKey = $server->credential(CredentialType::PublicKey)?->value;
         $keyMaterial = explode(' ', trim((string) $publicKey))[1] ?? '';
 
         if ($keyMaterial === '' || ! $server->ip_address) {

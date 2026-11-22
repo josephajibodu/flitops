@@ -3,6 +3,7 @@
 use App\Actions\Database\CreateDatabaseUser;
 use App\Actions\Database\DestroyDatabaseUser;
 use App\Actions\Database\UpdateDatabaseUser;
+use App\Enums\CredentialType;
 use App\Enums\DatabaseStatus;
 use App\Enums\ServerStatus;
 use App\Models\DatabaseUser;
@@ -39,7 +40,7 @@ function mockConnectionRecordingCommands(array &$commands): SshConnection
 
 it('grants only SELECT for a readonly MySQL user on create', function () {
     $server = Server::factory()->create(['database_type' => 'mysql', 'status' => ServerStatus::Active]);
-    ServerCredential::create(['server_id' => $server->id, 'type' => 'database_password', 'value' => 'rootsecret']);
+    ServerCredential::create(['server_id' => $server->id, 'type' => CredentialType::DatabasePassword, 'value' => 'rootsecret']);
 
     $user = DatabaseUser::factory()->create([
         'server_id' => $server->id,
@@ -62,7 +63,7 @@ it('grants only SELECT for a readonly MySQL user on create', function () {
 
 it('grants ALL PRIVILEGES for a readwrite MySQL user on create', function () {
     $server = Server::factory()->create(['database_type' => 'mysql', 'status' => ServerStatus::Active]);
-    ServerCredential::create(['server_id' => $server->id, 'type' => 'database_password', 'value' => 'rootsecret']);
+    ServerCredential::create(['server_id' => $server->id, 'type' => CredentialType::DatabasePassword, 'value' => 'rootsecret']);
 
     $user = DatabaseUser::factory()->create([
         'server_id' => $server->id,
@@ -83,7 +84,7 @@ it('grants ALL PRIVILEGES for a readwrite MySQL user on create', function () {
 
 it('re-grants only SELECT for a MySQL user updated to readonly', function () {
     $server = Server::factory()->create(['database_type' => 'mysql', 'status' => ServerStatus::Active]);
-    ServerCredential::create(['server_id' => $server->id, 'type' => 'database_password', 'value' => 'rootsecret']);
+    ServerCredential::create(['server_id' => $server->id, 'type' => CredentialType::DatabasePassword, 'value' => 'rootsecret']);
 
     $user = DatabaseUser::factory()->create([
         'server_id' => $server->id,
@@ -108,7 +109,7 @@ it('re-grants only SELECT for a MySQL user updated to readonly', function () {
 
 it('grants schema-level SELECT only for a readonly Postgres user on create', function () {
     $server = Server::factory()->create(['database_type' => 'postgresql', 'status' => ServerStatus::Active]);
-    ServerCredential::create(['server_id' => $server->id, 'type' => 'database_password', 'value' => 'rootsecret']);
+    ServerCredential::create(['server_id' => $server->id, 'type' => CredentialType::DatabasePassword, 'value' => 'rootsecret']);
 
     $user = DatabaseUser::factory()->create([
         'server_id' => $server->id,
@@ -133,7 +134,7 @@ it('grants schema-level SELECT only for a readonly Postgres user on create', fun
 
 it('grants ALL PRIVILEGES on the database for a readwrite Postgres user on create', function () {
     $server = Server::factory()->create(['database_type' => 'postgresql', 'status' => ServerStatus::Active]);
-    ServerCredential::create(['server_id' => $server->id, 'type' => 'database_password', 'value' => 'rootsecret']);
+    ServerCredential::create(['server_id' => $server->id, 'type' => CredentialType::DatabasePassword, 'value' => 'rootsecret']);
 
     $user = DatabaseUser::factory()->create([
         'server_id' => $server->id,
@@ -160,7 +161,7 @@ it('grants ALL PRIVILEGES on the database for a readwrite Postgres user on creat
 function postgresServerRecordingCommands(array &$commands): Server
 {
     $server = Server::factory()->create(['database_type' => 'postgresql', 'status' => ServerStatus::Active]);
-    ServerCredential::create(['server_id' => $server->id, 'type' => 'database_password', 'value' => 'rootsecret']);
+    ServerCredential::create(['server_id' => $server->id, 'type' => CredentialType::DatabasePassword, 'value' => 'rootsecret']);
 
     $connection = mockConnectionRecordingCommands($commands);
     $sshService = Mockery::mock(SshService::class);
@@ -238,7 +239,7 @@ it('hands a deleted Postgres user\'s tables to postgres and clears their grants 
 
 it('gives a new MySQL user an account other servers can use while servers are connected', function () {
     $server = Server::factory()->create(['database_type' => 'mysql', 'status' => ServerStatus::Active]);
-    ServerCredential::create(['server_id' => $server->id, 'type' => 'database_password', 'value' => 'rootsecret']);
+    ServerCredential::create(['server_id' => $server->id, 'type' => CredentialType::DatabasePassword, 'value' => 'rootsecret']);
     ServerConnection::factory()->create(['server_id' => $server->id, 'client_server_id' => Server::factory()->web()->create()->id]);
 
     $user = DatabaseUser::factory()->create([

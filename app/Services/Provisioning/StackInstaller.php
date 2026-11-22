@@ -4,6 +4,7 @@ namespace App\Services\Provisioning;
 
 use App\Contracts\Remote\RemoteCommandRunner;
 use App\Enums\ConnectionStatus;
+use App\Enums\CredentialType;
 use App\Enums\ProvisioningStep;
 use App\Enums\ServerStatus;
 use App\Enums\ServiceStatus;
@@ -48,11 +49,11 @@ class StackInstaller
         $services = new SystemdServiceManager($runner);
 
         $databasePassword = $server->credentials()
-            ->where('type', 'database_password')
+            ->where('type', CredentialType::DatabasePassword)
             ->first()?->value ?? '';
 
         $sudoPassword = $server->credentials()
-            ->where('type', 'sudo_password')
+            ->where('type', CredentialType::SudoPassword)
             ->first()?->value ?? '';
 
         $installationRunner = new ServiceInstallationRunner(

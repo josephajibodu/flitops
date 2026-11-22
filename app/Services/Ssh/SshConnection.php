@@ -2,6 +2,7 @@
 
 namespace App\Services\Ssh;
 
+use App\Enums\CredentialType;
 use App\Exceptions\SshCommandException;
 use App\Models\Server;
 use phpseclib3\Crypt\PublicKeyLoader;
@@ -231,7 +232,7 @@ class SshConnection
             app(HostKeyVerifier::class)->verify($this->sftp, $this->server);
 
             $privateKeyCredential = $this->server->credentials()
-                ->where('type', 'private_key')
+                ->where('type', CredentialType::PrivateKey)
                 ->first();
 
             $key = PublicKeyLoader::load($privateKeyCredential->value);

@@ -1,6 +1,7 @@
 <?php
 
 use App\Actions\Database\CreateServerDatabase;
+use App\Enums\CredentialType;
 use App\Enums\DatabaseStatus;
 use App\Enums\ServerStatus;
 use App\Events\ServerDatabasesUpdated;
@@ -23,7 +24,7 @@ it('creates database on server and sets status to ready', function () {
     ]);
     ServerCredential::create([
         'server_id' => $server->id,
-        'type' => 'database_password',
+        'type' => CredentialType::DatabasePassword,
         'value' => 'rootsecret',
     ]);
 

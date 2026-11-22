@@ -7,6 +7,7 @@ use App\Actions\Servers\CreateServerAction;
 use App\Actions\Servers\DeleteServerAction;
 use App\Data\CustomServerData;
 use App\Data\ServerData;
+use App\Enums\CredentialType;
 use App\Enums\PhpVersion;
 use App\Enums\Provider;
 use App\Enums\ProvisioningStep;
@@ -124,7 +125,7 @@ class ServerController extends Controller
             return redirect()->route('servers.show', [$team, $server]);
         }
 
-        $publicKey = $server->credential('public_key')?->value;
+        $publicKey = $server->credential(CredentialType::PublicKey)?->value;
         $command = "mkdir -p /root/.ssh && touch /root/.ssh/authorized_keys && echo \"{$publicKey}\" >> /root/.ssh/authorized_keys";
 
         return Inertia::render('servers/setup', [

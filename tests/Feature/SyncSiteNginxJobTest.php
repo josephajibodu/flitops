@@ -1,5 +1,6 @@
 <?php
 
+use App\Enums\CredentialType;
 use App\Enums\NginxFileSection;
 use App\Events\SiteNginxUpdated;
 use App\Jobs\SyncSiteNginxJob;
@@ -51,7 +52,7 @@ it('emails the server owner when a sync fails for good', function () {
 });
 
 it('removes the server passwords from the reason it records and emails', function () {
-    $this->server->credentials()->create(['type' => 'sudo_password', 'value' => 'super-secret-sudo']);
+    $this->server->credentials()->create(['type' => CredentialType::SudoPassword, 'value' => 'super-secret-sudo']);
 
     (new SyncSiteNginxJob($this->site))->failed(new RuntimeException('SSH command failed: echo super-secret-sudo | sudo -S nginx -t'));
 
