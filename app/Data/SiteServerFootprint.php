@@ -2,6 +2,7 @@
 
 namespace App\Data;
 
+use App\Enums\PhpVersion;
 use App\Enums\SiteDomainType;
 use App\Models\Site;
 use App\Services\Nginx\NginxConfigService;
@@ -42,7 +43,7 @@ readonly class SiteServerFootprint
             domain: $site->domain,
             siteRoot: $site->rootPath(),
             systemUser: $site->system_user,
-            phpVersion: $site->php_version ?? '8.4',
+            phpVersion: $site->php_version ?? PhpVersion::siteFallback()->value,
             webServerConfigBasenames: $site->domains
                 ->map(fn ($d) => NginxConfigService::configFileName($site, $d))
                 ->values()

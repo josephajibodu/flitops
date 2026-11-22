@@ -5,6 +5,7 @@ namespace App\Jobs;
 use App\Actions\Database\EscapesShell;
 use App\Actions\Database\KeepsSecretsOffCommandLine;
 use App\Enums\DeploymentStatus;
+use App\Enums\PhpVersion;
 use App\Exceptions\DeploymentFailedException;
 use App\Jobs\Concerns\ManagesDeploymentLifecycle;
 use App\Models\Deployment;
@@ -292,7 +293,7 @@ class DeploySiteJob implements ShouldQueue
      */
     private function buildScript(string $script, Site $site, string $releasePath): string
     {
-        $phpVersion = $site->php_version ?? '8.4';
+        $phpVersion = $site->php_version ?? PhpVersion::siteFallback()->value;
 
         // Replace placeholder variables in script ({{SITE_PATH}}, {{BRANCH}}, etc.)
         // {{WEB_ROOT}} points at the release being built, not $site->webRoot()

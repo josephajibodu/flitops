@@ -32,6 +32,18 @@ enum PhpVersion: string
     }
 
     /**
+     * The PHP version assumed for a site that has no version of its own
+     * recorded yet. Distinct from default() (the new-server/site preselection):
+     * this is the version existing code paths fall back to when reading a
+     * site's runtime, so it tracks the installed base rather than the newest
+     * well-established release.
+     */
+    public static function siteFallback(): self
+    {
+        return self::Php84;
+    }
+
+    /**
      * Every supported version number, oldest first. Use for validation rules
      * where ordering does not matter.
      *

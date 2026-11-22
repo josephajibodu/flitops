@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Enums\PhpVersion;
 use App\Models\Site;
 
 class PhpRuntimeResolver
@@ -13,7 +14,7 @@ class PhpRuntimeResolver
      */
     public function forSite(Site $site): array
     {
-        $version = $site->php_version ?? '8.4';
+        $version = $site->php_version ?? PhpVersion::siteFallback()->value;
 
         return [
             ...$this->forVersion($version),
