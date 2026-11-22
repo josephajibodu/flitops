@@ -2,6 +2,7 @@
 
 namespace App\Services\Provisioning;
 
+use App\Enums\DatabaseType;
 use App\Enums\ServiceType;
 
 /**
@@ -81,12 +82,7 @@ class ServiceInstallationRunner
     private function installDatabase(ProvisioningContext $context): array
     {
         $this->databaseService->installForServer($context);
-        $unit = match ($context->server->database_type) {
-            'mysql' => 'mysql',
-            'mariadb' => 'mariadb',
-            'postgresql' => 'postgresql',
-            default => 'mysql',
-        };
+        $unit = ($context->server->database_type ?? DatabaseType::default())->value;
 
         return [
             'unit' => $unit,

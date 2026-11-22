@@ -4,6 +4,7 @@ namespace App\Actions\Backups;
 
 use App\Actions\Database\EscapesShell;
 use App\Actions\Database\KeepsSecretsOffCommandLine;
+use App\Enums\DatabaseType;
 use App\Events\BackupStatusChanged;
 use App\Exceptions\BackupFailedException;
 use App\Jobs\RestoreBackupJob;
@@ -104,10 +105,10 @@ class RestoreDatabaseBackup
         $credentialsOption = '--defaults-extra-file='.$this->escapeForShell($mysqlCredentials);
 
         return match ($server->database_type) {
-            'mysql' => "sudo mysql {$credentialsOption}",
-            'mariadb' => "sudo mariadb {$credentialsOption}",
-            'postgresql' => 'sudo -u postgres psql -d postgres',
-            default => throw new RuntimeException("Unsupported database type: {$server->database_type}"),
+            DatabaseType::Mysql => "sudo mysql {$credentialsOption}",
+            DatabaseType::Mariadb => "sudo mariadb {$credentialsOption}",
+            DatabaseType::Postgresql => 'sudo -u postgres psql -d postgres',
+            default => throw new RuntimeException("Unsupported database type: {$server->database_type?->value}"),
         };
     }
 }

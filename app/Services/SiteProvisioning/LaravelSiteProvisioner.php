@@ -3,6 +3,7 @@
 namespace App\Services\SiteProvisioning;
 
 use App\Actions\Database\EscapesShell;
+use App\Enums\DatabaseType;
 use App\Enums\SiteProvisioningStep;
 use App\Models\DatabaseUser;
 
@@ -67,15 +68,9 @@ class LaravelSiteProvisioner extends BaseSiteProvisioner
                 ->where('client_server_id', $this->site->server_id)
                 ->value('host_address');
 
-        $dbType = $databaseServer->database_type;
-        $connection = match ($dbType) {
-            'postgresql' => 'pgsql',
-            default => 'mysql',
-        };
-        $port = match ($dbType) {
-            'postgresql' => '5432',
-            default => '3306',
-        };
+        $dbType = $databaseServer->database_type ?? DatabaseType::default();
+        $connection = $dbType === DatabaseType::Postgresql ? 'pgsql' : 'mysql';
+        $port = (string) $dbType->port();
 
         $this->sedEnv($envPath, 'DB_CONNECTION', $connection);
         $this->sedEnv($envPath, 'DB_HOST', $dbHost);

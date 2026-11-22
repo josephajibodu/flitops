@@ -2,6 +2,7 @@
 
 namespace App\Actions\Database;
 
+use App\Enums\DatabaseType;
 use App\Jobs\CreateDatabaseUserJob;
 use App\Models\DatabaseUser;
 use App\Models\Server;
@@ -64,12 +65,12 @@ class CreateDatabaseUser
         try {
             $databaseType = $server->database_type;
 
-            if ($databaseType === 'mysql' || $databaseType === 'mariadb') {
+            if ($databaseType?->isMysqlFamily()) {
                 $this->createMysqlUser($connection, $databaseUser, $rootPassword);
-            } elseif ($databaseType === 'postgresql') {
+            } elseif ($databaseType === DatabaseType::Postgresql) {
                 $this->createPostgresUser($connection, $databaseUser);
             } else {
-                throw new RuntimeException("Unsupported database type: {$databaseType}");
+                throw new RuntimeException("Unsupported database type: {$databaseType?->value}");
             }
         } finally {
             $connection->disconnect();
