@@ -31,7 +31,7 @@ class ServerPhpController extends Controller
         abort_unless($server->hasPhp(), 404);
 
         $phpServicesCollection = $server->installedServices()
-            ->where('type', 'php')
+            ->where('type', ServiceType::Php)
             ->orderBy('version')
             ->get();
 

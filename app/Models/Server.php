@@ -267,6 +267,24 @@ class Server extends Model
     }
 
     /**
+     * The PHP versions installed on this server (e.g. "8.3"), each listed once.
+     * A version still being installed counts, by the version it was asked for.
+     *
+     * @return list<string>
+     */
+    public function installedPhpVersions(): array
+    {
+        return $this->installedServices()
+            ->where('type', ServiceType::Php)
+            ->get()
+            ->map(fn (Service $service): ?string => $service->installed_version ?? $service->version)
+            ->filter()
+            ->unique()
+            ->values()
+            ->all();
+    }
+
+    /**
      * Resolve the concrete ServiceType for this server's configured database engine.
      */
     public function databaseServiceType(): ServiceType

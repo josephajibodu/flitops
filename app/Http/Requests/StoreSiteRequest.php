@@ -149,20 +149,7 @@ class StoreSiteRequest extends FormRequest
      */
     private function getServerInstalledPhpVersions(): array
     {
-        $versions = $this->targetServer()->installedServices()
-            ->where('type', 'php')
-            ->get()
-            ->map(fn ($s) => $s->installed_version ?? $s->version)
-            ->filter()
-            ->unique()
-            ->values()
-            ->all();
-
-        if (empty($versions)) {
-            return PhpVersion::values();
-        }
-
-        return $versions;
+        return $this->targetServer()->installedPhpVersions() ?: PhpVersion::values();
     }
 
     /**
