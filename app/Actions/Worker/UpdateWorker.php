@@ -2,7 +2,7 @@
 
 namespace App\Actions\Worker;
 
-use App\Actions\Database\EscapesShell;
+use App\Concerns\EscapesShell;
 use App\Jobs\UpdateWorkerJob;
 use App\Models\Worker;
 use App\Services\Ssh\SshService;

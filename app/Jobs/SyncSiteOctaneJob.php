@@ -2,9 +2,9 @@
 
 namespace App\Jobs;
 
-use App\Actions\Database\EscapesShell;
 use App\Actions\Worker\CreateWorker;
 use App\Actions\Worker\DestroyWorker;
+use App\Concerns\EscapesShell;
 use App\Enums\WorkerStatus;
 use App\Events\ServerProcessesUpdated;
 use App\Exceptions\SshCommandException;

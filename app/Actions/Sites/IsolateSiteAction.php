@@ -2,7 +2,7 @@
 
 namespace App\Actions\Sites;
 
-use App\Actions\Database\EscapesShell;
+use App\Concerns\EscapesShell;
 use App\Enums\CronJobStatus;
 use App\Enums\DeploymentStatus;
 use App\Enums\ProjectType;

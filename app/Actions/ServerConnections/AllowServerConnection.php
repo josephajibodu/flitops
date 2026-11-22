@@ -2,10 +2,10 @@
 
 namespace App\Actions\ServerConnections;
 
-use App\Actions\Database\EscapesShell;
 use App\Actions\Database\ManagesRemoteMysqlAccounts;
-use App\Actions\Database\QuotesMysql;
 use App\Actions\Database\RunsSqlPrivately;
+use App\Concerns\EscapesShell;
+use App\Concerns\QuotesMysql;
 use App\Enums\CredentialType;
 use App\Enums\ServerConnectionStatus;
 use App\Jobs\AllowServerConnectionJob;

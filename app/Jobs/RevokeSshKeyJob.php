@@ -2,7 +2,7 @@
 
 namespace App\Jobs;
 
-use App\Actions\Database\EscapesShell;
+use App\Concerns\EscapesShell;
 use App\Enums\SshKeyStatus;
 use App\Models\Server;
 use App\Models\ServerSshKey;

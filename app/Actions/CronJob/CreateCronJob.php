@@ -2,7 +2,7 @@
 
 namespace App\Actions\CronJob;
 
-use App\Actions\Database\EscapesShell;
+use App\Concerns\EscapesShell;
 use App\Enums\CronJobStatus;
 use App\Jobs\CreateCronJobJob;
 use App\Models\CronJob;

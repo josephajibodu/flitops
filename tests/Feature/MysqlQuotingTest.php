@@ -3,8 +3,8 @@
 use App\Actions\Database\CreateDatabaseUser;
 use App\Actions\Database\DestroyDatabaseUser;
 use App\Actions\Database\DestroyServerDatabase;
-use App\Actions\Database\QuotesMysql;
 use App\Actions\Database\UpdateDatabaseUser;
+use App\Concerns\QuotesMysql;
 use App\Enums\CredentialType;
 use App\Enums\ServerStatus;
 use App\Jobs\CreateDatabaseUserJob;

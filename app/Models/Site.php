@@ -2,7 +2,7 @@
 
 namespace App\Models;
 
-use App\Actions\Database\EscapesShell;
+use App\Concerns\EscapesShell;
 use App\Enums\DeploymentStatus;
 use App\Enums\Framework;
 use App\Enums\OctaneServer;

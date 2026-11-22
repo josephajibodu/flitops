@@ -2,6 +2,7 @@
 
 namespace App\Actions\Sites;
 
+use App\Concerns\EscapesShell;
 use App\Enums\SiteCommandRunStatus;
 use App\Events\SiteCommandRunStatusChanged;
 use App\Exceptions\SshCommandException;
@@ -13,7 +14,7 @@ use RuntimeException;
 
 class RunSiteCommand
 {
-    use \App\Actions\Database\EscapesShell;
+    use EscapesShell;
 
     public function __construct(
         private SshService $sshService

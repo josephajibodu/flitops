@@ -2,7 +2,7 @@
 
 namespace App\Actions\Servers;
 
-use App\Actions\Database\EscapesShell;
+use App\Concerns\EscapesShell;
 use App\Enums\CredentialType;
 use App\Models\Server;
 use App\Services\Ssh\SshService;

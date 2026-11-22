@@ -2,8 +2,8 @@
 
 namespace App\Actions\Backups;
 
-use App\Actions\Database\EscapesShell;
 use App\Actions\Database\KeepsSecretsOffCommandLine;
+use App\Concerns\EscapesShell;
 use App\Contracts\StorageProviderContract;
 use App\Enums\BackupStatus;
 use App\Events\BackupStatusChanged;

@@ -2,9 +2,9 @@
 
 namespace App\Jobs;
 
-use App\Actions\Database\EscapesShell;
 use App\Actions\Database\KeepsSecretsOffCommandLine;
 use App\Actions\Worker\ControlWorker;
+use App\Concerns\EscapesShell;
 use App\Enums\WorkerControlAction;
 use App\Enums\WorkerStatus;
 use App\Models\Site;

@@ -2,7 +2,7 @@
 
 namespace App\Actions\Worker;
 
-use App\Actions\Database\EscapesShell;
+use App\Concerns\EscapesShell;
 use App\Enums\WorkerStatus;
 use App\Jobs\CreateWorkerJob;
 use App\Models\Server;

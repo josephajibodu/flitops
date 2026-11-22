@@ -2,7 +2,7 @@
 
 namespace App\Actions\CronJob;
 
-use App\Actions\Database\EscapesShell;
+use App\Concerns\EscapesShell;
 use App\Jobs\UpdateCronJobJob;
 use App\Models\CronJob;
 use App\Services\Ssh\SshService;
