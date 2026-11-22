@@ -2,6 +2,7 @@
 
 namespace App\Actions\Database;
 
+use App\Enums\DatabaseStatus;
 use App\Jobs\CreateDatabaseUserJob;
 use App\Models\DatabaseUser;
 use App\Models\Server;
@@ -32,7 +33,7 @@ class CreateDatabaseUser
             'databases' => $input['databases'],
             'permission' => $input['permission'] ?? 'readwrite',
             'host' => $input['host'] ?? 'localhost',
-            'status' => 'pending',
+            'status' => DatabaseStatus::Pending,
         ]);
 
         CreateDatabaseUserJob::dispatch($databaseUser);

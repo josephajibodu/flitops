@@ -2,11 +2,13 @@
 
 namespace Database\Factories;
 
+use App\Enums\DatabaseStatus;
 use App\Models\Server;
+use App\Models\ServerDatabase;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
- * @extends \Illuminate\Database\Eloquent\Factories\Factory<\App\Models\ServerDatabase>
+ * @extends Factory<ServerDatabase>
  */
 class ServerDatabaseFactory extends Factory
 {
@@ -22,7 +24,7 @@ class ServerDatabaseFactory extends Factory
             'name' => fake()->unique()->slug(2).'_'.fake()->randomNumber(4),
             'collation' => 'utf8mb4_unicode_ci',
             'charset' => 'utf8mb4',
-            'status' => 'ready',
+            'status' => DatabaseStatus::Ready,
         ];
     }
 }

@@ -3,6 +3,7 @@
 use App\Actions\Database\CreateDatabaseUser;
 use App\Actions\Database\DestroyDatabaseUser;
 use App\Actions\Database\UpdateDatabaseUser;
+use App\Enums\DatabaseStatus;
 use App\Enums\ServerStatus;
 use App\Models\DatabaseUser;
 use App\Models\Server;
@@ -173,9 +174,9 @@ it('lets a new readonly Postgres user read tables that existing readwrite users 
     $commands = [];
     $server = postgresServerRecordingCommands($commands);
 
-    DatabaseUser::factory()->create(['server_id' => $server->id, 'username' => 'app_owner', 'databases' => ['app_db'], 'permission' => 'readwrite', 'status' => 'ready']);
-    DatabaseUser::factory()->create(['server_id' => $server->id, 'username' => 'not_yet_created', 'databases' => ['app_db'], 'permission' => 'readwrite', 'status' => 'pending']);
-    DatabaseUser::factory()->create(['server_id' => $server->id, 'username' => 'other_db_owner', 'databases' => ['other_db'], 'permission' => 'readwrite', 'status' => 'ready']);
+    DatabaseUser::factory()->create(['server_id' => $server->id, 'username' => 'app_owner', 'databases' => ['app_db'], 'permission' => 'readwrite', 'status' => DatabaseStatus::Ready]);
+    DatabaseUser::factory()->create(['server_id' => $server->id, 'username' => 'not_yet_created', 'databases' => ['app_db'], 'permission' => 'readwrite', 'status' => DatabaseStatus::Pending]);
+    DatabaseUser::factory()->create(['server_id' => $server->id, 'username' => 'other_db_owner', 'databases' => ['other_db'], 'permission' => 'readwrite', 'status' => DatabaseStatus::Ready]);
 
     $reader = DatabaseUser::factory()->create(['server_id' => $server->id, 'username' => 'reader', 'databases' => ['app_db'], 'permission' => 'readonly']);
 
@@ -191,7 +192,7 @@ it('lets existing readonly Postgres users read tables a new readwrite user creat
     $commands = [];
     $server = postgresServerRecordingCommands($commands);
 
-    DatabaseUser::factory()->create(['server_id' => $server->id, 'username' => 'reader', 'databases' => ['app_db'], 'permission' => 'readonly', 'status' => 'ready']);
+    DatabaseUser::factory()->create(['server_id' => $server->id, 'username' => 'reader', 'databases' => ['app_db'], 'permission' => 'readonly', 'status' => DatabaseStatus::Ready]);
 
     $owner = DatabaseUser::factory()->create(['server_id' => $server->id, 'username' => 'app_owner', 'databases' => ['app_db'], 'permission' => 'readwrite']);
 
@@ -205,9 +206,9 @@ it('revokes schema and future-table privileges before re-granting an updated Pos
     $commands = [];
     $server = postgresServerRecordingCommands($commands);
 
-    DatabaseUser::factory()->create(['server_id' => $server->id, 'username' => 'app_owner', 'databases' => ['app_db'], 'permission' => 'readwrite', 'status' => 'ready']);
+    DatabaseUser::factory()->create(['server_id' => $server->id, 'username' => 'app_owner', 'databases' => ['app_db'], 'permission' => 'readwrite', 'status' => DatabaseStatus::Ready]);
 
-    $user = DatabaseUser::factory()->create(['server_id' => $server->id, 'username' => 'switcher', 'databases' => ['app_db'], 'permission' => 'readonly', 'status' => 'ready']);
+    $user = DatabaseUser::factory()->create(['server_id' => $server->id, 'username' => 'switcher', 'databases' => ['app_db'], 'permission' => 'readonly', 'status' => DatabaseStatus::Ready]);
 
     app(UpdateDatabaseUser::class)->execute($user);
 
@@ -225,7 +226,7 @@ it('hands a deleted Postgres user\'s tables to postgres and clears their grants 
     $commands = [];
     $server = postgresServerRecordingCommands($commands);
 
-    $user = DatabaseUser::factory()->create(['server_id' => $server->id, 'username' => 'app_owner', 'databases' => ['app_db', 'logs_db'], 'permission' => 'readwrite', 'status' => 'deleting']);
+    $user = DatabaseUser::factory()->create(['server_id' => $server->id, 'username' => 'app_owner', 'databases' => ['app_db', 'logs_db'], 'permission' => 'readwrite', 'status' => DatabaseStatus::Deleting]);
 
     app(DestroyDatabaseUser::class)->execute($user);
 

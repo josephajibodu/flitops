@@ -2,6 +2,7 @@
 
 namespace App\Actions\Database;
 
+use App\Enums\DatabaseStatus;
 use App\Jobs\CreateServerDatabaseJob;
 use App\Models\Server;
 use App\Models\ServerDatabase;
@@ -35,7 +36,7 @@ class CreateServerDatabase
             'name' => $input['name'],
             'collation' => $usesCharsets ? ($input['collation'] ?? null) : null,
             'charset' => $usesCharsets ? ($input['charset'] ?? null) : null,
-            'status' => 'pending',
+            'status' => DatabaseStatus::Pending,
         ]);
 
         CreateServerDatabaseJob::dispatch($serverDatabase);

@@ -3,6 +3,7 @@
 use App\Actions\Sites\CreateSiteAction;
 use App\Actions\Sites\ProvisionSiteAction;
 use App\Data\SiteData;
+use App\Enums\DatabaseStatus;
 use App\Enums\ProjectType;
 use App\Enums\ServerStatus;
 use App\Events\ServerSitesUpdated;
@@ -45,7 +46,7 @@ describe('StoreSiteRequest validation', function () {
 
         $database = ServerDatabase::factory()->create([
             'server_id' => $this->server->id,
-            'status' => 'ready',
+            'status' => DatabaseStatus::Ready,
         ]);
 
         $response = $this->actingAs($this->user)
@@ -79,7 +80,7 @@ describe('StoreSiteRequest validation', function () {
 
         $database = ServerDatabase::factory()->create([
             'server_id' => $otherServer->id,
-            'status' => 'ready',
+            'status' => DatabaseStatus::Ready,
         ]);
 
         $response = $this->actingAs($this->user)
@@ -175,7 +176,7 @@ describe('CreateSiteAction', function () {
 
         $database = ServerDatabase::factory()->create([
             'server_id' => $this->server->id,
-            'status' => 'ready',
+            'status' => DatabaseStatus::Ready,
         ]);
 
         $this->actingAs($this->user)
@@ -258,7 +259,7 @@ describe('LaravelSiteProvisioner env injection', function () {
         $database = ServerDatabase::factory()->create([
             'server_id' => $this->server->id,
             'name' => 'myapp_db',
-            'status' => 'ready',
+            'status' => DatabaseStatus::Ready,
         ]);
 
         $dbUser = DatabaseUser::factory()->create([
@@ -314,7 +315,7 @@ describe('LaravelSiteProvisioner env injection', function () {
         $database = ServerDatabase::factory()->create([
             'server_id' => $this->server->id,
             'name' => 'pg_db',
-            'status' => 'ready',
+            'status' => DatabaseStatus::Ready,
         ]);
 
         DatabaseUser::factory()->create([
@@ -407,7 +408,7 @@ describe('LaravelSiteProvisioner env injection', function () {
         $database = ServerDatabase::factory()->create([
             'server_id' => $this->server->id,
             'name' => 'myapp_db',
-            'status' => 'ready',
+            'status' => DatabaseStatus::Ready,
         ]);
 
         DatabaseUser::factory()->create([
@@ -490,7 +491,7 @@ describe('LaravelSiteProvisioner env injection', function () {
         $database = ServerDatabase::factory()->create([
             'server_id' => $this->server->id,
             'name' => 'myapp_db',
-            'status' => 'ready',
+            'status' => DatabaseStatus::Ready,
         ]);
 
         DatabaseUser::factory()->create([
@@ -548,7 +549,7 @@ describe('databases on a connected server', function () {
     it('accepts a database on a server this one is connected to', function () {
         Queue::fake();
         ServerConnection::factory()->create(['server_id' => $this->databaseServer->id, 'client_server_id' => $this->server->id]);
-        $database = ServerDatabase::factory()->create(['server_id' => $this->databaseServer->id, 'status' => 'ready']);
+        $database = ServerDatabase::factory()->create(['server_id' => $this->databaseServer->id, 'status' => DatabaseStatus::Ready]);
 
         $response = $this->actingAs($this->user)
             ->post("/{$this->team->slug}/servers/{$this->server->id}/sites", [
@@ -568,7 +569,7 @@ describe('databases on a connected server', function () {
 
     it('refuses a database on a server this one is not connected to', function () {
         Queue::fake();
-        $database = ServerDatabase::factory()->create(['server_id' => $this->databaseServer->id, 'status' => 'ready']);
+        $database = ServerDatabase::factory()->create(['server_id' => $this->databaseServer->id, 'status' => DatabaseStatus::Ready]);
 
         $response = $this->actingAs($this->user)
             ->post("/{$this->team->slug}/servers/{$this->server->id}/sites", [
@@ -593,7 +594,7 @@ describe('databases on a connected server', function () {
             'client_server_id' => $this->server->id,
             'host_address' => '10.10.0.2',
         ]);
-        $database = ServerDatabase::factory()->create(['server_id' => $this->databaseServer->id, 'name' => 'pg_db', 'status' => 'ready']);
+        $database = ServerDatabase::factory()->create(['server_id' => $this->databaseServer->id, 'name' => 'pg_db', 'status' => DatabaseStatus::Ready]);
         DatabaseUser::factory()->create([
             'server_id' => $this->databaseServer->id,
             'username' => 'remote_app',

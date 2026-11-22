@@ -2,6 +2,7 @@
 
 namespace App\Actions\Database;
 
+use App\Enums\DatabaseStatus;
 use App\Events\ServerDatabasesUpdated;
 use App\Jobs\DestroyDatabaseUserJob;
 use App\Models\DatabaseUser;
@@ -19,7 +20,7 @@ class DestroyDatabaseUser
 
     public function delete(DatabaseUser $databaseUser): void
     {
-        $databaseUser->update(['status' => 'deleting']);
+        $databaseUser->update(['status' => DatabaseStatus::Deleting]);
         $server = $databaseUser->server;
         if ($server) {
             event(new ServerDatabasesUpdated($server));

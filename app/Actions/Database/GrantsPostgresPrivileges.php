@@ -2,6 +2,7 @@
 
 namespace App\Actions\Database;
 
+use App\Enums\DatabaseStatus;
 use App\Models\DatabaseUser;
 use App\Services\Ssh\SshConnection;
 
@@ -98,7 +99,7 @@ trait GrantsPostgresPrivileges
             ->where('server_id', $databaseUser->server_id)
             ->whereKeyNot($databaseUser->getKey())
             ->where('permission', $permission)
-            ->where('status', 'ready')
+            ->where('status', DatabaseStatus::Ready)
             ->whereJsonContains('databases', $dbName)
             ->pluck('username')
             ->all();

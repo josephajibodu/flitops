@@ -1,6 +1,8 @@
 <?php
 
 use App\Actions\Database\CreateDatabaseUser;
+use App\Enums\DatabaseStatus;
+use App\Enums\ServerStatus;
 use App\Events\ServerDatabasesUpdated;
 use App\Jobs\CreateDatabaseUserJob;
 use App\Models\DatabaseUser;
@@ -18,7 +20,7 @@ it('creates database user on server and sets status to ready', function () {
 
     $server = Server::factory()->create([
         'database_type' => 'mysql',
-        'status' => \App\Enums\ServerStatus::Active,
+        'status' => ServerStatus::Active,
     ]);
     ServerCredential::create([
         'server_id' => $server->id,
@@ -37,15 +39,15 @@ it('creates database user on server and sets status to ready', function () {
         'password' => 'userpass123',
         'databases' => ['app_db'],
         'host' => 'localhost',
-        'status' => 'pending',
+        'status' => DatabaseStatus::Pending,
     ]);
 
     $mockConnection = mockDatabaseConnection();
 
-    $sshService = \Mockery::mock(SshService::class);
+    $sshService = Mockery::mock(SshService::class);
     $sshService->shouldReceive('connect')
         ->once()
-        ->with(\Mockery::on(fn ($s) => $s->id === $server->id))
+        ->with(Mockery::on(fn ($s) => $s->id === $server->id))
         ->andReturn($mockConnection);
 
     $this->app->instance(SshService::class, $sshService);
@@ -54,7 +56,7 @@ it('creates database user on server and sets status to ready', function () {
     $job->handle(app(CreateDatabaseUser::class));
 
     $databaseUser->refresh();
-    expect($databaseUser->status)->toBe('ready');
+    expect($databaseUser->status)->toBe(DatabaseStatus::Ready);
 
     Event::assertDispatched(ServerDatabasesUpdated::class, fn ($e) => $e->server->id === $server->id);
 });
@@ -64,7 +66,7 @@ it('sets status to failed when server has no database password credential', func
 
     $server = Server::factory()->create([
         'database_type' => 'mysql',
-        'status' => \App\Enums\ServerStatus::Active,
+        'status' => ServerStatus::Active,
     ]);
     ServerDatabase::factory()->create([
         'server_id' => $server->id,
@@ -77,18 +79,18 @@ it('sets status to failed when server has no database password credential', func
         'username' => 'myuser',
         'password' => 'userpass123',
         'databases' => ['app_db'],
-        'status' => 'pending',
+        'status' => DatabaseStatus::Pending,
     ]);
 
     $job = new CreateDatabaseUserJob($databaseUser);
     try {
         $job->handle(app(CreateDatabaseUser::class));
-    } catch (\RuntimeException) {
+    } catch (RuntimeException) {
         // Job sets status to failed then rethrows
     }
 
     $databaseUser->refresh();
-    expect($databaseUser->status)->toBe('failed');
+    expect($databaseUser->status)->toBe(DatabaseStatus::Failed);
 
     Event::assertDispatched(ServerDatabasesUpdated::class);
 });

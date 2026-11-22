@@ -4,6 +4,7 @@ namespace App\Actions\Backups;
 
 use App\Actions\Database\GrantsPostgresPrivileges;
 use App\Actions\Database\RunsSqlPrivately;
+use App\Enums\DatabaseStatus;
 use App\Exceptions\BackupFailedException;
 use App\Exceptions\SshCommandException;
 use App\Models\DatabaseUser;
@@ -87,7 +88,7 @@ trait ImportsForeignDumps
 
         $users = DatabaseUser::query()
             ->where('server_id', $server->id)
-            ->where('status', 'ready')
+            ->where('status', DatabaseStatus::Ready)
             ->whereJsonContains('databases', $serverDatabase->name)
             ->get();
 
