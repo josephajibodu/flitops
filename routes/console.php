@@ -7,13 +7,7 @@ use App\Jobs\CollectDueBackupsJob;
 use App\Jobs\IssueWildcardCertificateJob;
 use App\Jobs\SendSchedulerHeartbeatJob;
 use App\Jobs\SyncAllWorkerStatusesJob;
-use Illuminate\Foundation\Inspiring;
-use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Schedule;
-
-Artisan::command('inspire', function () {
-    $this->comment(Inspiring::quote());
-})->purpose('Display an inspiring quote');
 
 Schedule::command('horizon:snapshot')->everyFiveMinutes();
 
