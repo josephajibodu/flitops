@@ -22,6 +22,18 @@ enum WebServer: string
     }
 
     /**
+     * A short note shown next to the label in pickers, or null when the label
+     * stands on its own.
+     */
+    public function description(): ?string
+    {
+        return match ($this) {
+            self::Nginx => null,
+            self::Caddy => 'Automatic HTTPS',
+        };
+    }
+
+    /**
      * The managed service that runs this web server.
      */
     public function serviceType(): ServiceType
@@ -53,7 +65,7 @@ enum WebServer: string
     /**
      * Options for a web server picker.
      *
-     * @return array<int, array{value: string, label: string}>
+     * @return array<int, array{value: string, label: string, description: string|null}>
      */
     public static function options(): array
     {
@@ -61,6 +73,7 @@ enum WebServer: string
             fn (self $server): array => [
                 'value' => $server->value,
                 'label' => $server->label(),
+                'description' => $server->description(),
             ],
             self::cases(),
         );
