@@ -3,6 +3,7 @@
 namespace App\Actions\Sites;
 
 use App\Actions\Database\EscapesShell;
+use App\Enums\CronJobStatus;
 use App\Enums\DeploymentStatus;
 use App\Enums\ProjectType;
 use App\Enums\SiteDomainType;
@@ -339,7 +340,7 @@ class IsolateSiteAction
             $this->installAsRoot($this->connection, $worker->supervisorConfig("{$prefix}-{$worker->id}"), config('supervisor.conf_path')."/{$prefix}-{$worker->id}.conf");
         }
 
-        foreach ($this->cronJobs->filter(fn (CronJob $cronJob): bool => $cronJob->status === 'active' && ! $cronJob->hidden) as $cronJob) {
+        foreach ($this->cronJobs->filter(fn (CronJob $cronJob): bool => $cronJob->status === CronJobStatus::Active && ! $cronJob->hidden) as $cronJob) {
             $this->installAsRoot($this->connection, $cronJob->cronLine(), config('cron.cron_d_path').'/'.config('cron.file_prefix')."-{$cronJob->id}");
         }
 

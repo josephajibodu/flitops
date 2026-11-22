@@ -2,9 +2,11 @@
 
 namespace App\Models;
 
+use App\Enums\CronJobStatus;
 use App\Rules\AllowedProcessUser;
 use App\Rules\NoControlCharacters;
 use App\Rules\ValidCronExpression;
+use Database\Factories\CronJobFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -13,7 +15,7 @@ use RuntimeException;
 
 class CronJob extends Model
 {
-    /** @use HasFactory<\Database\Factories\CronJobFactory> */
+    /** @use HasFactory<CronJobFactory> */
     use HasFactory;
 
     protected $fillable = [
@@ -33,6 +35,7 @@ class CronJob extends Model
     {
         return [
             'hidden' => 'boolean',
+            'status' => CronJobStatus::class,
         ];
     }
 

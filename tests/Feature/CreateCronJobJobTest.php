@@ -1,6 +1,7 @@
 <?php
 
 use App\Actions\CronJob\CreateCronJob;
+use App\Enums\CronJobStatus;
 use App\Enums\ServerStatus;
 use App\Jobs\CreateCronJobJob;
 use App\Models\CronJob;
@@ -14,7 +15,7 @@ it('writes cron file on server and sets status to active', function () {
     $server = Server::factory()->create(['status' => ServerStatus::Active]);
     $cronJob = CronJob::factory()->create([
         'server_id' => $server->id,
-        'status' => 'pending',
+        'status' => CronJobStatus::Pending,
         'hidden' => false,
     ]);
 
@@ -32,14 +33,14 @@ it('writes cron file on server and sets status to active', function () {
     $job->handle(app(CreateCronJob::class));
 
     $cronJob->refresh();
-    expect($cronJob->status)->toBe('active');
+    expect($cronJob->status)->toBe(CronJobStatus::Active);
 });
 
 it('sets cron job status to failed when execute throws', function () {
     $server = Server::factory()->create(['status' => ServerStatus::Active]);
     $cronJob = CronJob::factory()->create([
         'server_id' => $server->id,
-        'status' => 'pending',
+        'status' => CronJobStatus::Pending,
     ]);
 
     $sshService = Mockery::mock(SshService::class);
@@ -55,5 +56,5 @@ it('sets cron job status to failed when execute throws', function () {
     }
 
     $cronJob->refresh();
-    expect($cronJob->status)->toBe('failed');
+    expect($cronJob->status)->toBe(CronJobStatus::Failed);
 });

@@ -1,5 +1,6 @@
 <?php
 
+use App\Enums\CronJobStatus;
 use App\Enums\ServerStatus;
 use App\Jobs\CreateCronJobJob;
 use App\Jobs\DestroyCronJobJob;
@@ -8,6 +9,7 @@ use App\Jobs\EnableCronJobJob;
 use App\Jobs\UpdateCronJobJob;
 use App\Models\CronJob;
 use App\Models\Server;
+use App\Models\Site;
 use App\Models\Team;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -42,7 +44,7 @@ it('stores a new cron job and dispatches job', function () {
         'user' => 'artisan',
         'frequency' => '* * * * *',
         'hidden' => false,
-        'status' => 'pending',
+        'status' => CronJobStatus::Pending,
     ]);
 
     Queue::assertPushed(CreateCronJobJob::class);
@@ -62,7 +64,7 @@ it('validates cron job command and frequency are required', function () {
 
 it('validates cron job site_id belongs to server', function () {
     $otherServer = Server::factory()->forTeam($this->team)->create();
-    $site = \App\Models\Site::factory()->create([
+    $site = Site::factory()->create([
         'server_id' => $otherServer->id,
     ]);
 

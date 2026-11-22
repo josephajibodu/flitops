@@ -2,6 +2,7 @@
 
 use App\Actions\Sites\IsolateSiteAction;
 use App\Enums\ConnectionStatus;
+use App\Enums\CronJobStatus;
 use App\Enums\DeploymentStatus;
 use App\Enums\NginxFileSection;
 use App\Enums\ProjectType;
@@ -108,7 +109,7 @@ beforeEach(function () {
         'server_id' => $this->server->id, 'site_id' => $this->site->id, 'user' => 'artisan', 'status' => 'stopped',
     ]);
     $this->cronJob = CronJob::factory()->create([
-        'server_id' => $this->server->id, 'site_id' => $this->site->id, 'user' => 'artisan', 'status' => 'active',
+        'server_id' => $this->server->id, 'site_id' => $this->site->id, 'user' => 'artisan', 'status' => CronJobStatus::Active,
         'command' => 'php artisan schedule:run', 'frequency' => '* * * * *', 'hidden' => false,
     ]);
     $this->serverWorker = Worker::factory()->create([

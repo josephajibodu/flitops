@@ -2,12 +2,14 @@
 
 namespace Database\Factories;
 
+use App\Enums\CronJobStatus;
+use App\Models\CronJob;
 use App\Models\Server;
 use App\Models\Site;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
- * @extends \Illuminate\Database\Eloquent\Factories\Factory<\App\Models\CronJob>
+ * @extends Factory<CronJob>
  */
 class CronJobFactory extends Factory
 {
@@ -25,7 +27,7 @@ class CronJobFactory extends Factory
             'user' => config('server.user', 'deploy'),
             'frequency' => '* * * * *',
             'hidden' => false,
-            'status' => 'active',
+            'status' => CronJobStatus::Active,
         ];
     }
 
