@@ -46,6 +46,7 @@ import {
 interface ServiceOption {
     value: string;
     label: string;
+    description?: string | null;
 }
 
 interface Props {
@@ -1294,6 +1295,12 @@ function StackSection({
                                     value={server.value}
                                 >
                                     {server.label}
+                                    {server.description && (
+                                        <span className="text-muted-foreground">
+                                            {' '}
+                                            · {server.description}
+                                        </span>
+                                    )}
                                 </SelectItem>
                             ))}
                             <SelectItem value={NONE}>None</SelectItem>
