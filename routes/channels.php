@@ -3,6 +3,8 @@
 use App\Models\Deployment;
 use App\Models\Server;
 use App\Models\Site;
+use App\Models\Team;
+use App\Models\User;
 use App\Realtime\RealtimeDiagnosticsChannelAuthorizer;
 use Illuminate\Support\Facades\Broadcast;
 use Illuminate\Support\Facades\Log;
@@ -11,40 +13,36 @@ Broadcast::channel('App.Models.User.{id}', function ($user, $id) {
     return (int) $user->id === (int) $id;
 });
 
-// Server channels - team members can subscribe to their team's server events
-Broadcast::channel('servers.{teamId}', function ($user, $teamId) {
-    return $user->teams()->where('team_id', $teamId)->exists()
-        || $user->ownedTeams()->where('id', $teamId)->exists();
+// Each channel asks the same policy as the page it feeds, so whoever can
+// see a team, server, site or deployment can hear its live updates.
+
+// Server list channel for a team (named by the team's numeric id, not its slug)
+Broadcast::channel('servers.{teamId}', function (User $user, string $teamId) {
+    $team = Team::find($teamId);
+
+    return $team !== null && $user->can('view', $team);
 });
 
-// Individual server channel - team members can subscribe to a specific server
-Broadcast::channel('server.{serverId}', function ($user, $serverId) {
-    $server = Server::find($serverId);
-
-    return $server && $user->belongsToTeam($server->team);
+Broadcast::channel('server.{server}', function (User $user, Server $server) {
+    return $user->can('view', $server);
 });
 
-// Deployment channel - team members can subscribe to deployment logs
-Broadcast::channel('deployments.{deploymentId}', function ($user, $deploymentId) {
-    $deployment = Deployment::find($deploymentId);
-
-    $authorized = $deployment && $user->belongsToTeam($deployment->site->server->team);
+// Deployment logs follow the deployment's site
+Broadcast::channel('deployments.{deployment}', function (User $user, Deployment $deployment) {
+    $authorized = $user->can('view', $deployment->site);
 
     Log::debug('Broadcast channel authorization', [
         'channel' => 'deployments',
-        'deployment_id' => (int) $deploymentId,
+        'deployment_id' => $deployment->id,
         'user_id' => $user->id,
-        'authorized' => (bool) $authorized,
+        'authorized' => $authorized,
     ]);
 
     return $authorized;
 });
 
-// Site channel - team members can subscribe to a specific site's events
-Broadcast::channel('site.{siteId}', function ($user, $siteId) {
-    $site = Site::find($siteId);
-
-    return $site && $user->belongsToTeam($site->server->team);
+Broadcast::channel('site.{site}', function (User $user, Site $site) {
+    return $user->can('view', $site);
 });
 
 Broadcast::channel('realtime.diagnostics.{userId}', function ($user, $userId) {

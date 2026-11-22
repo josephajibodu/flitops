@@ -1,6 +1,7 @@
 <?php
 
 use App\Actions\ServerConnections\AllowServerConnection;
+use App\Enums\CredentialType;
 use App\Models\DatabaseUser;
 use App\Models\Server;
 
@@ -65,7 +66,7 @@ it('opens Redis on a cache server behind a password kept off the command line', 
 
     app(AllowServerConnection::class)->execute($connection);
 
-    $password = $host->credential('redis_password')->value;
+    $password = $host->credential(CredentialType::RedisPassword)->value;
     expect($password)->toHaveLength(40);
     expect($uploads['/tmp/tmp.fleetops/staged'])->toContain("bind 0.0.0.0\nprotected-mode yes\nrequirepass {$password}");
     expect(implode("\n", $commands))

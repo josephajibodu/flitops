@@ -2,7 +2,8 @@
 
 namespace App\Jobs;
 
-use App\Actions\Database\EscapesShell;
+use App\Concerns\EscapesShell;
+use App\Enums\SshKeyStatus;
 use App\Models\Server;
 use App\Models\ServerSshKey;
 use App\Models\Site;
@@ -49,7 +50,7 @@ class SyncSshKeyJob implements ShouldQueue
                 throw new RuntimeException("Site {$this->site->id} isn't an isolated site on server {$this->server->id}.");
             }
 
-            $this->updatePlacement($systemUser, ['status' => 'syncing']);
+            $this->updatePlacement($systemUser, ['status' => SshKeyStatus::Syncing]);
 
             $connection = $sshService->connect($this->server);
 
@@ -78,7 +79,7 @@ class SyncSshKeyJob implements ShouldQueue
             $connection->disconnect();
 
             $this->updatePlacement($systemUser, [
-                'status' => 'synced',
+                'status' => SshKeyStatus::Synced,
                 'synced_at' => now(),
             ]);
 
@@ -86,7 +87,7 @@ class SyncSshKeyJob implements ShouldQueue
         } catch (Throwable $e) {
             Log::error("Failed to sync SSH key {$this->sshKey->id} to {$systemUser} on server {$this->server->id}: {$e->getMessage()}");
 
-            $this->updatePlacement($systemUser, ['status' => 'failed']);
+            $this->updatePlacement($systemUser, ['status' => SshKeyStatus::Failed]);
 
             throw $e;
         }

@@ -3,6 +3,7 @@
 namespace App\Actions\Servers;
 
 use App\Data\ServerData;
+use App\Enums\CredentialType;
 use App\Enums\ServerStatus;
 use App\Jobs\ProvisionServerJob;
 use App\Models\ProviderRegion;
@@ -94,19 +95,19 @@ class CreateServerAction
 
                 $server->credentials()->createMany([
                     [
-                        'type' => 'private_key',
+                        'type' => CredentialType::PrivateKey,
                         'value' => $keyPair->privateKey,
                     ],
                     [
-                        'type' => 'public_key',
+                        'type' => CredentialType::PublicKey,
                         'value' => $keyPair->publicKey,
                     ],
                     [
-                        'type' => 'sudo_password',
+                        'type' => CredentialType::SudoPassword,
                         'value' => Str::random(32),
                     ],
                     [
-                        'type' => 'database_password',
+                        'type' => CredentialType::DatabasePassword,
                         'value' => Str::random(32),
                     ],
                 ]);

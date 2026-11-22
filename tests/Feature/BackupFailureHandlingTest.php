@@ -2,6 +2,8 @@
 
 use App\Actions\Backups\RestoreDatabaseBackup;
 use App\Actions\Backups\RunDatabaseBackup;
+use App\Enums\BackupStatus;
+use App\Enums\CredentialType;
 use App\Exceptions\BackupFailedException;
 use App\Exceptions\SshCommandException;
 use App\Exceptions\SshConnectionException;
@@ -28,7 +30,7 @@ beforeEach(function () {
     $this->server = Server::factory()->create(['database_type' => 'mysql']);
     ServerCredential::create([
         'server_id' => $this->server->id,
-        'type' => 'database_password',
+        'type' => CredentialType::DatabasePassword,
         'value' => 'rootsecret',
     ]);
     $this->serverDatabase = ServerDatabase::factory()->create([
@@ -47,7 +49,7 @@ beforeEach(function () {
     $this->backup = Backup::factory()->create([
         'server_database_id' => $this->serverDatabase->id,
         'storage_provider_id' => $this->storageProvider->id,
-        'status' => 'dumping',
+        'status' => BackupStatus::Dumping,
     ]);
 
     $this->failedUpload = fn (string $stderr) => new SshCommandException(
@@ -141,7 +143,7 @@ it('stores the safe message, never the raw command, when a backup upload is reje
         ->toThrow(SshCommandException::class);
 
     $this->backup->refresh();
-    expect($this->backup->status)->toBe('failed')
+    expect($this->backup->status)->toBe(BackupStatus::Failed)
         ->and($this->backup->error_message)->toStartWith("Cloudflare R2 didn't accept the access key")
         ->and($this->backup->error_message)->not->toContain('STORAGESECRETVALUE');
 });
@@ -152,7 +154,7 @@ it('marks a backup failed and notifies when it fails before the action can handl
     (new RunBackupJob($this->backup))->failed(new SshConnectionException('SSH connection failed: Network is unreachable'));
 
     $this->backup->refresh();
-    expect($this->backup->status)->toBe('failed')
+    expect($this->backup->status)->toBe(BackupStatus::Failed)
         ->and($this->backup->finished_at)->not->toBeNull()
         ->and($this->backup->error_message)->toStartWith("Couldn't connect to the server over SSH.");
 
@@ -165,7 +167,7 @@ it('marks a backup failed and notifies when it fails before the action can handl
 
 it('keeps the message the action already recorded', function () {
     Notification::fake();
-    $this->backup->update(['status' => 'failed', 'error_message' => 'Recorded by the action.']);
+    $this->backup->update(['status' => BackupStatus::Failed, 'error_message' => 'Recorded by the action.']);
 
     (new RunBackupJob($this->backup))->failed(new RuntimeException('boom'));
 
@@ -191,7 +193,7 @@ it('logs the full error with server and storage secrets redacted', function () {
 });
 
 it('marks a running restore failed when the restore job fails early', function () {
-    $this->backup->update(['status' => 'completed', 'restore_status' => 'running']);
+    $this->backup->update(['status' => BackupStatus::Completed, 'restore_status' => 'running']);
 
     (new RestoreBackupJob($this->backup))->failed(new SshConnectionException('SSH connection failed'));
 
@@ -201,7 +203,7 @@ it('marks a running restore failed when the restore job fails early', function (
 });
 
 it('leaves a finished restore alone when the restore job fails', function () {
-    $this->backup->update(['status' => 'completed', 'restore_status' => 'completed']);
+    $this->backup->update(['status' => BackupStatus::Completed, 'restore_status' => 'completed']);
 
     (new RestoreBackupJob($this->backup))->failed(new RuntimeException('late failure'));
 

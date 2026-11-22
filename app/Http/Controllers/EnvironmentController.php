@@ -2,19 +2,17 @@
 
 namespace App\Http\Controllers;
 
+use App\Actions\Sites\UpdateSiteEnvironmentAction;
 use App\Enums\ActivityEvent;
 use App\Http\Resources\ServerResource;
 use App\Http\Resources\SiteResource;
-use App\Jobs\SyncEnvironmentJob;
 use App\Models\ActivityLog;
 use App\Models\Server;
 use App\Models\Site;
 use App\Models\Team;
-use App\Models\User;
 use App\Services\Ssh\SshService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Validation\ValidationException;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -69,7 +67,7 @@ class EnvironmentController extends Controller
         ]);
     }
 
-    public function update(Request $request, Team $team, Server $server, Site $site): RedirectResponse
+    public function update(Request $request, Team $team, Server $server, Site $site, UpdateSiteEnvironmentAction $action): RedirectResponse
     {
         $this->authorize('changeDeploySettings', $site);
 
@@ -79,132 +77,16 @@ class EnvironmentController extends Controller
             'restart_queue' => ['sometimes', 'boolean'],
         ]);
 
-        $clearConfigCache = (bool) ($validated['clear_config_cache'] ?? false);
-        $restartQueue = (bool) ($validated['restart_queue'] ?? false);
-        $variables = $this->parseEnvContent($validated['env_content']);
-
-        $this->recordActivity($site, $validated['env_content'], $variables, $request->user());
-
-        $site->update(['env_content' => $validated['env_content']]);
-
-        // Get existing variables to detect deletions
-        $existingKeys = $site->environmentVariables()->pluck('key')->all();
-        $newKeys = array_keys($variables);
-
-        // Delete removed variables
-        $keysToDelete = array_diff($existingKeys, $newKeys);
-        if (! empty($keysToDelete)) {
-            $site->environmentVariables()->whereIn('key', $keysToDelete)->delete();
-        }
-
-        // Update or create variables
-        foreach ($variables as $key => $value) {
-            $site->environmentVariables()->updateOrCreate(
-                ['key' => $key],
-                ['value' => $value]
-            );
-        }
-
-        // Dispatch job to sync environment to server
-        SyncEnvironmentJob::dispatch($site, $clearConfigCache, $restartQueue);
+        $action->execute(
+            $site,
+            $validated['env_content'],
+            $request->user(),
+            clearConfigCache: (bool) ($validated['clear_config_cache'] ?? false),
+            restartQueue: (bool) ($validated['restart_queue'] ?? false),
+        );
 
         return redirect()
             ->back()
             ->with('success', 'Environment variables updated. Syncing to server...');
-    }
-
-    /**
-     * Record in the team activity log who saved the environment and which
-     * keys the save added, changed or removed (names only, never values).
-     * Saving the same content again records nothing. When FlitOps has never
-     * stored this site's environment (it was only read from the server), the
-     * earlier file is unknown, so the entry is marked as a first save with no
-     * key breakdown.
-     *
-     * @param  array<string, string>  $newVariables
-     */
-    protected function recordActivity(Site $site, string $newContent, array $newVariables, ?User $user): void
-    {
-        $oldContent = $site->env_content;
-
-        if ($oldContent === null) {
-            $storedVariables = $site->environmentVariables()->get();
-
-            if ($storedVariables->isNotEmpty()) {
-                $oldContent = $storedVariables->map(fn ($variable) => "{$variable->key}={$variable->value}")->implode("\n");
-            }
-        }
-
-        if ($oldContent === $newContent) {
-            return;
-        }
-
-        $properties = ['first_save' => true, 'added_keys' => [], 'changed_keys' => [], 'removed_keys' => []];
-
-        if ($oldContent !== null) {
-            try {
-                $oldVariables = $this->parseEnvContent($oldContent);
-            } catch (ValidationException) {
-                $oldVariables = [];
-            }
-
-            $properties = [
-                'first_save' => false,
-                'added_keys' => array_keys(array_diff_key($newVariables, $oldVariables)),
-                'changed_keys' => array_keys(array_filter(
-                    array_intersect_key($newVariables, $oldVariables),
-                    fn (string $value, string $key): bool => $oldVariables[$key] !== $value,
-                    ARRAY_FILTER_USE_BOTH,
-                )),
-                'removed_keys' => array_keys(array_diff_key($oldVariables, $newVariables)),
-            ];
-        }
-
-        ActivityLog::record($site->server->team, ActivityEvent::SiteEnvironmentUpdated, $site, $properties, $user);
-    }
-
-    /**
-     * @return array<string, string>
-     *
-     * @throws ValidationException
-     */
-    protected function parseEnvContent(string $envContent): array
-    {
-        $variables = [];
-        $lines = preg_split('/\r\n|\r|\n/', $envContent) ?: [];
-
-        foreach ($lines as $index => $line) {
-            $trimmedLine = trim($line);
-
-            if ($trimmedLine === '' || str_starts_with($trimmedLine, '#')) {
-                continue;
-            }
-
-            $delimiterIndex = strpos($line, '=');
-            if ($delimiterIndex === false) {
-                throw ValidationException::withMessages([
-                    'env_content' => 'Line '.($index + 1).' is invalid. Use KEY=value format.',
-                ]);
-            }
-
-            $key = trim(substr($line, 0, $delimiterIndex));
-            $value = ltrim(substr($line, $delimiterIndex + 1));
-
-            if ($key === '' || ! preg_match('/^[A-Z_][A-Z0-9_]*$/i', $key)) {
-                throw ValidationException::withMessages([
-                    'env_content' => 'Line '.($index + 1).' has an invalid key. Keys must start with a letter or underscore and contain only letters, numbers, and underscores.',
-                ]);
-            }
-
-            if (strlen($value) > 65535) {
-                throw ValidationException::withMessages([
-                    'env_content' => 'Line '.($index + 1).' value is too long.',
-                ]);
-            }
-
-            $variables[$key] = $value;
-        }
-
-        return $variables;
     }
 }

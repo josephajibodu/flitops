@@ -3,6 +3,7 @@
 namespace App\Jobs;
 
 use App\Actions\Database\UpdateDatabaseUser;
+use App\Enums\DatabaseStatus;
 use App\Events\ServerDatabasesUpdated;
 use App\Models\DatabaseUser;
 use Illuminate\Contracts\Queue\ShouldQueue;
@@ -29,7 +30,7 @@ class UpdateDatabaseUserJob implements ShouldQueue
     {
         try {
             $action->execute($this->databaseUser);
-            $this->databaseUser->update(['status' => 'ready']);
+            $this->databaseUser->update(['status' => DatabaseStatus::Ready]);
         } catch (\Throwable $e) {
             Log::error('UpdateDatabaseUserJob failed', [
                 'database_user_id' => $this->databaseUser->id,

@@ -2,7 +2,7 @@
 
 namespace App\Actions\Certificates;
 
-use App\Actions\Database\EscapesShell;
+use App\Concerns\EscapesShell;
 use App\Contracts\WebServerContract;
 use App\Models\Certificate;
 use App\Services\Certificates\WildcardCertificateIssuer;

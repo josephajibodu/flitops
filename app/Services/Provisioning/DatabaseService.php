@@ -2,8 +2,8 @@
 
 namespace App\Services\Provisioning;
 
-use App\Actions\Database\EscapesShell;
-use App\Actions\Database\QuotesMysql;
+use App\Concerns\EscapesShell;
+use App\Concerns\QuotesMysql;
 use App\Enums\DatabaseType;
 use RuntimeException;
 

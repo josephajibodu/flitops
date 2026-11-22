@@ -1,5 +1,6 @@
 <?php
 
+use App\Enums\SshKeyStatus;
 use App\Http\Resources\SshKeyResource;
 use App\Jobs\RevokeSshKeyJob;
 use App\Jobs\SyncSshKeyJob;
@@ -74,7 +75,7 @@ it('serializes synced_at on attached servers as an iso8601 string', function () 
     ]);
 
     $sshKey->servers()->attach($server->id, [
-        'status' => 'synced',
+        'status' => SshKeyStatus::Synced,
         'synced_at' => now(),
     ]);
 
@@ -83,7 +84,7 @@ it('serializes synced_at on attached servers as an iso8601 string', function () 
     $resource = SshKeyResource::make($sshKey)->resolve();
 
     expect($resource['servers'][0]['synced_at'])->toBeString()
-        ->and($resource['servers'][0]['status'])->toBe('synced');
+        ->and($resource['servers'][0]['status'])->toBe(SshKeyStatus::Synced);
 });
 
 it('deletes an ssh key under the team prefix', function () {
@@ -171,7 +172,7 @@ it('quotes the stored key when syncing it, so its text is never run by the shell
         'user_id' => $this->user->id,
         'public_key' => 'ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIC6nEXz5 me$(touch /tmp/pwned)\'"`id`',
     ]);
-    $sshKey->servers()->attach($server->id, ['status' => 'pending']);
+    $sshKey->servers()->attach($server->id, ['status' => SshKeyStatus::Pending]);
 
     $commands = [];
     $connection = Mockery::mock(SshConnection::class);
@@ -194,7 +195,7 @@ it('quotes the stored key when syncing it, so its text is never run by the shell
         "grep -qxF -- {$quotedKey} {$authorizedKeys} && echo \"exists\" || echo \"not_found\"",
         "printf '%s\\n' {$quotedKey} >> {$authorizedKeys}",
     ]);
-    expect($sshKey->servers()->first()->pivot->status)->toBe('synced');
+    expect($sshKey->servers()->first()->pivot->status)->toBe(SshKeyStatus::Synced);
 });
 
 it('revokes a key by its quoted key material rather than a regex prefix', function () {
@@ -203,7 +204,7 @@ it('revokes a key by its quoted key material rather than a regex prefix', functi
         'user_id' => $this->user->id,
         'public_key' => 'ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIC6nEXz5 me$(touch /tmp/pwned)',
     ]);
-    $sshKey->servers()->attach($server->id, ['status' => 'synced']);
+    $sshKey->servers()->attach($server->id, ['status' => SshKeyStatus::Synced]);
 
     $commands = [];
     $connection = Mockery::mock(SshConnection::class);
@@ -235,8 +236,8 @@ it('still revokes a deleted ssh key from its servers once the queued job runs', 
         'public_key' => 'ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIDeletedKeyMaterial me@laptop',
     ]);
     $sshKey->servers()->attach([
-        $firstServer->id => ['status' => 'synced'],
-        $secondServer->id => ['status' => 'synced'],
+        $firstServer->id => ['status' => SshKeyStatus::Synced],
+        $secondServer->id => ['status' => SshKeyStatus::Synced],
     ]);
 
     $this->actingAs($this->user)

@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Actions\ServerConnections\AllowServerConnection;
 use App\Actions\ServerConnections\RevokeServerConnection;
+use App\Enums\CredentialType;
 use App\Enums\ServerConnectionStatus;
 use App\Enums\ServerStatus;
 use App\Events\ServerConnectionsUpdated;
@@ -62,7 +63,7 @@ class ServerConnectionController extends Controller
             'availableServers' => Inertia::live($availableServers, on: $connectionsUpdated),
             'redisPassword' => Inertia::live(
                 $server->sharesRedis() && auth()->user()->can('viewSecrets', $server)
-                    ? $server->credential('redis_password')?->value
+                    ? $server->credential(CredentialType::RedisPassword)?->value
                     : null,
                 on: $connectionsUpdated,
             ),

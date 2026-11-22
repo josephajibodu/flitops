@@ -2,7 +2,7 @@
 
 namespace App\Jobs;
 
-use App\Actions\Database\EscapesShell;
+use App\Concerns\EscapesShell;
 use App\Enums\DeploymentStatus;
 use App\Exceptions\DeploymentFailedException;
 use App\Jobs\Concerns\ManagesDeploymentLifecycle;

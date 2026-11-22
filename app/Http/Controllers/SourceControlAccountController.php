@@ -47,10 +47,14 @@ class SourceControlAccountController extends Controller
             abort(404);
         }
 
-        // Store the intended redirect URL in session. The optional popup flag
+        // Store where to go back to in session. The optional popup flag
         // makes the callback close the OAuth popup instead of redirecting, so
         // the opener page can refresh in place (used by the create-site flow).
-        session()->put('source_control_redirect', $request->get('redirect', route('source-control.index', auth()->user()->currentTeamOrFail())));
+        session()->put(
+            'source_control_redirect',
+            $this->pathOnThisSite($request->query('redirect'))
+                ?? route('source-control.index', auth()->user()->currentTeamOrFail()),
+        );
         session()->put('source_control_popup', $request->boolean('popup'));
 
         $socialite = match ($provider) {
@@ -147,6 +151,25 @@ class SourceControlAccountController extends Controller
      * post a message to the opener so the create-site page can refresh its
      * connected-accounts list in place.
      */
+    /**
+     * The given address if it is a page on this site, otherwise null. Only
+     * a path such as `/team/servers` is kept: a full URL, or one starting
+     * with `//` or containing a backslash (which browsers read as another site),
+     * could send the user to a look-alike site after they connect.
+     */
+    private function pathOnThisSite(mixed $path): ?string
+    {
+        if (! is_string($path) || ! str_starts_with($path, '/') || str_starts_with($path, '//')) {
+            return null;
+        }
+
+        if (str_contains($path, '\\') || preg_match('/[\x00-\x1F\x7F]/', $path) === 1) {
+            return null;
+        }
+
+        return $path;
+    }
+
     private function popupCloseResponse(bool $success, ?string $error = null): HttpResponse
     {
         $payload = json_encode([

@@ -36,7 +36,7 @@ class PublishSecurityAdvisoryAction
         $serversAdded = 0;
 
         [$affected, $unaffected] = Server::query()
-            ->with('team')
+            ->with('team.owner')
             ->whereNotNull('team_id')
             ->when($teamIds !== null, fn (Builder $query): Builder => $query->whereIn('team_id', $teamIds))
             ->when($serverIds !== null, fn (Builder $query): Builder => $query->whereIn('id', $serverIds))

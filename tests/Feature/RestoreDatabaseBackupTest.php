@@ -1,6 +1,8 @@
 <?php
 
 use App\Actions\Backups\RestoreDatabaseBackup;
+use App\Enums\BackupStatus;
+use App\Enums\CredentialType;
 use App\Exceptions\BackupFailedException;
 use App\Exceptions\SshCommandException;
 use App\Models\Backup;
@@ -20,7 +22,7 @@ beforeEach(function () {
     $this->server = Server::factory()->create(['database_type' => 'mysql']);
     ServerCredential::create([
         'server_id' => $this->server->id,
-        'type' => 'database_password',
+        'type' => CredentialType::DatabasePassword,
         'value' => 'rootsecret',
     ]);
     $this->serverDatabase = ServerDatabase::factory()->create([
@@ -96,7 +98,7 @@ it('refuses to restore a backup with no stored file', function () {
     $backup = Backup::factory()->create([
         'server_database_id' => $this->serverDatabase->id,
         'storage_provider_id' => $this->storageProvider->id,
-        'status' => 'pending',
+        'status' => BackupStatus::Pending,
         'storage_path' => null,
     ]);
 

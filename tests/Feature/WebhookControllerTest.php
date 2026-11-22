@@ -8,6 +8,7 @@ use App\Models\Server;
 use App\Models\Site;
 use App\Models\Team;
 use App\Models\User;
+use Illuminate\Database\UniqueConstraintViolationException;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Queue;
 use Illuminate\Support\Str;
@@ -73,6 +74,22 @@ function bitbucketHeaders(array $payload, string $secret): array
 
 it('returns 404 for an unknown secret', function () {
     $this->postJson('/webhook/unknown-secret')->assertNotFound();
+});
+
+it('limits how often the webhook can be called to stop secret guessing', function () {
+    foreach (range(1, 60) as $attempt) {
+        $this->postJson('/webhook/guess-'.$attempt)->assertNotFound();
+    }
+
+    $this->postJson('/webhook/guess-61')->assertTooManyRequests();
+});
+
+it('refuses two sites with the same webhook secret', function () {
+    makeSite();
+
+    expect(fn () => Site::factory()->forServer($this->server)->create([
+        'webhook_secret' => 'test-secret-32-chars-long-12345x',
+    ]))->toThrow(UniqueConstraintViolationException::class);
 });
 
 // ---------------------------------------------------------------------------

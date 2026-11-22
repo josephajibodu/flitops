@@ -73,22 +73,7 @@ class SiteController extends Controller
             ->sourceControlAccounts()
             ->get();
 
-        $phpVersions = $server->installedServices()
-            ->where('type', 'php')
-            ->get()
-            ->map(fn ($s) => [
-                'value' => $s->installed_version ?? $s->version,
-                'label' => 'PHP '.($s->installed_version ?? $s->version),
-            ])
-            ->filter(fn ($v) => ! empty($v['value']))
-            ->unique('value')
-            ->values()
-            ->all();
-
-        if (empty($phpVersions)) {
-            $defaultVersion = $server->php_version ?? '8.3';
-            $phpVersions = [['value' => $defaultVersion, 'label' => 'PHP '.$defaultVersion]];
-        }
+        $phpVersions = $this->phpVersionOptions($server);
 
         return Inertia::render('sites/create', [
             'server' => new ServerResource($server),
@@ -190,22 +175,7 @@ class SiteController extends Controller
 
         $site->load('server.providerAccount');
 
-        $phpVersions = $server->installedServices()
-            ->where('type', 'php')
-            ->get()
-            ->map(fn ($s) => [
-                'value' => $s->installed_version ?? $s->version,
-                'label' => 'PHP '.($s->installed_version ?? $s->version),
-            ])
-            ->filter(fn ($v) => ! empty($v['value']))
-            ->unique('value')
-            ->values()
-            ->all();
-
-        if (empty($phpVersions)) {
-            $defaultVersion = $server->php_version ?? '8.3';
-            $phpVersions = [['value' => $defaultVersion, 'label' => 'PHP '.$defaultVersion]];
-        }
+        $phpVersions = $this->phpVersionOptions($server);
 
         return Inertia::render('sites/edit', [
             'server' => new ServerResource($server),
@@ -314,5 +284,18 @@ class SiteController extends Controller
         return redirect()
             ->route('servers.sites.show', [$team, $server, $site])
             ->with('success', 'Retrying site creation...');
+    }
+
+    /**
+     * The PHP versions a site on this server can pick, as select options.
+     * Falls back to the server's default version when none are recorded.
+     *
+     * @return list<array{value: string, label: string}>
+     */
+    private function phpVersionOptions(Server $server): array
+    {
+        $versions = $server->installedPhpVersions() ?: [$server->php_version ?? '8.3'];
+
+        return array_map(fn (string $version): array => ['value' => $version, 'label' => "PHP {$version}"], $versions);
     }
 }

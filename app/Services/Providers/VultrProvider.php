@@ -8,29 +8,27 @@ use App\Data\ProviderServerResult;
 use App\Data\ProviderServerStatus;
 use App\Data\ProviderSize;
 use App\Exceptions\ProviderApiException;
+use App\Services\Providers\Concerns\BuildsProviderClient;
 use Illuminate\Http\Client\PendingRequest;
 use Illuminate\Support\Collection;
-use Illuminate\Support\Facades\Http;
 
 class VultrProvider implements ProviderContract
 {
+    use BuildsProviderClient;
+
     private string $apiToken = '';
 
     private PendingRequest $http;
 
     public function __construct()
     {
-        $this->http = Http::baseUrl('https://api.vultr.com/v2')
-            ->timeout(30)
-            ->retry(3, 100);
+        $this->http = $this->providerClient('https://api.vultr.com/v2');
     }
 
     public function setCredentials(array $credentials): void
     {
         $this->apiToken = $credentials['api_token'] ?? '';
-        $this->http = Http::baseUrl('https://api.vultr.com/v2')
-            ->timeout(30)
-            ->retry(3, 100)
+        $this->http = $this->providerClient('https://api.vultr.com/v2')
             ->withToken($this->apiToken);
     }
 
@@ -182,7 +180,7 @@ class VultrProvider implements ProviderContract
             'os_id' => 2284, // Ubuntu 24.04 LTS x64
             'sshkey_id' => [$sshKeyId],
             'backups' => 'disabled',
-            'tags' => ['serverforge'],
+            'tags' => ['flitops'],
         ]);
 
         if (! $response->successful()) {

@@ -2,9 +2,10 @@
 
 namespace App\Actions\Backups;
 
-use App\Actions\Database\EscapesShell;
 use App\Actions\Database\KeepsSecretsOffCommandLine;
+use App\Concerns\EscapesShell;
 use App\Contracts\StorageProviderContract;
+use App\Enums\BackupStatus;
 use App\Events\BackupStatusChanged;
 use App\Exceptions\BackupFailedException;
 use App\Jobs\RunBackupJob;
@@ -61,7 +62,7 @@ class RunSqliteBackup
         $backup = $site->backups()->create([
             'storage_provider_id' => $storageProvider->id,
             'user_id' => $user?->id,
-            'status' => 'pending',
+            'status' => BackupStatus::Pending,
             'triggered_by' => $triggeredBy,
         ]);
 
@@ -92,15 +93,15 @@ class RunSqliteBackup
             $this->withPrivateDirectory($connection, function (string $directory) use ($connection, $backup, $site, $driver, $s3Uri): void {
                 $awsCredentials = $this->uploadStorageCredentials($connection, $directory, $driver);
 
-                $this->updateStatus($backup, 'dumping', ['started_at' => now()]);
+                $this->updateStatus($backup, BackupStatus::Dumping, ['started_at' => now()]);
                 $this->streamSnapshotToStorage($connection, $site, $directory, $awsCredentials, $driver, $s3Uri);
 
-                $this->updateStatus($backup, 'verifying');
+                $this->updateStatus($backup, BackupStatus::Verifying);
                 $this->verifyBackup($connection, $directory, $awsCredentials, $driver, $s3Uri);
             });
 
             $backup->update([
-                'status' => 'completed',
+                'status' => BackupStatus::Completed,
                 'storage_path' => $path,
                 'size_bytes' => $driver->size($path),
                 'verified_at' => now(),

@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Enums\DatabaseStatus;
 use Database\Factories\ServerDatabaseFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -23,6 +24,16 @@ class ServerDatabase extends Model
         'charset',
         'status',
     ];
+
+    /**
+     * @return array<string, string>
+     */
+    protected function casts(): array
+    {
+        return [
+            'status' => DatabaseStatus::class,
+        ];
+    }
 
     public function server(): BelongsTo
     {
@@ -48,7 +59,7 @@ class ServerDatabase extends Model
         return DatabaseUser::query()
             ->where('server_id', $this->server_id)
             ->where('permission', 'readwrite')
-            ->where('status', 'ready')
+            ->where('status', DatabaseStatus::Ready)
             ->whereJsonContains('databases', $this->name)
             ->oldest('id')
             ->first();

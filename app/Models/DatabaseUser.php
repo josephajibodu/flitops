@@ -2,13 +2,15 @@
 
 namespace App\Models;
 
+use App\Enums\DatabaseStatus;
+use Database\Factories\DatabaseUserFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class DatabaseUser extends Model
 {
-    /** @use HasFactory<\Database\Factories\DatabaseUserFactory> */
+    /** @use HasFactory<DatabaseUserFactory> */
     use HasFactory;
 
     protected $fillable = [
@@ -38,6 +40,7 @@ class DatabaseUser extends Model
         return [
             'databases' => 'array',
             'password' => 'encrypted',
+            'status' => DatabaseStatus::class,
         ];
     }
 

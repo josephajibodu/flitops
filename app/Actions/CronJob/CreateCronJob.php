@@ -2,7 +2,8 @@
 
 namespace App\Actions\CronJob;
 
-use App\Actions\Database\EscapesShell;
+use App\Concerns\EscapesShell;
+use App\Enums\CronJobStatus;
 use App\Jobs\CreateCronJobJob;
 use App\Models\CronJob;
 use App\Models\Server;
@@ -33,7 +34,7 @@ class CreateCronJob
             'user' => $input['user'],
             'frequency' => $input['frequency'],
             'hidden' => false,
-            'status' => 'pending',
+            'status' => CronJobStatus::Pending,
         ]);
 
         CreateCronJobJob::dispatch($cronJob);
@@ -63,7 +64,7 @@ class CreateCronJob
 
             $this->installAsRoot($connection, $cronJob->cronLine(), $destPath);
 
-            $cronJob->update(['status' => 'active']);
+            $cronJob->update(['status' => CronJobStatus::Active]);
         } finally {
             $connection->disconnect();
         }

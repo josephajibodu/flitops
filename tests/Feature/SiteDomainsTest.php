@@ -284,3 +284,14 @@ it('only rebuilds the config when a www change leaves the certificate\'s names a
     'a subdomain' => [['hostname' => 'app.example.com', 'ssl_enabled_at' => now()], 'nginx', WwwRedirect::None],
     'Caddy gets its own certificates' => [['hostname' => 'example.com', 'ssl_enabled_at' => now()], 'caddy', WwwRedirect::None],
 ]);
+
+it('refuses to change a domain through a different site\'s address', function () {
+    $otherSite = Site::factory()->create(['server_id' => $this->server->id]);
+    $otherDomain = SiteDomain::factory()->for($otherSite)->create(['hostname' => 'other.example.com']);
+
+    $this->actingAs($this->user)
+        ->delete("/{$this->team->slug}/servers/{$this->server->id}/sites/{$this->site->id}/domains/{$otherDomain->ulid}")
+        ->assertNotFound();
+
+    expect($otherDomain->fresh())->not->toBeNull();
+});

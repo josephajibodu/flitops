@@ -2,6 +2,7 @@
 
 use App\Actions\Sites\IsolateSiteAction;
 use App\Enums\ConnectionStatus;
+use App\Enums\CronJobStatus;
 use App\Enums\DeploymentStatus;
 use App\Enums\NginxFileSection;
 use App\Enums\ProjectType;
@@ -9,6 +10,7 @@ use App\Enums\ServerStatus;
 use App\Enums\SiteDomainType;
 use App\Enums\SiteStatus;
 use App\Enums\TeamRoleKey;
+use App\Enums\WorkerStatus;
 use App\Jobs\IsolateSiteJob;
 use App\Jobs\IssueSslForDomainJob;
 use App\Models\CronJob;
@@ -102,17 +104,17 @@ beforeEach(function () {
     ]);
 
     $this->worker = Worker::factory()->create([
-        'server_id' => $this->server->id, 'site_id' => $this->site->id, 'user' => 'artisan', 'status' => 'active',
+        'server_id' => $this->server->id, 'site_id' => $this->site->id, 'user' => 'artisan', 'status' => WorkerStatus::Active,
     ]);
     $this->stoppedWorker = Worker::factory()->create([
-        'server_id' => $this->server->id, 'site_id' => $this->site->id, 'user' => 'artisan', 'status' => 'stopped',
+        'server_id' => $this->server->id, 'site_id' => $this->site->id, 'user' => 'artisan', 'status' => WorkerStatus::Stopped,
     ]);
     $this->cronJob = CronJob::factory()->create([
-        'server_id' => $this->server->id, 'site_id' => $this->site->id, 'user' => 'artisan', 'status' => 'active',
+        'server_id' => $this->server->id, 'site_id' => $this->site->id, 'user' => 'artisan', 'status' => CronJobStatus::Active,
         'command' => 'php artisan schedule:run', 'frequency' => '* * * * *', 'hidden' => false,
     ]);
     $this->serverWorker = Worker::factory()->create([
-        'server_id' => $this->server->id, 'site_id' => null, 'user' => 'artisan', 'status' => 'active',
+        'server_id' => $this->server->id, 'site_id' => null, 'user' => 'artisan', 'status' => WorkerStatus::Active,
     ]);
 });
 

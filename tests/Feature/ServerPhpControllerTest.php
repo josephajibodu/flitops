@@ -15,6 +15,7 @@ use App\Jobs\SetDefaultPhpVersionJob;
 use App\Jobs\SyncSiteNginxJob;
 use App\Jobs\UpdatePhpSettingsJob;
 use App\Models\Server;
+use App\Models\Service;
 use App\Models\Site;
 use App\Models\Team;
 use App\Models\User;
@@ -460,4 +461,15 @@ describe('extensions', function () {
             'Another extension change is already in progress for PHP 8.3.',
         ],
     ]);
+});
+
+it('lists each installed PHP version once, ignoring other services', function () {
+    $server = Server::factory()->create();
+    Service::factory()->for($server)->php('8.3')->create();
+    Service::factory()->for($server)->php('8.2')->create();
+    Service::factory()->for($server)->php('8.3')->create(['is_default' => true]);
+    Service::factory()->for($server)->php()->create(['version' => '8.4', 'installed_version' => null, 'status' => ServiceStatus::Installing]);
+    Service::factory()->for($server)->nginx()->create();
+
+    expect($server->installedPhpVersions())->toEqualCanonicalizing(['8.3', '8.2', '8.4']);
 });

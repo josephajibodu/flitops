@@ -2,7 +2,7 @@
 
 namespace App\Services\Storage;
 
-use App\Actions\Database\EscapesShell;
+use App\Concerns\EscapesShell;
 use App\Contracts\StorageProviderContract;
 use Illuminate\Contracts\Filesystem\Filesystem;
 use Illuminate\Support\Facades\Storage;

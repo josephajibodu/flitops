@@ -3,6 +3,7 @@
 namespace App\Jobs;
 
 use App\Actions\Worker\UpdateWorker;
+use App\Enums\WorkerStatus;
 use App\Events\ServerProcessesUpdated;
 use App\Models\Worker;
 use Illuminate\Contracts\Queue\ShouldQueue;
@@ -34,7 +35,7 @@ class UpdateWorkerJob implements ShouldQueue
                 'worker_id' => $this->worker->id,
                 'message' => $e->getMessage(),
             ]);
-            $this->worker->update(['status' => 'failed']);
+            $this->worker->update(['status' => WorkerStatus::Failed]);
             throw $e;
         } finally {
             event(new ServerProcessesUpdated($this->worker->server_id));

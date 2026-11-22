@@ -1,5 +1,6 @@
 <?php
 
+use App\Enums\CredentialType;
 use App\Models\Server;
 use App\Models\ServerConnection;
 use App\Models\ServerCredential;
@@ -125,7 +126,7 @@ function fakeHostSsh(array &$commands, array &$uploads, array $outputs = []): vo
  */
 function connectionTo(Server $host): ServerConnection
 {
-    ServerCredential::create(['server_id' => $host->id, 'type' => 'database_password', 'value' => 'root-secret']);
+    ServerCredential::create(['server_id' => $host->id, 'type' => CredentialType::DatabasePassword, 'value' => 'root-secret']);
 
     return ServerConnection::factory()->pending()->create([
         'server_id' => $host->id,

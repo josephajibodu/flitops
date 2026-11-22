@@ -1,5 +1,6 @@
 <?php
 
+use App\Enums\CredentialType;
 use App\Exceptions\SshConnectionException;
 use App\Exceptions\SshHostKeyMismatchException;
 use App\Models\Backup;
@@ -136,7 +137,7 @@ beforeEach(function () {
     $this->key = fakeHostKey();
     $this->server = Server::factory()->active()->create();
     $this->server->credentials()->create([
-        'type' => 'private_key',
+        'type' => CredentialType::PrivateKey,
         'value' => app(KeyGenerator::class)->generate()->privateKey,
     ]);
 });

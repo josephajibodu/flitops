@@ -2,7 +2,7 @@
 
 namespace App\Models;
 
-use App\Actions\Database\EscapesShell;
+use App\Concerns\EscapesShell;
 use App\Enums\DeploymentStatus;
 use App\Enums\Framework;
 use App\Enums\OctaneServer;
@@ -468,7 +468,7 @@ class Site extends Model
         return $this->hasMany(SiteNginxFile::class);
     }
 
-    public function nginxHistory(): HasMany
+    public function nginxHistories(): HasMany
     {
         return $this->hasMany(SiteNginxHistory::class)->latest('created_at');
     }

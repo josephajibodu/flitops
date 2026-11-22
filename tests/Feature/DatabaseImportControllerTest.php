@@ -1,5 +1,6 @@
 <?php
 
+use App\Enums\BackupStatus;
 use App\Enums\ServerStatus;
 use App\Enums\TeamRoleKey;
 use App\Jobs\RestoreBackupJob;
@@ -54,7 +55,7 @@ it('keeps the uploaded dump in storage and starts loading it into the database',
 
     $backup = $this->serverDatabase->backups()->sole();
     expect($backup->triggered_by)->toBe('import')
-        ->and($backup->status)->toBe('completed')
+        ->and($backup->status)->toBe(BackupStatus::Completed)
         ->and($backup->restore_status)->toBe('running')
         ->and($backup->user_id)->toBe($this->user->id);
 

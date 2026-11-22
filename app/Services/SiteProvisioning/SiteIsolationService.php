@@ -2,7 +2,7 @@
 
 namespace App\Services\SiteProvisioning;
 
-use App\Actions\Database\EscapesShell;
+use App\Concerns\EscapesShell;
 use App\Models\Site;
 use App\Services\SiteUserNameGenerator;
 use App\Services\Ssh\SshConnection;

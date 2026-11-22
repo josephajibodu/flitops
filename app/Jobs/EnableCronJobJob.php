@@ -3,6 +3,7 @@
 namespace App\Jobs;
 
 use App\Actions\CronJob\EnableCronJob;
+use App\Enums\CronJobStatus;
 use App\Events\ServerProcessesUpdated;
 use App\Models\CronJob;
 use Illuminate\Contracts\Queue\ShouldQueue;
@@ -29,13 +30,13 @@ class EnableCronJobJob implements ShouldQueue
     {
         try {
             $action->execute($this->cronJob);
-            $this->cronJob->update(['status' => 'active']);
+            $this->cronJob->update(['status' => CronJobStatus::Active]);
         } catch (\Throwable $e) {
             Log::error('EnableCronJobJob failed', [
                 'cron_job_id' => $this->cronJob->id,
                 'message' => $e->getMessage(),
             ]);
-            $this->cronJob->update(['status' => 'failed']);
+            $this->cronJob->update(['status' => CronJobStatus::Failed]);
             throw $e;
         } finally {
             event(new ServerProcessesUpdated($this->cronJob->server_id));

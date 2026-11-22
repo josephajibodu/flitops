@@ -231,7 +231,6 @@ export default function SitesCreate({
     const [folders, setFolders] = useState<string[]>([]);
 
     const form = useForm({
-        server_id: serverData.id,
         domain: '',
         site_name: '',
         directory: '/public',

@@ -46,15 +46,6 @@ class SetDefaultPhpVersionRequest extends FormRequest
             return PhpVersion::values();
         }
 
-        $versions = $server->installedServices()
-            ->where('type', 'php')
-            ->get()
-            ->map(fn ($s) => $s->installed_version ?? $s->version)
-            ->filter()
-            ->unique()
-            ->values()
-            ->all();
-
-        return ! empty($versions) ? $versions : PhpVersion::values();
+        return $server->installedPhpVersions() ?: PhpVersion::values();
     }
 }

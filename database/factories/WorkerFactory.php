@@ -2,6 +2,7 @@
 
 namespace Database\Factories;
 
+use App\Enums\WorkerStatus;
 use App\Models\Server;
 use App\Models\Site;
 use App\Models\Worker;
@@ -29,7 +30,7 @@ class WorkerFactory extends Factory
             'numprocs' => 1,
             'redirect_stderr' => true,
             'restart_on_deploy' => false,
-            'status' => 'active',
+            'status' => WorkerStatus::Active,
             'name' => 'worker-'.fake()->randomNumber(3),
         ];
     }

@@ -1,6 +1,7 @@
 <?php
 
 use App\Enums\ServerStatus;
+use App\Enums\SshKeyStatus;
 use App\Enums\TeamRoleKey;
 use App\Jobs\RevokeSshKeyJob;
 use App\Jobs\SyncSshKeyJob;
@@ -75,7 +76,7 @@ it('lets a Developer put a key on an isolated site user', function () {
     $placement = ServerSshKey::query()->sole();
     expect($placement->system_user)->toBe('example_com')
         ->and($placement->site_id)->toBe($this->site->id)
-        ->and($placement->status)->toBe('pending');
+        ->and($placement->status)->toBe(SshKeyStatus::Pending);
 });
 
 it('stops a Viewer putting a key anywhere', function () {
@@ -150,7 +151,7 @@ function sshKeyConnection(array &$commands): SshService
 
 it('adds the key to the site user own authorized_keys, as that user', function () {
     [, $sshKey] = memberWithKey($this->team, TeamRoleKey::Developer);
-    ServerSshKey::query()->create(['ssh_key_id' => $sshKey->id, 'server_id' => $this->server->id, 'site_id' => $this->site->id, 'system_user' => 'example_com', 'status' => 'pending']);
+    ServerSshKey::query()->create(['ssh_key_id' => $sshKey->id, 'server_id' => $this->server->id, 'site_id' => $this->site->id, 'system_user' => 'example_com', 'status' => SshKeyStatus::Pending]);
 
     $commands = [];
     (new SyncSshKeyJob($sshKey, $this->server, $this->site))->handle(sshKeyConnection($commands));
@@ -159,7 +160,7 @@ it('adds the key to the site user own authorized_keys, as that user', function (
         ->and($commands[0])->toStartWith("sudo -u 'example_com' -H bash -c 'cd ~ && mkdir -p ~/.ssh && chmod 700 ~/.ssh")
         ->and($commands[0])->toContain('~/.ssh/authorized_keys')
         ->and($commands[0])->not->toContain('/home/artisan')
-        ->and(ServerSshKey::query()->sole()->status)->toBe('synced');
+        ->and(ServerSshKey::query()->sole()->status)->toBe(SshKeyStatus::Synced);
 });
 
 it('refuses to put a key on a site that is not isolated', function () {
@@ -176,8 +177,8 @@ it('refuses to put a key on a site that is not isolated', function () {
 
 it('takes the key off only the site user it was placed on', function () {
     [, $sshKey] = memberWithKey($this->team, TeamRoleKey::Admin);
-    ServerSshKey::query()->create(['ssh_key_id' => $sshKey->id, 'server_id' => $this->server->id, 'system_user' => 'artisan', 'status' => 'synced']);
-    ServerSshKey::query()->create(['ssh_key_id' => $sshKey->id, 'server_id' => $this->server->id, 'site_id' => $this->site->id, 'system_user' => 'example_com', 'status' => 'synced']);
+    ServerSshKey::query()->create(['ssh_key_id' => $sshKey->id, 'server_id' => $this->server->id, 'system_user' => 'artisan', 'status' => SshKeyStatus::Synced]);
+    ServerSshKey::query()->create(['ssh_key_id' => $sshKey->id, 'server_id' => $this->server->id, 'site_id' => $this->site->id, 'system_user' => 'example_com', 'status' => SshKeyStatus::Synced]);
 
     $commands = [];
     (new RevokeSshKeyJob($sshKey, $this->server, 'example_com'))->handle(sshKeyConnection($commands));
@@ -191,21 +192,21 @@ it('takes the key off only the site user it was placed on', function () {
 it('revokes a key from a chosen site through the keys page', function () {
     Queue::fake();
     [$member, $sshKey] = memberWithKey($this->team, TeamRoleKey::Developer);
-    ServerSshKey::query()->create(['ssh_key_id' => $sshKey->id, 'server_id' => $this->server->id, 'site_id' => $this->site->id, 'system_user' => 'example_com', 'status' => 'synced']);
+    ServerSshKey::query()->create(['ssh_key_id' => $sshKey->id, 'server_id' => $this->server->id, 'site_id' => $this->site->id, 'system_user' => 'example_com', 'status' => SshKeyStatus::Synced]);
 
     $this->actingAs($member)
         ->post(route('ssh-keys.revoke', [$this->team, $sshKey]), ['site_ids' => [$this->site->id]])
         ->assertRedirect();
 
     Queue::assertPushed(RevokeSshKeyJob::class, fn ($job) => $job->systemUser === 'example_com' && $job->server->is($this->server));
-    expect(ServerSshKey::query()->sole()->status)->toBe('revoking');
+    expect(ServerSshKey::query()->sole()->status)->toBe(SshKeyStatus::Revoking);
 });
 
 it('revokes a key from the server user only, leaving the site user\'s copy', function () {
     Queue::fake();
     [$member, $sshKey] = memberWithKey($this->team, TeamRoleKey::Admin);
-    $serverPlacement = ServerSshKey::query()->create(['ssh_key_id' => $sshKey->id, 'server_id' => $this->server->id, 'system_user' => 'artisan', 'status' => 'synced']);
-    $sitePlacement = ServerSshKey::query()->create(['ssh_key_id' => $sshKey->id, 'server_id' => $this->server->id, 'site_id' => $this->site->id, 'system_user' => 'example_com', 'status' => 'synced']);
+    $serverPlacement = ServerSshKey::query()->create(['ssh_key_id' => $sshKey->id, 'server_id' => $this->server->id, 'system_user' => 'artisan', 'status' => SshKeyStatus::Synced]);
+    $sitePlacement = ServerSshKey::query()->create(['ssh_key_id' => $sshKey->id, 'server_id' => $this->server->id, 'site_id' => $this->site->id, 'system_user' => 'example_com', 'status' => SshKeyStatus::Synced]);
 
     $this->actingAs($member)
         ->post(route('ssh-keys.revoke', [$this->team, $sshKey]), ['server_ids' => [$this->server->id]])
@@ -213,15 +214,15 @@ it('revokes a key from the server user only, leaving the site user\'s copy', fun
 
     Queue::assertPushed(RevokeSshKeyJob::class, 1);
     Queue::assertPushed(RevokeSshKeyJob::class, fn ($job) => $job->systemUser === 'artisan');
-    expect($serverPlacement->fresh()->status)->toBe('revoking')
-        ->and($sitePlacement->fresh()->status)->toBe('synced');
+    expect($serverPlacement->fresh()->status)->toBe(SshKeyStatus::Revoking)
+        ->and($sitePlacement->fresh()->status)->toBe(SshKeyStatus::Synced);
 });
 
 it('revokes every placement with its own user when the key is deleted', function () {
     Queue::fake();
     [$member, $sshKey] = memberWithKey($this->team, TeamRoleKey::Admin);
-    ServerSshKey::query()->create(['ssh_key_id' => $sshKey->id, 'server_id' => $this->server->id, 'system_user' => 'artisan', 'status' => 'synced']);
-    ServerSshKey::query()->create(['ssh_key_id' => $sshKey->id, 'server_id' => $this->server->id, 'site_id' => $this->site->id, 'system_user' => 'example_com', 'status' => 'synced']);
+    ServerSshKey::query()->create(['ssh_key_id' => $sshKey->id, 'server_id' => $this->server->id, 'system_user' => 'artisan', 'status' => SshKeyStatus::Synced]);
+    ServerSshKey::query()->create(['ssh_key_id' => $sshKey->id, 'server_id' => $this->server->id, 'site_id' => $this->site->id, 'system_user' => 'example_com', 'status' => SshKeyStatus::Synced]);
 
     $this->actingAs($member)
         ->delete(route('ssh-keys.destroy', [$this->team, $sshKey]))
@@ -243,8 +244,8 @@ function memberWithBothPlacements(Team $team, Server $server, Site $site, TeamRo
 {
     [$member, $sshKey] = memberWithKey($team, $role);
 
-    ServerSshKey::query()->create(['ssh_key_id' => $sshKey->id, 'server_id' => $server->id, 'system_user' => 'artisan', 'status' => 'synced']);
-    ServerSshKey::query()->create(['ssh_key_id' => $sshKey->id, 'server_id' => $server->id, 'site_id' => $site->id, 'system_user' => 'example_com', 'status' => 'synced']);
+    ServerSshKey::query()->create(['ssh_key_id' => $sshKey->id, 'server_id' => $server->id, 'system_user' => 'artisan', 'status' => SshKeyStatus::Synced]);
+    ServerSshKey::query()->create(['ssh_key_id' => $sshKey->id, 'server_id' => $server->id, 'site_id' => $site->id, 'system_user' => 'example_com', 'status' => SshKeyStatus::Synced]);
 
     return [$member, $sshKey];
 }
@@ -260,8 +261,8 @@ it('takes keys off the server user but not isolated sites when a member drops to
     Queue::assertPushed(RevokeSshKeyJob::class, 1);
     Queue::assertPushed(RevokeSshKeyJob::class, fn ($job) => $job->systemUser === 'artisan');
 
-    expect(ServerSshKey::query()->where('system_user', 'artisan')->sole()->status)->toBe('revoking')
-        ->and(ServerSshKey::query()->where('system_user', 'example_com')->sole()->status)->toBe('synced');
+    expect(ServerSshKey::query()->where('system_user', 'artisan')->sole()->status)->toBe(SshKeyStatus::Revoking)
+        ->and(ServerSshKey::query()->where('system_user', 'example_com')->sole()->status)->toBe(SshKeyStatus::Synced);
 })->with([
     'admin' => [TeamRoleKey::Admin],
     // A Developer who put a key on the server user before admin access was its own permission.
@@ -295,7 +296,7 @@ it('takes keys off isolated sites too when a member is removed', function () {
 it('records existing keys as being on the server user', function () {
     [, $sshKey] = memberWithKey($this->team, TeamRoleKey::Admin);
 
-    $sshKey->servers()->attach($this->server->id, ['status' => 'synced']);
+    $sshKey->servers()->attach($this->server->id, ['status' => SshKeyStatus::Synced]);
 
     expect(ServerSshKey::query()->sole()->system_user)->toBe('artisan')
         ->and(ServerSshKey::query()->sole()->site_id)->toBeNull();

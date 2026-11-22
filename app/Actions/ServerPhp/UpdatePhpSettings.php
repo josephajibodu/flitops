@@ -2,7 +2,7 @@
 
 namespace App\Actions\ServerPhp;
 
-use App\Actions\Database\EscapesShell;
+use App\Concerns\EscapesShell;
 use App\Enums\WebServer;
 use App\Models\Server;
 use App\Services\Provisioning\NginxService;

@@ -1,5 +1,6 @@
 <?php
 
+use App\Enums\CredentialType;
 use App\Enums\ProvisioningStep;
 use App\Enums\ServerStatus;
 use App\Jobs\InstallStackJob;
@@ -31,15 +32,15 @@ it('orchestrates provisioning steps in order', function () {
     // Fake credentials needed by the job.
     $server->credentials()->createMany([
         [
-            'type' => 'private_key',
+            'type' => CredentialType::PrivateKey,
             'value' => 'test-private-key',
         ],
         [
-            'type' => 'database_password',
+            'type' => CredentialType::DatabasePassword,
             'value' => 'secret-password',
         ],
         [
-            'type' => 'sudo_password',
+            'type' => CredentialType::SudoPassword,
             'value' => 'sudo-secret',
         ],
     ]);
@@ -124,8 +125,8 @@ it('redacts sudo and database passwords from the stored and notified error messa
     ]);
 
     $server->credentials()->createMany([
-        ['type' => 'sudo_password', 'value' => 'super-secret-sudo'],
-        ['type' => 'database_password', 'value' => 'super-secret-db'],
+        ['type' => CredentialType::SudoPassword, 'value' => 'super-secret-sudo'],
+        ['type' => CredentialType::DatabasePassword, 'value' => 'super-secret-db'],
     ]);
 
     $exception = new RuntimeException(

@@ -1,6 +1,7 @@
 <?php
 
 use App\Enums\Plan;
+use App\Enums\SshKeyStatus;
 use App\Enums\TeamRoleKey;
 use App\Jobs\RevokeSshKeyJob;
 use App\Models\Server;
@@ -124,6 +125,46 @@ describe('team plan', function () {
     });
 });
 
+describe('accepting an invitation', function () {
+    beforeEach(function () {
+        $this->invitation = $this->team->invitations()->create([
+            'email' => 'invitee@example.com',
+            'team_role_id' => TeamRole::builtIn(TeamRoleKey::Developer)->id,
+            'token' => 'join-token',
+        ]);
+    });
+
+    it('only shows the invitation when a signed-in user opens the link', function () {
+        $invitee = User::factory()->create(['email' => 'invitee@example.com']);
+
+        $this->actingAs($invitee)
+            ->get(route('team-invitations.accept', 'join-token'))
+            ->assertOk()
+            ->assertInertia(fn ($page) => $page
+                ->component('teams/accept-invitation')
+                ->where('signedInEmail', 'invitee@example.com'));
+
+        expect($this->team->hasUser($invitee))->toBeFalse()
+            ->and($this->invitation->fresh())->not->toBeNull();
+    });
+
+    it('brings a guest back to the invitation after they sign in', function () {
+        $this->get(route('team-invitations.accept', 'join-token'))
+            ->assertOk()
+            ->assertSessionHas('url.intended', route('team-invitations.accept', 'join-token'));
+    });
+
+    it('needs a verified email to join', function () {
+        $invitee = User::factory()->unverified()->create(['email' => 'invitee@example.com']);
+
+        $this->actingAs($invitee)
+            ->post(route('team-invitations.confirm', 'join-token'))
+            ->assertRedirect(route('verification.notice'));
+
+        expect($this->team->hasUser($invitee))->toBeFalse();
+    });
+});
+
 describe('changing a role', function () {
     it('lets each role change only members it outranks, and only to roles it may grant', function (string $actor, TeamRoleKey $currentRole, TeamRoleKey $newRole) {
         $member = User::factory()->memberOf($this->team, $currentRole)->create();
@@ -224,7 +265,7 @@ describe('server access on a role change', function () {
         $sshKey = SshKey::factory()->create(['user_id' => $member->id]);
 
         foreach ($servers as $server) {
-            $sshKey->servers()->attach($server->id, ['status' => 'synced']);
+            $sshKey->servers()->attach($server->id, ['status' => SshKeyStatus::Synced]);
         }
 
         return [$member, $sshKey];
@@ -240,8 +281,8 @@ describe('server access on a role change', function () {
         Queue::assertPushed(RevokeSshKeyJob::class, 1);
         Queue::assertPushed(RevokeSshKeyJob::class, fn (RevokeSshKeyJob $job) => $job->server->is($this->teamServer) && $job->sshKeyId === $sshKey->id);
 
-        expect($sshKey->servers()->where('servers.id', $this->teamServer->id)->first()->pivot->status)->toBe('revoking')
-            ->and($sshKey->servers()->where('servers.id', $this->otherTeamServer->id)->first()->pivot->status)->toBe('synced');
+        expect($sshKey->servers()->where('servers.id', $this->teamServer->id)->first()->pivot->status)->toBe(SshKeyStatus::Revoking)
+            ->and($sshKey->servers()->where('servers.id', $this->otherTeamServer->id)->first()->pivot->status)->toBe(SshKeyStatus::Synced);
     })->with([TeamRoleKey::Developer, TeamRoleKey::Admin, TeamRoleKey::Owner]);
 
     it('leaves the member keys alone when they keep or gain admin server access', function (TeamRoleKey $from, TeamRoleKey $to) {
@@ -252,7 +293,7 @@ describe('server access on a role change', function () {
             ->assertSessionHasNoErrors();
 
         Queue::assertNotPushed(RevokeSshKeyJob::class);
-        expect($sshKey->servers()->first()->pivot->status)->toBe('synced');
+        expect($sshKey->servers()->first()->pivot->status)->toBe(SshKeyStatus::Synced);
     })->with([
         'developer to admin' => [TeamRoleKey::Developer, TeamRoleKey::Admin],
         'admin to owner' => [TeamRoleKey::Admin, TeamRoleKey::Owner],

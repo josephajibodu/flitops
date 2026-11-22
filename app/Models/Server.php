@@ -4,6 +4,7 @@ namespace App\Models;
 
 use App\Contracts\WebServerContract;
 use App\Enums\ConnectionStatus;
+use App\Enums\CredentialType;
 use App\Enums\DatabaseType;
 use App\Enums\NodeVersion;
 use App\Enums\Provider;
@@ -59,24 +60,12 @@ class Server extends Model
         'notes',
         'archived',
         'ssh_port',
-        'sudo_password',
-        'database_password',
         'local_public_key',
         'provisioned_at',
         'last_ssh_connection_at',
         'host_key_type',
         'host_key_fingerprint',
         'meta',
-    ];
-
-    /**
-     * The attributes that should be hidden for serialization.
-     *
-     * @var list<string>
-     */
-    protected $hidden = [
-        'sudo_password',
-        'database_password',
     ];
 
     /**
@@ -95,8 +84,6 @@ class Server extends Model
             'node_version' => NodeVersion::class,
             'node_status' => ServiceStatus::class,
             'archived' => 'boolean',
-            'sudo_password' => 'encrypted',
-            'database_password' => 'encrypted',
             'provisioned_at' => 'datetime',
             'last_ssh_connection_at' => 'datetime',
             'meta' => 'array',
@@ -284,6 +271,24 @@ class Server extends Model
     }
 
     /**
+     * The PHP versions installed on this server (e.g. "8.3"), each listed once.
+     * A version still being installed counts, by the version it was asked for.
+     *
+     * @return list<string>
+     */
+    public function installedPhpVersions(): array
+    {
+        return $this->installedServices()
+            ->where('type', ServiceType::Php)
+            ->get()
+            ->map(fn (Service $service): ?string => $service->installed_version ?? $service->version)
+            ->filter()
+            ->unique()
+            ->values()
+            ->all();
+    }
+
+    /**
      * Resolve the concrete ServiceType for this server's configured database engine.
      */
     public function databaseServiceType(): ServiceType
@@ -385,7 +390,7 @@ class Server extends Model
         return $this->service(ServiceType::Supervisor, $version);
     }
 
-    public function credential(string $type = 'private_key'): ?ServerCredential
+    public function credential(CredentialType $type = CredentialType::PrivateKey): ?ServerCredential
     {
         return $this->credentials()->where('type', $type)->first();
     }
@@ -410,7 +415,7 @@ class Server extends Model
     public function secretValues(): array
     {
         return $this->credentials()
-            ->whereIn('type', ['sudo_password', 'database_password', 'redis_password'])
+            ->whereIn('type', [CredentialType::SudoPassword, CredentialType::DatabasePassword, CredentialType::RedisPassword])
             ->pluck('value')
             ->filter()
             ->values()

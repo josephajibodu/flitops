@@ -2,6 +2,7 @@
 
 namespace App\Actions\Backups;
 
+use App\Enums\BackupStatus;
 use App\Models\Backup;
 use App\Models\ServerDatabase;
 use App\Models\StorageProvider;
@@ -43,7 +44,7 @@ class ImportDatabaseDump
         $backup = $serverDatabase->backups()->create([
             'storage_provider_id' => $storageProvider->id,
             'user_id' => $user->id,
-            'status' => 'completed',
+            'status' => BackupStatus::Completed,
             'triggered_by' => 'import',
             'storage_path' => $path,
             'size_bytes' => $dump->getSize(),

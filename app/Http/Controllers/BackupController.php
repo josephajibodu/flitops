@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Actions\Backups\RestoreDatabaseBackup;
 use App\Actions\Backups\RunDatabaseBackup;
+use App\Enums\BackupStatus;
 use App\Enums\PlanFeature;
 use App\Events\BackupStatusChanged;
 use App\Http\Resources\BackupResource;
@@ -108,7 +109,7 @@ class BackupController extends Controller
     ): RedirectResponse {
         $this->authorize('restoreBackups', $server);
 
-        if ($backup->status !== 'completed') {
+        if ($backup->status !== BackupStatus::Completed) {
             return redirect()
                 ->back()
                 ->with('error', 'Only a completed, verified backup can be restored.');

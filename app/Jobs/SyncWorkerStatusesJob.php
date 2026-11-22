@@ -2,6 +2,7 @@
 
 namespace App\Jobs;
 
+use App\Enums\WorkerStatus;
 use App\Events\ServerProcessesUpdated;
 use App\Models\Server;
 use App\Models\Worker;
@@ -23,7 +24,7 @@ class SyncWorkerStatusesJob implements ShouldQueue
      * Statuses the check may overwrite. Any other status means FlitOps is in
      * the middle of changing the worker, and that job sets the status itself.
      */
-    public const SETTLED_STATUSES = ['active', 'stopped', 'crashed'];
+    public const SETTLED_STATUSES = [WorkerStatus::Active, WorkerStatus::Stopped, WorkerStatus::Crashed];
 
     public int $tries = 1;
 
@@ -111,16 +112,16 @@ class SyncWorkerStatusesJob implements ShouldQueue
      *
      * @param  list<string>  $states
      */
-    private function statusFromStates(array $states): string
+    private function statusFromStates(array $states): WorkerStatus
     {
         if (array_intersect($states, ['FATAL', 'BACKOFF', 'EXITED', 'UNKNOWN']) !== []) {
-            return 'crashed';
+            return WorkerStatus::Crashed;
         }
 
         if (array_intersect($states, ['RUNNING', 'STARTING']) !== []) {
-            return 'active';
+            return WorkerStatus::Active;
         }
 
-        return 'stopped';
+        return WorkerStatus::Stopped;
     }
 }

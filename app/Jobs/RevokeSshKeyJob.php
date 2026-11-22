@@ -2,7 +2,8 @@
 
 namespace App\Jobs;
 
-use App\Actions\Database\EscapesShell;
+use App\Concerns\EscapesShell;
+use App\Enums\SshKeyStatus;
 use App\Models\Server;
 use App\Models\ServerSshKey;
 use App\Models\SshKey;
@@ -55,7 +56,7 @@ class RevokeSshKeyJob implements ShouldQueue
     public function handle(SshService $sshService): void
     {
         try {
-            $this->placement()->update(['status' => 'revoking']);
+            $this->placement()->update(['status' => SshKeyStatus::Revoking]);
 
             // Connect to server
             $connection = $sshService->connect($this->server);
@@ -88,7 +89,7 @@ class RevokeSshKeyJob implements ShouldQueue
         } catch (Throwable $e) {
             Log::error("Failed to revoke SSH key {$this->sshKeyId} from server {$this->server->id}: {$e->getMessage()}");
 
-            $this->placement()->update(['status' => 'failed']);
+            $this->placement()->update(['status' => SshKeyStatus::Failed]);
 
             throw $e;
         }

@@ -1,6 +1,7 @@
 <?php
 
 use App\Enums\ServerStatus;
+use App\Enums\WorkerStatus;
 use App\Jobs\ControlWorkerJob;
 use App\Jobs\CreateWorkerJob;
 use App\Jobs\DestroyWorkerJob;
@@ -165,7 +166,7 @@ it('starts a worker and marks it starting immediately', function () {
 
     $worker = Worker::factory()->create([
         'server_id' => $this->server->id,
-        'status' => 'stopped',
+        'status' => WorkerStatus::Stopped,
     ]);
 
     $response = $this->actingAs($this->user)
@@ -184,7 +185,7 @@ it('stops a worker and marks it stopping immediately', function () {
 
     $worker = Worker::factory()->create([
         'server_id' => $this->server->id,
-        'status' => 'active',
+        'status' => WorkerStatus::Active,
     ]);
 
     $response = $this->actingAs($this->user)
@@ -203,7 +204,7 @@ it('restarts a worker and marks it restarting immediately', function () {
 
     $worker = Worker::factory()->create([
         'server_id' => $this->server->id,
-        'status' => 'stopped',
+        'status' => WorkerStatus::Stopped,
     ]);
 
     $response = $this->actingAs($this->user)

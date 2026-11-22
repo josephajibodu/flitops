@@ -12,6 +12,7 @@ use App\Models\Site;
 use App\Models\SiteDomain;
 use App\Services\Cloudflare\CloudflareDnsService;
 use App\Services\SiteUserNameGenerator;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 
 class CreateSiteAction
@@ -36,65 +37,71 @@ class CreateSiteAction
             $cloudflareRecordId = $this->cloudflare->createARecord($domain, $server->ip_address);
         }
 
-        $site = $server->sites()->create([
-            'domain' => $domain,
-            'root_path' => $domain,
-            'system_user' => $data->isolated ? $this->siteUserNames->generate($server, $domain) : null,
-            'site_name' => $data->siteName,
-            'aliases' => $data->aliases,
-            'directory' => $data->directory,
-            'app_directory' => $data->appDirectory,
-            'repository' => $data->repository,
-            'source_control_account_id' => $data->sourceControlAccountId,
-            'repository_provider' => $data->repositoryProvider->value,
-            'branch' => $data->branch,
-            'project_type' => $data->projectType->value,
-            'framework' => $data->framework->value,
-            'server_database_id' => $data->serverDatabaseId,
-            'php_version' => $data->phpVersion,
-            'package_manager' => $data->packageManager,
-            'build_command' => $data->buildCommand,
-            'single_page_app' => $data->singlePageApp,
-            'status' => SiteStatus::Pending,
-            'webhook_secret' => Str::random(32),
-            'auto_deploy' => $data->autoDeploy,
-        ]);
+        // The site, its domains and its deploy script are saved together, so a
+        // failure part way never leaves a site with no domain or no script.
+        $site = DB::transaction(function () use ($server, $data, $domain, $cloudflareRecordId): Site {
+            $site = $server->sites()->create([
+                'domain' => $domain,
+                'root_path' => $domain,
+                'system_user' => $data->isolated ? $this->siteUserNames->generate($server, $domain) : null,
+                'site_name' => $data->siteName,
+                'aliases' => $data->aliases,
+                'directory' => $data->directory,
+                'app_directory' => $data->appDirectory,
+                'repository' => $data->repository,
+                'source_control_account_id' => $data->sourceControlAccountId,
+                'repository_provider' => $data->repositoryProvider->value,
+                'branch' => $data->branch,
+                'project_type' => $data->projectType->value,
+                'framework' => $data->framework->value,
+                'server_database_id' => $data->serverDatabaseId,
+                'php_version' => $data->phpVersion,
+                'package_manager' => $data->packageManager,
+                'build_command' => $data->buildCommand,
+                'single_page_app' => $data->singlePageApp,
+                'status' => SiteStatus::Pending,
+                'webhook_secret' => Str::random(32),
+                'auto_deploy' => $data->autoDeploy,
+            ]);
 
-        $freeDomain = config('server.free_domain');
-        $isSystemDomain = str_ends_with(strtolower($domain), strtolower('.'.$freeDomain));
+            $freeDomain = config('server.free_domain');
+            $isSystemDomain = str_ends_with(strtolower($domain), strtolower('.'.$freeDomain));
 
-        SiteDomain::query()->create([
-            'site_id' => $site->id,
-            'hostname' => $domain,
-            'type' => $isSystemDomain ? SiteDomainType::System : SiteDomainType::Custom,
-            'is_primary' => true,
-            'wildcard_enabled' => false,
-            'www_redirect' => WwwRedirect::None,
-            'is_enabled' => true,
-            'cloudflare_dns_record_id' => $cloudflareRecordId,
-        ]);
-
-        foreach ($data->aliases ?? [] as $alias) {
-            if (! is_string($alias) || $alias === '' || $alias === $domain) {
-                continue;
-            }
             SiteDomain::query()->create([
                 'site_id' => $site->id,
-                'hostname' => $alias,
-                'type' => str_ends_with(strtolower($alias), strtolower('.'.$freeDomain))
-                    ? SiteDomainType::System
-                    : SiteDomainType::Custom,
-                'is_primary' => false,
+                'hostname' => $domain,
+                'type' => $isSystemDomain ? SiteDomainType::System : SiteDomainType::Custom,
+                'is_primary' => true,
                 'wildcard_enabled' => false,
                 'www_redirect' => WwwRedirect::None,
                 'is_enabled' => true,
-                'cloudflare_dns_record_id' => null,
+                'cloudflare_dns_record_id' => $cloudflareRecordId,
             ]);
-        }
 
-        $site->deployScript()->create([
-            'script' => $data->framework->defaultDeployScript($data->packageManager, $data->buildCommand),
-        ]);
+            foreach ($data->aliases ?? [] as $alias) {
+                if (! is_string($alias) || $alias === '' || $alias === $domain) {
+                    continue;
+                }
+                SiteDomain::query()->create([
+                    'site_id' => $site->id,
+                    'hostname' => $alias,
+                    'type' => str_ends_with(strtolower($alias), strtolower('.'.$freeDomain))
+                        ? SiteDomainType::System
+                        : SiteDomainType::Custom,
+                    'is_primary' => false,
+                    'wildcard_enabled' => false,
+                    'www_redirect' => WwwRedirect::None,
+                    'is_enabled' => true,
+                    'cloudflare_dns_record_id' => null,
+                ]);
+            }
+
+            $site->deployScript()->create([
+                'script' => $data->framework->defaultDeployScript($data->packageManager, $data->buildCommand),
+            ]);
+
+            return $site;
+        });
 
         CreateSiteJob::dispatch($site);
 

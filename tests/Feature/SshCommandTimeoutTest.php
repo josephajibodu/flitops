@@ -1,5 +1,6 @@
 <?php
 
+use App\Enums\CredentialType;
 use App\Models\Server;
 use App\Services\Ssh\SshConnection;
 use phpseclib3\Net\SSH2;
@@ -101,7 +102,7 @@ it('runs the next command after one times out', function () {
 
 it('removes the server passwords from the timeout error', function () {
     $server = Server::factory()->create();
-    $server->credentials()->create(['type' => 'sudo_password', 'value' => 'super-secret-sudo']);
+    $server->credentials()->create(['type' => CredentialType::SudoPassword, 'value' => 'super-secret-sudo']);
     $command = 'echo "artisan:super-secret-sudo" | chpasswd';
     $connection = timingOutSshConnection([$command], $server);
 

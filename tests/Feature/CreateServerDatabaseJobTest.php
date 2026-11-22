@@ -1,6 +1,9 @@
 <?php
 
 use App\Actions\Database\CreateServerDatabase;
+use App\Enums\CredentialType;
+use App\Enums\DatabaseStatus;
+use App\Enums\ServerStatus;
 use App\Events\ServerDatabasesUpdated;
 use App\Jobs\CreateServerDatabaseJob;
 use App\Models\Server;
@@ -17,26 +20,26 @@ it('creates database on server and sets status to ready', function () {
 
     $server = Server::factory()->create([
         'database_type' => 'mysql',
-        'status' => \App\Enums\ServerStatus::Active,
+        'status' => ServerStatus::Active,
     ]);
     ServerCredential::create([
         'server_id' => $server->id,
-        'type' => 'database_password',
+        'type' => CredentialType::DatabasePassword,
         'value' => 'rootsecret',
     ]);
 
     $serverDatabase = ServerDatabase::factory()->create([
         'server_id' => $server->id,
         'name' => 'testdb',
-        'status' => 'pending',
+        'status' => DatabaseStatus::Pending,
     ]);
 
     $mockConnection = mockDatabaseConnection();
 
-    $sshService = \Mockery::mock(SshService::class);
+    $sshService = Mockery::mock(SshService::class);
     $sshService->shouldReceive('connect')
         ->once()
-        ->with(\Mockery::on(fn ($s) => $s->id === $server->id))
+        ->with(Mockery::on(fn ($s) => $s->id === $server->id))
         ->andReturn($mockConnection);
 
     $this->app->instance(SshService::class, $sshService);
@@ -45,7 +48,7 @@ it('creates database on server and sets status to ready', function () {
     $job->handle(app(CreateServerDatabase::class));
 
     $serverDatabase->refresh();
-    expect($serverDatabase->status)->toBe('ready');
+    expect($serverDatabase->status)->toBe(DatabaseStatus::Ready);
 
     Event::assertDispatched(ServerDatabasesUpdated::class, fn ($e) => $e->server->id === $server->id);
 });
@@ -55,25 +58,25 @@ it('sets status to failed when server has no database password credential', func
 
     $server = Server::factory()->create([
         'database_type' => 'mysql',
-        'status' => \App\Enums\ServerStatus::Active,
+        'status' => ServerStatus::Active,
     ]);
     // No database_password credential
 
     $serverDatabase = ServerDatabase::factory()->create([
         'server_id' => $server->id,
         'name' => 'testdb',
-        'status' => 'pending',
+        'status' => DatabaseStatus::Pending,
     ]);
 
     $job = new CreateServerDatabaseJob($serverDatabase);
     try {
         $job->handle(app(CreateServerDatabase::class));
-    } catch (\RuntimeException) {
+    } catch (RuntimeException) {
         // Job sets status to failed then rethrows
     }
 
     $serverDatabase->refresh();
-    expect($serverDatabase->status)->toBe('failed');
+    expect($serverDatabase->status)->toBe(DatabaseStatus::Failed);
 
     Event::assertDispatched(ServerDatabasesUpdated::class);
 });

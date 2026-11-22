@@ -25,18 +25,23 @@ class TeamInvitationController extends Controller
             ->with('success', 'Invitation sent.');
     }
 
-    public function accept(Request $request, string $token): Response|RedirectResponse
+    /**
+     * Show the invitation. Opening the link never joins the team: a signed-in
+     * user joins by confirming on this page, which posts to confirm().
+     */
+    public function accept(Request $request, string $token): Response
     {
         $invitation = TeamInvitation::where('token', $token)->firstOrFail();
 
         if (! $request->user()) {
-            return Inertia::render('teams/accept-invitation', [
-                'invitation' => $invitation->load(['team', 'teamRole']),
-                'token' => $token,
-            ]);
+            $request->session()->put('url.intended', route('team-invitations.accept', $token));
         }
 
-        return $this->handleAccept($request, $invitation);
+        return Inertia::render('teams/accept-invitation', [
+            'invitation' => $invitation->load(['team', 'teamRole']),
+            'token' => $token,
+            'signedInEmail' => $request->user()?->email,
+        ]);
     }
 
     public function confirm(Request $request, string $token): RedirectResponse
@@ -63,13 +68,13 @@ class TeamInvitationController extends Controller
         $team = $invitation->team;
 
         if ($user->email !== $invitation->email) {
-            return redirect('/dashboard')
+            return redirect()->route('dashboard.current')
                 ->with('error', 'This invitation was sent to a different email address.');
         }
 
         if (! $team->hasUser($user)) {
             if (! $team->planIncludes(PlanFeature::TeamMembers)) {
-                return redirect('/dashboard')
+                return redirect()->route('dashboard.current')
                     ->with('error', "{$team->name}'s plan doesn't include team members yet. Ask the team owner to upgrade, then open the invitation again.");
             }
 

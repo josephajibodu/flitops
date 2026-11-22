@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Actions\SshKeys\SyncSshKeyAction;
+use App\Enums\SshKeyStatus;
 use App\Http\Requests\StoreSshKeyRequest;
 use App\Http\Requests\SyncSshKeyRequest;
 use App\Http\Resources\ServerResource;
@@ -101,7 +102,7 @@ class SshKeyController extends Controller
         foreach ($placements as $placement) {
             RevokeSshKeyJob::dispatch($sshKey, $placement->server, $placement->system_user);
 
-            $placement->update(['status' => 'revoking']);
+            $placement->update(['status' => SshKeyStatus::Revoking]);
         }
 
         return redirect()

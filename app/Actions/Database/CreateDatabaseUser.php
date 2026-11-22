@@ -2,6 +2,10 @@
 
 namespace App\Actions\Database;
 
+use App\Concerns\EscapesShell;
+use App\Concerns\QuotesMysql;
+use App\Enums\CredentialType;
+use App\Enums\DatabaseStatus;
 use App\Enums\DatabaseType;
 use App\Jobs\CreateDatabaseUserJob;
 use App\Models\DatabaseUser;
@@ -33,7 +37,7 @@ class CreateDatabaseUser
             'databases' => $input['databases'],
             'permission' => $input['permission'] ?? 'readwrite',
             'host' => $input['host'] ?? 'localhost',
-            'status' => 'pending',
+            'status' => DatabaseStatus::Pending,
         ]);
 
         CreateDatabaseUserJob::dispatch($databaseUser);
@@ -49,7 +53,7 @@ class CreateDatabaseUser
             throw new RuntimeException("Server {$server->id} is not ready.");
         }
 
-        $credential = $server->credential('database_password');
+        $credential = $server->credential(CredentialType::DatabasePassword);
         if (! $credential) {
             throw new RuntimeException("No database password credential for server {$server->id}.");
         }

@@ -2,12 +2,14 @@
 
 namespace Database\Factories;
 
+use App\Enums\DatabaseStatus;
+use App\Models\DatabaseUser;
 use App\Models\Server;
 use Illuminate\Database\Eloquent\Factories\Factory;
 use Illuminate\Support\Str;
 
 /**
- * @extends \Illuminate\Database\Eloquent\Factories\Factory<\App\Models\DatabaseUser>
+ * @extends Factory<DatabaseUser>
  */
 class DatabaseUserFactory extends Factory
 {
@@ -25,7 +27,7 @@ class DatabaseUserFactory extends Factory
             'databases' => [],
             'permission' => 'readwrite',
             'host' => 'localhost',
-            'status' => 'ready',
+            'status' => DatabaseStatus::Ready,
         ];
     }
 }

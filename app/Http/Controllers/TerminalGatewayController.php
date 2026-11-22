@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Enums\CredentialType;
 use App\Models\TerminalSession;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -32,7 +33,7 @@ class TerminalGatewayController extends Controller
         }
 
         $server = $session->server;
-        $privateKey = $server->credential('private_key')?->value;
+        $privateKey = $server->credential(CredentialType::PrivateKey)?->value;
 
         if (! $server->hasPinnedHostKey() || $privateKey === null) {
             $session->update(['ended_at' => now()]);

@@ -2,6 +2,10 @@
 
 namespace App\Actions\Database;
 
+use App\Concerns\EscapesShell;
+use App\Concerns\QuotesMysql;
+use App\Enums\CredentialType;
+use App\Enums\DatabaseStatus;
 use App\Enums\DatabaseType;
 use App\Jobs\CreateServerDatabaseJob;
 use App\Models\Server;
@@ -36,7 +40,7 @@ class CreateServerDatabase
             'name' => $input['name'],
             'collation' => $usesCharsets ? ($input['collation'] ?? null) : null,
             'charset' => $usesCharsets ? ($input['charset'] ?? null) : null,
-            'status' => 'pending',
+            'status' => DatabaseStatus::Pending,
         ]);
 
         CreateServerDatabaseJob::dispatch($serverDatabase);
@@ -85,7 +89,7 @@ class CreateServerDatabase
             throw new RuntimeException("Server {$server->id} is not ready.");
         }
 
-        $credential = $server->credential('database_password');
+        $credential = $server->credential(CredentialType::DatabasePassword);
         if (! $credential) {
             throw new RuntimeException("No database password credential for server {$server->id}.");
         }

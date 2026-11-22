@@ -4,12 +4,16 @@ namespace App\Notifications;
 
 use App\Models\Server;
 use Illuminate\Bus\Queueable;
+use Illuminate\Contracts\Queue\ShouldQueueAfterCommit;
 use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
 
-class ServerProvisioningFailed extends Notification
+class ServerProvisioningFailed extends Notification implements ShouldQueueAfterCommit
 {
     use Queueable;
+
+    /** Drop the email quietly if its record was deleted before it was sent. */
+    public bool $deleteWhenMissingModels = true;
 
     public function __construct(
         public Server $server,

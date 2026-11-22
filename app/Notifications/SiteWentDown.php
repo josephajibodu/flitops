@@ -4,13 +4,17 @@ namespace App\Notifications;
 
 use App\Models\SiteIncident;
 use Illuminate\Bus\Queueable;
+use Illuminate\Contracts\Queue\ShouldQueueAfterCommit;
 use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
 use Illuminate\Support\HtmlString;
 
-class SiteWentDown extends Notification
+class SiteWentDown extends Notification implements ShouldQueueAfterCommit
 {
     use Queueable;
+
+    /** Drop the email quietly if its record was deleted before it was sent. */
+    public bool $deleteWhenMissingModels = true;
 
     /**
      * @param  array<int, string>  $errorLogLines  The site's last few error log lines, if they could be read.

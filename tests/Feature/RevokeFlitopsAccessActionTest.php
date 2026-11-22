@@ -1,6 +1,7 @@
 <?php
 
 use App\Actions\Servers\RevokeFlitopsAccessAction;
+use App\Enums\CredentialType;
 use App\Models\Server;
 use App\Models\ServerCredential;
 use App\Services\Ssh\SshConnection;
@@ -11,7 +12,7 @@ uses(RefreshDatabase::class);
 
 it('removes our key from root and the server user, and nothing else', function () {
     $server = Server::factory()->custom()->create(['ip_address' => '203.0.113.10']);
-    ServerCredential::create(['server_id' => $server->id, 'type' => 'public_key', 'value' => 'ssh-ed25519 AAAAOURKEY flitops-worker']);
+    ServerCredential::create(['server_id' => $server->id, 'type' => CredentialType::PublicKey, 'value' => 'ssh-ed25519 AAAAOURKEY flitops-worker']);
 
     $connection = Mockery::mock(SshConnection::class);
     $connection->shouldReceive('exec')->once()->withArgs(function (string $command) {

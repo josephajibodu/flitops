@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Enums\BackupStatus;
 use App\Events\BackupStatusChanged;
 use App\Support\BackupFailureMessage;
 use Database\Factories\BackupFactory;
@@ -39,6 +40,7 @@ class Backup extends Model
     protected function casts(): array
     {
         return [
+            'status' => BackupStatus::class,
             'size_bytes' => 'integer',
             'verified_at' => 'datetime',
             'restored_at' => 'datetime',
@@ -117,7 +119,7 @@ class Backup extends Model
     public function markAsFailed(Throwable $exception): void
     {
         $this->update([
-            'status' => 'failed',
+            'status' => BackupStatus::Failed,
             'error_message' => BackupFailureMessage::for($exception, $this),
             'finished_at' => now(),
         ]);

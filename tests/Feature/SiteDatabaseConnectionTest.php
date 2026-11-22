@@ -1,6 +1,9 @@
 <?php
 
+use App\Actions\Sites\CreateSiteAction;
 use App\Actions\Sites\ProvisionSiteAction;
+use App\Data\SiteData;
+use App\Enums\DatabaseStatus;
 use App\Enums\ProjectType;
 use App\Enums\ServerStatus;
 use App\Events\ServerSitesUpdated;
@@ -15,6 +18,7 @@ use App\Models\Team;
 use App\Models\User;
 use App\Services\Ssh\SshConnection;
 use App\Services\Ssh\SshService;
+use Illuminate\Database\UniqueConstraintViolationException;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Queue;
@@ -42,7 +46,7 @@ describe('StoreSiteRequest validation', function () {
 
         $database = ServerDatabase::factory()->create([
             'server_id' => $this->server->id,
-            'status' => 'ready',
+            'status' => DatabaseStatus::Ready,
         ]);
 
         $response = $this->actingAs($this->user)
@@ -76,7 +80,7 @@ describe('StoreSiteRequest validation', function () {
 
         $database = ServerDatabase::factory()->create([
             'server_id' => $otherServer->id,
-            'status' => 'ready',
+            'status' => DatabaseStatus::Ready,
         ]);
 
         $response = $this->actingAs($this->user)
@@ -172,7 +176,7 @@ describe('CreateSiteAction', function () {
 
         $database = ServerDatabase::factory()->create([
             'server_id' => $this->server->id,
-            'status' => 'ready',
+            'status' => DatabaseStatus::Ready,
         ]);
 
         $this->actingAs($this->user)
@@ -190,6 +194,21 @@ describe('CreateSiteAction', function () {
         $site = Site::where('domain', 'with-db.com')->firstOrFail();
         expect($site->server_database_id)->toBe($database->id);
         expect($site->serverDatabase->name)->toBe($database->name);
+    });
+
+    it('saves nothing when one of the site\'s domains cannot be saved', function () {
+        Queue::fake();
+        SiteDomain::factory()->for(Site::factory()->forServer($this->server))->create(['hostname' => 'taken.com']);
+        $sitesBefore = Site::count();
+
+        expect(fn () => app(CreateSiteAction::class)->execute(
+            $this->server,
+            new SiteData(domain: 'fresh.com', aliases: ['taken.com']),
+        ))->toThrow(UniqueConstraintViolationException::class);
+
+        expect(Site::count())->toBe($sitesBefore)
+            ->and(SiteDomain::where('hostname', 'fresh.com')->exists())->toBeFalse();
+        Queue::assertNotPushed(CreateSiteJob::class);
     });
 });
 
@@ -240,7 +259,7 @@ describe('LaravelSiteProvisioner env injection', function () {
         $database = ServerDatabase::factory()->create([
             'server_id' => $this->server->id,
             'name' => 'myapp_db',
-            'status' => 'ready',
+            'status' => DatabaseStatus::Ready,
         ]);
 
         $dbUser = DatabaseUser::factory()->create([
@@ -296,7 +315,7 @@ describe('LaravelSiteProvisioner env injection', function () {
         $database = ServerDatabase::factory()->create([
             'server_id' => $this->server->id,
             'name' => 'pg_db',
-            'status' => 'ready',
+            'status' => DatabaseStatus::Ready,
         ]);
 
         DatabaseUser::factory()->create([
@@ -389,7 +408,7 @@ describe('LaravelSiteProvisioner env injection', function () {
         $database = ServerDatabase::factory()->create([
             'server_id' => $this->server->id,
             'name' => 'myapp_db',
-            'status' => 'ready',
+            'status' => DatabaseStatus::Ready,
         ]);
 
         DatabaseUser::factory()->create([
@@ -472,7 +491,7 @@ describe('LaravelSiteProvisioner env injection', function () {
         $database = ServerDatabase::factory()->create([
             'server_id' => $this->server->id,
             'name' => 'myapp_db',
-            'status' => 'ready',
+            'status' => DatabaseStatus::Ready,
         ]);
 
         DatabaseUser::factory()->create([
@@ -530,7 +549,7 @@ describe('databases on a connected server', function () {
     it('accepts a database on a server this one is connected to', function () {
         Queue::fake();
         ServerConnection::factory()->create(['server_id' => $this->databaseServer->id, 'client_server_id' => $this->server->id]);
-        $database = ServerDatabase::factory()->create(['server_id' => $this->databaseServer->id, 'status' => 'ready']);
+        $database = ServerDatabase::factory()->create(['server_id' => $this->databaseServer->id, 'status' => DatabaseStatus::Ready]);
 
         $response = $this->actingAs($this->user)
             ->post("/{$this->team->slug}/servers/{$this->server->id}/sites", [
@@ -550,7 +569,7 @@ describe('databases on a connected server', function () {
 
     it('refuses a database on a server this one is not connected to', function () {
         Queue::fake();
-        $database = ServerDatabase::factory()->create(['server_id' => $this->databaseServer->id, 'status' => 'ready']);
+        $database = ServerDatabase::factory()->create(['server_id' => $this->databaseServer->id, 'status' => DatabaseStatus::Ready]);
 
         $response = $this->actingAs($this->user)
             ->post("/{$this->team->slug}/servers/{$this->server->id}/sites", [
@@ -575,7 +594,7 @@ describe('databases on a connected server', function () {
             'client_server_id' => $this->server->id,
             'host_address' => '10.10.0.2',
         ]);
-        $database = ServerDatabase::factory()->create(['server_id' => $this->databaseServer->id, 'name' => 'pg_db', 'status' => 'ready']);
+        $database = ServerDatabase::factory()->create(['server_id' => $this->databaseServer->id, 'name' => 'pg_db', 'status' => DatabaseStatus::Ready]);
         DatabaseUser::factory()->create([
             'server_id' => $this->databaseServer->id,
             'username' => 'remote_app',

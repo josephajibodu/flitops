@@ -1,5 +1,6 @@
 <?php
 
+use App\Enums\ServerActionStatus;
 use App\Models\Server;
 use App\Models\ServerDatabase;
 use App\Models\Team;
@@ -101,8 +102,8 @@ it('lists the services the server can restart, with how each last restart went',
         'php_version' => '8.3',
         'database_type' => 'mariadb',
     ]);
-    $server->actions()->create(['action' => 'restart_nginx', 'status' => 'finished', 'finished_at' => now()->subDay()]);
-    $server->actions()->create(['action' => 'restart_nginx', 'status' => 'failed', 'error' => 'Job for nginx.service failed', 'finished_at' => now()]);
+    $server->actions()->create(['action' => 'restart_nginx', 'status' => ServerActionStatus::Finished, 'finished_at' => now()->subDay()]);
+    $server->actions()->create(['action' => 'restart_nginx', 'status' => ServerActionStatus::Failed, 'error' => 'Job for nginx.service failed', 'finished_at' => now()]);
 
     $this->actingAs($this->user)
         ->get(route('servers.show', [$this->team, $server]))

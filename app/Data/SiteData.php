@@ -15,7 +15,6 @@ readonly class SiteData
      * @param  array<string>|null  $aliases
      */
     public function __construct(
-        public int $serverId,
         public ?string $domain = null,
         public ?string $siteName = null,
         public ?array $aliases = null,
@@ -51,7 +50,6 @@ readonly class SiteData
             ?? (isset($data['project_type']) ? ProjectType::from($data['project_type']) : ProjectType::Laravel);
 
         return new self(
-            serverId: $data['server_id'],
             domain: $data['domain'] ?? null,
             siteName: $data['site_name'] ?? null,
             aliases: $data['aliases'] ?? null,
@@ -81,7 +79,6 @@ readonly class SiteData
     public function toArray(): array
     {
         return [
-            'server_id' => $this->serverId,
             'domain' => $this->domain,
             'site_name' => $this->siteName,
             'aliases' => $this->aliases,

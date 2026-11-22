@@ -1,5 +1,6 @@
 <?php
 
+use App\Enums\ServerActionStatus;
 use App\Enums\ServiceType;
 use App\Enums\TeamRoleKey;
 use App\Events\ServerActionsUpdated;
@@ -34,7 +35,7 @@ it('restarts a service the server runs', function () {
 
     expect($this->server->actions()->first())
         ->action->toBe('restart_nginx')
-        ->status->toBe('pending');
+        ->status->toBe(ServerActionStatus::Pending);
     Queue::assertPushed(RestartServiceJob::class, fn ($job) => $job->service === ServiceType::Nginx);
 });
 
@@ -64,11 +65,11 @@ it('records the result and tells the page', function () {
     $commands = [];
     $uploads = [];
     fakeHostSsh($commands, $uploads);
-    $action = $this->server->actions()->create(['action' => 'restart_nginx', 'status' => 'pending']);
+    $action = $this->server->actions()->create(['action' => 'restart_nginx', 'status' => ServerActionStatus::Pending]);
 
     app()->call([new RestartServiceJob($this->server, ServiceType::Nginx, $action), 'handle']);
 
-    expect($action->fresh()->status)->toBe('finished')
+    expect($action->fresh()->status)->toBe(ServerActionStatus::Finished)
         ->and(implode("\n", $commands))->toContain('systemctl restart nginx');
     Event::assertDispatched(ServerActionsUpdated::class, 2);
 });

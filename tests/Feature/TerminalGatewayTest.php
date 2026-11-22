@@ -1,5 +1,6 @@
 <?php
 
+use App\Enums\CredentialType;
 use App\Models\Server;
 use App\Models\TerminalSession;
 
@@ -7,7 +8,7 @@ beforeEach(function () {
     config(['services.terminal_gateway.secret' => 'gateway-secret']);
 
     $this->server = Server::factory()->active()->withPinnedHostKey('SHA256:server-key')->create();
-    $this->server->credentials()->create(['type' => 'private_key', 'value' => 'fake-private-key']);
+    $this->server->credentials()->create(['type' => CredentialType::PrivateKey, 'value' => 'fake-private-key']);
 });
 
 function issueTerminalToken(Server $server): string

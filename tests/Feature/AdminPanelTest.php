@@ -1,6 +1,7 @@
 <?php
 
 use App\Enums\AdminAction;
+use App\Enums\CredentialType;
 use App\Filament\Pages\SecurityAdvisoryServers;
 use App\Models\AdminAuditLog;
 use App\Models\Deployment;
@@ -94,9 +95,10 @@ it('says so when an advisory does not exist', function () {
 
 it('never shows a server\'s or a site\'s secrets', function () {
     $team = Team::factory()->forUser(User::factory()->create())->create();
-    $server = Server::factory()->forTeam($team)->active()->create([
-        'sudo_password' => 'sudo-secret-123',
-        'database_password' => 'db-secret-456',
+    $server = Server::factory()->forTeam($team)->active()->create();
+    $server->credentials()->createMany([
+        ['type' => CredentialType::SudoPassword, 'value' => 'sudo-secret-123'],
+        ['type' => CredentialType::DatabasePassword, 'value' => 'db-secret-456'],
     ]);
     $site = Site::factory()->forServer($server)->create([
         'env_content' => 'APP_KEY=base64:env-secret-789',

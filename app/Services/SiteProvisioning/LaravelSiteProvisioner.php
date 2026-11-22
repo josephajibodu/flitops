@@ -2,7 +2,7 @@
 
 namespace App\Services\SiteProvisioning;
 
-use App\Actions\Database\EscapesShell;
+use App\Concerns\EscapesShell;
 use App\Enums\DatabaseType;
 use App\Enums\SiteProvisioningStep;
 use App\Models\DatabaseUser;

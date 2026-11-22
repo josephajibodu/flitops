@@ -1,6 +1,7 @@
 <?php
 
 use App\Actions\CronJob\DisableCronJob;
+use App\Enums\CronJobStatus;
 use App\Enums\ServerStatus;
 use App\Jobs\DisableCronJobJob;
 use App\Models\CronJob;
@@ -15,18 +16,18 @@ it('removes cron file on server when disabled', function () {
     $server = Server::factory()->create(['status' => ServerStatus::Active]);
     $cronJob = CronJob::factory()->create([
         'server_id' => $server->id,
-        'status' => 'active',
+        'status' => CronJobStatus::Active,
         'hidden' => true,
     ]);
 
-    $mockConnection = \Mockery::mock(SshConnection::class)->makePartial();
+    $mockConnection = Mockery::mock(SshConnection::class)->makePartial();
     $mockConnection->shouldReceive('sudo')->andReturn('');
     $mockConnection->shouldReceive('disconnect')->andReturn(null);
 
-    $sshService = \Mockery::mock(SshService::class);
+    $sshService = Mockery::mock(SshService::class);
     $sshService->shouldReceive('connect')
         ->once()
-        ->with(\Mockery::on(fn ($s) => $s->id === $server->id))
+        ->with(Mockery::on(fn ($s) => $s->id === $server->id))
         ->andReturn($mockConnection);
 
     app()->instance(SshService::class, $sshService);
@@ -35,27 +36,27 @@ it('removes cron file on server when disabled', function () {
     $job->handle(app(DisableCronJob::class));
 
     $cronJob->refresh();
-    expect($cronJob->status)->toBe('active');
+    expect($cronJob->status)->toBe(CronJobStatus::Active);
 });
 
 it('sets status to failed and rethrows when SSH fails', function () {
     $server = Server::factory()->create(['status' => ServerStatus::Active]);
     $cronJob = CronJob::factory()->create([
         'server_id' => $server->id,
-        'status' => 'active',
+        'status' => CronJobStatus::Active,
         'hidden' => true,
     ]);
 
-    $sshService = \Mockery::mock(SshService::class);
+    $sshService = Mockery::mock(SshService::class);
     $sshService->shouldReceive('connect')
         ->once()
-        ->andThrow(new \RuntimeException('SSH connection refused'));
+        ->andThrow(new RuntimeException('SSH connection refused'));
 
     app()->instance(SshService::class, $sshService);
 
     expect(fn () => (new DisableCronJobJob($cronJob))->handle(app(DisableCronJob::class)))
-        ->toThrow(\RuntimeException::class, 'SSH connection refused');
+        ->toThrow(RuntimeException::class, 'SSH connection refused');
 
     $cronJob->refresh();
-    expect($cronJob->status)->toBe('failed');
+    expect($cronJob->status)->toBe(CronJobStatus::Failed);
 });

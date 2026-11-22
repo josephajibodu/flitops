@@ -3,6 +3,7 @@
 namespace App\Actions\Servers;
 
 use App\Data\CustomServerData;
+use App\Enums\CredentialType;
 use App\Enums\Provider;
 use App\Enums\ServerStatus;
 use App\Models\Server;
@@ -39,10 +40,10 @@ class CreateCustomServerAction
             ]);
 
             $server->credentials()->createMany([
-                ['type' => 'private_key', 'value' => $keypair->privateKey],
-                ['type' => 'public_key', 'value' => $keypair->publicKey],
-                ['type' => 'sudo_password', 'value' => Str::random(32)],
-                ['type' => 'database_password', 'value' => Str::random(32)],
+                ['type' => CredentialType::PrivateKey, 'value' => $keypair->privateKey],
+                ['type' => CredentialType::PublicKey, 'value' => $keypair->publicKey],
+                ['type' => CredentialType::SudoPassword, 'value' => Str::random(32)],
+                ['type' => CredentialType::DatabasePassword, 'value' => Str::random(32)],
             ]);
 
             $server->queueSelectedServices(withRedis: $data->redis);

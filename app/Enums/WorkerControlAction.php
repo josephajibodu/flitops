@@ -8,20 +8,20 @@ enum WorkerControlAction: string
     case Stop = 'stop';
     case Restart = 'restart';
 
-    public function targetStatus(): string
+    public function targetStatus(): WorkerStatus
     {
         return match ($this) {
-            self::Start, self::Restart => 'active',
-            self::Stop => 'stopped',
+            self::Start, self::Restart => WorkerStatus::Active,
+            self::Stop => WorkerStatus::Stopped,
         };
     }
 
-    public function pendingStatus(): string
+    public function pendingStatus(): WorkerStatus
     {
         return match ($this) {
-            self::Start => 'starting',
-            self::Stop => 'stopping',
-            self::Restart => 'restarting',
+            self::Start => WorkerStatus::Starting,
+            self::Stop => WorkerStatus::Stopping,
+            self::Restart => WorkerStatus::Restarting,
         };
     }
 }

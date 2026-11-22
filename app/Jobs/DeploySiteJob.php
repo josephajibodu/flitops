@@ -2,8 +2,8 @@
 
 namespace App\Jobs;
 
-use App\Actions\Database\EscapesShell;
 use App\Actions\Database\KeepsSecretsOffCommandLine;
+use App\Concerns\EscapesShell;
 use App\Enums\DeploymentStatus;
 use App\Enums\PhpVersion;
 use App\Exceptions\DeploymentFailedException;

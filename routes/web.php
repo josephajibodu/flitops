@@ -66,7 +66,8 @@ Route::inertia('privacy', 'marketing/privacy')->name('privacy');
 
 Route::middleware(['auth', 'verified'])->group(function () {
     // Legacy redirects — send old global URLs to the user's current team context
-    Route::get('dashboard', fn () => redirect()->route('dashboard', auth()->user()->currentTeamOrFail()));
+    Route::get('dashboard', fn () => redirect()->route('dashboard', auth()->user()->currentTeamOrFail()))
+        ->name('dashboard.current');
     Route::get('ssh-keys', fn () => redirect()->route('ssh-keys.index', auth()->user()->currentTeamOrFail()));
     Route::get('source-control', fn () => redirect()->route('source-control.index', auth()->user()->currentTeamOrFail()));
 
@@ -217,15 +218,15 @@ Route::middleware(['auth', 'verified'])->group(function () {
                     ->name('servers.sites.domains.validate');
                 Route::post('servers/{server}/sites/{site}/domains', [SiteDomainController::class, 'store'])
                     ->name('servers.sites.domains.store');
-                Route::patch('servers/{server}/sites/{site}/domains/{site_domain}', [SiteDomainController::class, 'update'])
+                Route::patch('servers/{server}/sites/{site}/domains/{domain:ulid}', [SiteDomainController::class, 'update'])
                     ->name('servers.sites.domains.update');
-                Route::delete('servers/{server}/sites/{site}/domains/{site_domain}', [SiteDomainController::class, 'destroy'])
+                Route::delete('servers/{server}/sites/{site}/domains/{domain:ulid}', [SiteDomainController::class, 'destroy'])
                     ->name('servers.sites.domains.destroy');
-                Route::post('servers/{server}/sites/{site}/domains/{site_domain}/primary', [SiteDomainController::class, 'setPrimary'])
+                Route::post('servers/{server}/sites/{site}/domains/{domain:ulid}/primary', [SiteDomainController::class, 'setPrimary'])
                     ->name('servers.sites.domains.primary');
-                Route::post('servers/{server}/sites/{site}/domains/{site_domain}/verify', [SiteDomainController::class, 'verify'])
+                Route::post('servers/{server}/sites/{site}/domains/{domain:ulid}/verify', [SiteDomainController::class, 'verify'])
                     ->name('servers.sites.domains.verify');
-                Route::post('servers/{server}/sites/{site}/domains/{site_domain}/ssl/renew', [SiteDomainController::class, 'renewSsl'])
+                Route::post('servers/{server}/sites/{site}/domains/{domain:ulid}/ssl/renew', [SiteDomainController::class, 'renewSsl'])
                     ->name('servers.sites.domains.ssl.renew');
 
                 // Environment & deploy script
@@ -293,9 +294,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
                     ->name('servers.sites.nginx.rename');
                 Route::delete('servers/{server}/sites/{site}/nginx/{nginxFile}', [SiteNginxController::class, 'destroy'])
                     ->name('servers.sites.nginx.destroy');
-                Route::get('servers/{server}/sites/{site}/nginx-history/{historyId}', [SiteNginxController::class, 'history'])
+                Route::get('servers/{server}/sites/{site}/nginx-history/{nginxHistory}', [SiteNginxController::class, 'history'])
                     ->name('servers.sites.nginx.history.show');
-                Route::post('servers/{server}/sites/{site}/nginx-history/{historyId}/restore', [SiteNginxController::class, 'restore'])
+                Route::post('servers/{server}/sites/{site}/nginx-history/{nginxHistory}/restore', [SiteNginxController::class, 'restore'])
                     ->name('servers.sites.nginx.history.restore');
                 Route::post('servers/{server}/sites/{site}/nginx/refresh', [SiteNginxController::class, 'refresh'])
                     ->name('servers.sites.nginx.refresh');
@@ -407,7 +408,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
 });
 
 // Deployment webhooks — no auth, no CSRF (exempt in bootstrap/app.php), secret in URL identifies the site
-Route::post('webhook/{secret}', [DeploymentWebhookController::class, 'handle'])->name('deployment-webhook.handle');
+Route::post('webhook/{secret}', [DeploymentWebhookController::class, 'handle'])
+    ->middleware('throttle:60,1')
+    ->name('deployment-webhook.handle');
 
 // Terminal gateway — no user session, no CSRF (exempt in bootstrap/app.php), the shared gateway secret authenticates
 Route::middleware([VerifyTerminalGatewaySecret::class])->prefix('internal/terminal-sessions')->group(function () {
@@ -415,7 +418,8 @@ Route::middleware([VerifyTerminalGatewaySecret::class])->prefix('internal/termin
     Route::post('{terminalSession}/end', [TerminalGatewayController::class, 'end'])->name('terminal-gateway.end');
 });
 
-// Team invitation acceptance (accessible without auth to show the page; auth required to confirm)
+// Team invitation acceptance: opening the link only shows the page; joining is the
+// confirm POST, which needs a signed-in user with a verified email
 Route::get('invitations/{token}/accept', [TeamInvitationController::class, 'accept'])->name('team-invitations.accept');
 Route::post('invitations/{token}/confirm', [TeamInvitationController::class, 'confirm'])
     ->middleware(['auth', 'verified'])

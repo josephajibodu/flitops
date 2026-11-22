@@ -2,6 +2,7 @@
 
 namespace App\Actions\CronJob;
 
+use App\Enums\CronJobStatus;
 use App\Events\ServerProcessesUpdated;
 use App\Jobs\DestroyCronJobJob;
 use App\Models\CronJob;
@@ -16,7 +17,7 @@ class DestroyCronJob
 
     public function delete(CronJob $cronJob): void
     {
-        $cronJob->update(['status' => 'deleting']);
+        $cronJob->update(['status' => CronJobStatus::Deleting]);
         event(new ServerProcessesUpdated($cronJob->server_id));
         DestroyCronJobJob::dispatch($cronJob);
     }

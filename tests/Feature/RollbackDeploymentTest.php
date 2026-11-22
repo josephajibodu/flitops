@@ -4,6 +4,7 @@ use App\Actions\Sites\RollbackDeploymentAction;
 use App\Enums\DeploymentStatus;
 use App\Enums\ProjectType;
 use App\Enums\SiteStatus;
+use App\Enums\WorkerStatus;
 use App\Exceptions\DeploymentFailedException;
 use App\Jobs\RollbackSiteJob;
 use App\Models\Deployment;
@@ -165,7 +166,7 @@ it('swaps current to the target release and marks the rollback finished', functi
 });
 
 it('restarts the site workers marked to restart after a rollback', function () {
-    $worker = Worker::factory()->forSite($this->site)->create(['status' => 'active', 'restart_on_deploy' => true]);
+    $worker = Worker::factory()->forSite($this->site)->create(['status' => WorkerStatus::Active, 'restart_on_deploy' => true]);
 
     $target = Deployment::factory()->finished()->forSite($this->site)->create();
     $rollback = Deployment::factory()->pending()->forSite($this->site)->create([

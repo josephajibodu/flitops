@@ -2,6 +2,7 @@
 
 namespace App\Services\Ssh;
 
+use App\Enums\CredentialType;
 use App\Exceptions\SshConnectionException;
 use App\Exceptions\SshHostKeyMismatchException;
 use App\Models\Server;
@@ -53,7 +54,7 @@ class SshService
         $ssh->setKeepAlive(30);
 
         $privateKeyCredential = $server->credentials()
-            ->where('type', 'private_key')
+            ->where('type', CredentialType::PrivateKey)
             ->first();
 
         if (! $privateKeyCredential) {

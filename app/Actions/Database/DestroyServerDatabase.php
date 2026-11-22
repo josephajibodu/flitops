@@ -2,6 +2,10 @@
 
 namespace App\Actions\Database;
 
+use App\Concerns\EscapesShell;
+use App\Concerns\QuotesMysql;
+use App\Enums\CredentialType;
+use App\Enums\DatabaseStatus;
 use App\Enums\DatabaseType;
 use App\Events\ServerDatabasesUpdated;
 use App\Jobs\DestroyServerDatabaseJob;
@@ -20,7 +24,7 @@ class DestroyServerDatabase
 
     public function delete(ServerDatabase $serverDatabase): void
     {
-        $serverDatabase->update(['status' => 'deleting']);
+        $serverDatabase->update(['status' => DatabaseStatus::Deleting]);
         $server = $serverDatabase->server;
         if ($server) {
             event(new ServerDatabasesUpdated($server));
@@ -36,7 +40,7 @@ class DestroyServerDatabase
             throw new RuntimeException("Server {$server->id} is not ready.");
         }
 
-        $credential = $server->credential('database_password');
+        $credential = $server->credential(CredentialType::DatabasePassword);
         if (! $credential) {
             throw new RuntimeException("No database password credential for server {$server->id}.");
         }

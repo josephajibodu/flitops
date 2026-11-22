@@ -2,10 +2,11 @@
 
 namespace App\Actions\ServerConnections;
 
-use App\Actions\Database\EscapesShell;
 use App\Actions\Database\ManagesRemoteMysqlAccounts;
-use App\Actions\Database\QuotesMysql;
 use App\Actions\Database\RunsSqlPrivately;
+use App\Concerns\EscapesShell;
+use App\Concerns\QuotesMysql;
+use App\Enums\CredentialType;
 use App\Enums\DatabaseType;
 use App\Enums\ServerConnectionStatus;
 use App\Jobs\AllowServerConnectionJob;
@@ -118,7 +119,7 @@ class AllowServerConnection
 
         $statements[] = 'FLUSH PRIVILEGES';
 
-        $this->runMysqlAsRoot($ssh, (string) $host->credential('database_password')?->value, $statements);
+        $this->runMysqlAsRoot($ssh, (string) $host->credential(CredentialType::DatabasePassword)?->value, $statements);
     }
 
     /**
@@ -152,11 +153,11 @@ class AllowServerConnection
      */
     private function openRedis(SshConnection $ssh, Server $host): void
     {
-        $password = $host->credential('redis_password')?->value;
+        $password = $host->credential(CredentialType::RedisPassword)?->value;
 
         if ($password === null) {
             $password = Str::random(40);
-            $host->credentials()->create(['type' => 'redis_password', 'value' => $password]);
+            $host->credentials()->create(['type' => CredentialType::RedisPassword, 'value' => $password]);
         }
 
         $this->installAsRoot(
