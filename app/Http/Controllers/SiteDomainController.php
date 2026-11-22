@@ -91,7 +91,7 @@ class SiteDomainController extends Controller
             ->with('success', 'Domain added.');
     }
 
-    public function update(UpdateSiteDomainRequest $request, Team $team, Server $server, Site $site, SiteDomain $siteDomain): RedirectResponse
+    public function update(UpdateSiteDomainRequest $request, Team $team, Server $server, Site $site, SiteDomain $domain): RedirectResponse
     {
         $data = $request->validated();
         if (isset($data['www_redirect'])) {
@@ -99,7 +99,7 @@ class SiteDomainController extends Controller
         }
 
         if (array_key_exists('is_enabled', $data) && $data['is_enabled'] === false) {
-            if ($siteDomain->is_primary) {
+            if ($domain->is_primary) {
                 return redirect()
                     ->route('servers.sites.domains.index', [$team, $server, $site])
                     ->with('error', 'Set another domain as primary before disabling this domain.');
@@ -113,18 +113,18 @@ class SiteDomainController extends Controller
             }
         }
 
-        $coveredWww = $siteDomain->effectiveWwwRedirect() !== WwwRedirect::None;
-        $siteDomain->update($data);
-        $coversWww = $siteDomain->effectiveWwwRedirect() !== WwwRedirect::None;
+        $coveredWww = $domain->effectiveWwwRedirect() !== WwwRedirect::None;
+        $domain->update($data);
+        $coversWww = $domain->effectiveWwwRedirect() !== WwwRedirect::None;
 
         // A certificate flitops requested lists the www address only while
         // the domain redirects it, so it's requested again when that changes.
         // The config goes first: the new address has to answer the
         // certificate check.
-        if ($coveredWww !== $coversWww && $siteDomain->hasSsl() && ! $server->webServer()->obtainsCertificates()) {
+        if ($coveredWww !== $coversWww && $domain->hasSsl() && ! $server->webServer()->obtainsCertificates()) {
             Bus::chain([
                 new SyncSiteNginxJob($site),
-                new IssueSslForDomainJob($siteDomain, $site),
+                new IssueSslForDomainJob($domain, $site),
             ])->dispatch();
         } else {
             SyncSiteNginxJob::dispatch($site);
@@ -136,11 +136,11 @@ class SiteDomainController extends Controller
             ->with('success', 'Domain updated.');
     }
 
-    public function destroy(Team $team, Server $server, Site $site, SiteDomain $siteDomain): RedirectResponse
+    public function destroy(Team $team, Server $server, Site $site, SiteDomain $domain): RedirectResponse
     {
         $this->authorize('update', $site);
 
-        if ($siteDomain->type === SiteDomainType::System) {
+        if ($domain->type === SiteDomainType::System) {
             return redirect()
                 ->route('servers.sites.domains.index', [$team, $server, $site])
                 ->with('error', 'The system domain cannot be deleted.');
@@ -153,32 +153,32 @@ class SiteDomainController extends Controller
                 ->with('error', 'You must keep at least one domain.');
         }
 
-        if ($siteDomain->is_primary) {
+        if ($domain->is_primary) {
             return redirect()
                 ->route('servers.sites.domains.index', [$team, $server, $site])
                 ->with('error', 'Set another domain as primary before deleting this one.');
         }
 
-        $siteDomain->update(['status' => SiteDomainStatus::Deleting]);
+        $domain->update(['status' => SiteDomainStatus::Deleting]);
         broadcast(new SiteDomainsUpdated($site));
 
-        DeleteSiteDomainJob::dispatch($siteDomain, $site);
+        DeleteSiteDomainJob::dispatch($domain, $site);
 
         return redirect()
             ->route('servers.sites.domains.index', [$team, $server, $site]);
     }
 
-    public function setPrimary(Team $team, Server $server, Site $site, SiteDomain $siteDomain, SetPrimarySiteDomainAction $action): RedirectResponse
+    public function setPrimary(Team $team, Server $server, Site $site, SiteDomain $domain, SetPrimarySiteDomainAction $action): RedirectResponse
     {
         $this->authorize('update', $site);
 
-        if (! $siteDomain->is_enabled) {
+        if (! $domain->is_enabled) {
             return redirect()
                 ->route('servers.sites.domains.index', [$team, $server, $site])
                 ->with('error', 'Enable the domain before setting it as primary.');
         }
 
-        $action->execute($site, $siteDomain);
+        $action->execute($site, $domain);
         broadcast(new SiteDomainsUpdated($site));
 
         return redirect()
@@ -186,46 +186,46 @@ class SiteDomainController extends Controller
             ->with('success', 'Primary domain updated.');
     }
 
-    public function verify(Team $team, Server $server, Site $site, SiteDomain $siteDomain): RedirectResponse
+    public function verify(Team $team, Server $server, Site $site, SiteDomain $domain): RedirectResponse
     {
         $this->authorize('update', $site);
 
-        if ($siteDomain->type !== SiteDomainType::Custom) {
+        if ($domain->type !== SiteDomainType::Custom) {
             return redirect()
                 ->route('servers.sites.domains.index', [$team, $server, $site])
                 ->with('error', 'Only custom domains require verification.');
         }
 
-        if ($siteDomain->isVerified()) {
+        if ($domain->isVerified()) {
             return redirect()
                 ->route('servers.sites.domains.index', [$team, $server, $site])
                 ->with('success', 'Domain is already verified.');
         }
 
-        VerifyCustomDomainJob::dispatch($siteDomain);
+        VerifyCustomDomainJob::dispatch($domain);
 
         return redirect()
             ->route('servers.sites.domains.index', [$team, $server, $site])
             ->with('success', 'Verification started. Refresh the page in a moment to see the updated status.');
     }
 
-    public function renewSsl(Team $team, Server $server, Site $site, SiteDomain $siteDomain): RedirectResponse
+    public function renewSsl(Team $team, Server $server, Site $site, SiteDomain $domain): RedirectResponse
     {
         $this->authorize('update', $site);
 
-        if ($siteDomain->type !== SiteDomainType::Custom) {
+        if ($domain->type !== SiteDomainType::Custom) {
             return redirect()
                 ->route('servers.sites.domains.index', [$team, $server, $site])
                 ->with('error', 'Only custom domains have a certificate to renew.');
         }
 
-        if (! $siteDomain->isVerified()) {
+        if (! $domain->isVerified()) {
             return redirect()
                 ->route('servers.sites.domains.index', [$team, $server, $site])
                 ->with('error', 'Verify the domain before requesting a certificate.');
         }
 
-        IssueSslForDomainJob::dispatch($siteDomain, $site);
+        IssueSslForDomainJob::dispatch($domain, $site);
 
         return redirect()
             ->route('servers.sites.domains.index', [$team, $server, $site])

@@ -87,7 +87,7 @@ function teamRouteParameters(Team $team, User $viewer): array
         'team' => $team,
         'server' => $server,
         'site' => $site,
-        'site_domain' => $site->domains()->first()->ulid,
+        'domain' => $site->domains()->first()->ulid,
         'deployment' => Deployment::factory()->for($site)->create(),
         'nginxFile' => SiteNginxFile::factory()->for($site)->create(),
         'historyId' => SiteNginxHistory::factory()->for($site)->create()->id,

@@ -217,15 +217,15 @@ Route::middleware(['auth', 'verified'])->group(function () {
                     ->name('servers.sites.domains.validate');
                 Route::post('servers/{server}/sites/{site}/domains', [SiteDomainController::class, 'store'])
                     ->name('servers.sites.domains.store');
-                Route::patch('servers/{server}/sites/{site}/domains/{site_domain}', [SiteDomainController::class, 'update'])
+                Route::patch('servers/{server}/sites/{site}/domains/{domain:ulid}', [SiteDomainController::class, 'update'])
                     ->name('servers.sites.domains.update');
-                Route::delete('servers/{server}/sites/{site}/domains/{site_domain}', [SiteDomainController::class, 'destroy'])
+                Route::delete('servers/{server}/sites/{site}/domains/{domain:ulid}', [SiteDomainController::class, 'destroy'])
                     ->name('servers.sites.domains.destroy');
-                Route::post('servers/{server}/sites/{site}/domains/{site_domain}/primary', [SiteDomainController::class, 'setPrimary'])
+                Route::post('servers/{server}/sites/{site}/domains/{domain:ulid}/primary', [SiteDomainController::class, 'setPrimary'])
                     ->name('servers.sites.domains.primary');
-                Route::post('servers/{server}/sites/{site}/domains/{site_domain}/verify', [SiteDomainController::class, 'verify'])
+                Route::post('servers/{server}/sites/{site}/domains/{domain:ulid}/verify', [SiteDomainController::class, 'verify'])
                     ->name('servers.sites.domains.verify');
-                Route::post('servers/{server}/sites/{site}/domains/{site_domain}/ssl/renew', [SiteDomainController::class, 'renewSsl'])
+                Route::post('servers/{server}/sites/{site}/domains/{domain:ulid}/ssl/renew', [SiteDomainController::class, 'renewSsl'])
                     ->name('servers.sites.domains.ssl.renew');
 
                 // Environment & deploy script
