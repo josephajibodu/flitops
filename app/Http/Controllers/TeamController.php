@@ -35,7 +35,7 @@ class TeamController extends Controller
         $team = auth()->user()->currentTeam;
 
         if (! $team) {
-            return redirect('/dashboard');
+            return redirect()->route('dashboard.current');
         }
 
         $this->authorize('view', $team);

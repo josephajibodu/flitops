@@ -68,13 +68,13 @@ class TeamInvitationController extends Controller
         $team = $invitation->team;
 
         if ($user->email !== $invitation->email) {
-            return redirect('/dashboard')
+            return redirect()->route('dashboard.current')
                 ->with('error', 'This invitation was sent to a different email address.');
         }
 
         if (! $team->hasUser($user)) {
             if (! $team->planIncludes(PlanFeature::TeamMembers)) {
-                return redirect('/dashboard')
+                return redirect()->route('dashboard.current')
                     ->with('error', "{$team->name}'s plan doesn't include team members yet. Ask the team owner to upgrade, then open the invitation again.");
             }
 

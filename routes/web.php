@@ -66,7 +66,8 @@ Route::inertia('privacy', 'marketing/privacy')->name('privacy');
 
 Route::middleware(['auth', 'verified'])->group(function () {
     // Legacy redirects — send old global URLs to the user's current team context
-    Route::get('dashboard', fn () => redirect()->route('dashboard', auth()->user()->currentTeamOrFail()));
+    Route::get('dashboard', fn () => redirect()->route('dashboard', auth()->user()->currentTeamOrFail()))
+        ->name('dashboard.current');
     Route::get('ssh-keys', fn () => redirect()->route('ssh-keys.index', auth()->user()->currentTeamOrFail()));
     Route::get('source-control', fn () => redirect()->route('source-control.index', auth()->user()->currentTeamOrFail()));
 
