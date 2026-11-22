@@ -4,6 +4,7 @@ namespace App\Actions\Backups;
 
 use App\Actions\Database\GrantsPostgresPrivileges;
 use App\Actions\Database\RunsSqlPrivately;
+use App\Enums\DatabaseType;
 use App\Exceptions\BackupFailedException;
 use App\Exceptions\SshCommandException;
 use App\Models\DatabaseUser;
@@ -41,10 +42,10 @@ trait ImportsForeignDumps
         $this->ensureClientCanRunDumpsSafely($connection, $server);
 
         return match ($server->database_type) {
-            'mysql' => $download.' | gunzip -cf | '.$this->mysqlImportFilter()." | sudo mysql {$credentialsOption} --commands=OFF {$databaseName}",
-            'mariadb' => $download.' | gunzip -cf | '.$this->mysqlImportFilter()." | sudo mariadb {$credentialsOption} --sandbox {$databaseName}",
-            'postgresql' => $this->buildPostgresImportPipeline($connection, $directory, $serverDatabase, $download),
-            default => throw new RuntimeException("Importing a dump isn't supported for {$server->database_type}."),
+            DatabaseType::Mysql => $download.' | gunzip -cf | '.$this->mysqlImportFilter()." | sudo mysql {$credentialsOption} --commands=OFF {$databaseName}",
+            DatabaseType::Mariadb => $download.' | gunzip -cf | '.$this->mysqlImportFilter()." | sudo mariadb {$credentialsOption} --sandbox {$databaseName}",
+            DatabaseType::Postgresql => $this->buildPostgresImportPipeline($connection, $directory, $serverDatabase, $download),
+            default => throw new RuntimeException("Importing a dump isn't supported for {$server->database_type?->value}."),
         };
     }
 
@@ -59,13 +60,13 @@ trait ImportsForeignDumps
     private function ensureClientCanRunDumpsSafely(SshConnection $connection, Server $server): void
     {
         [$check, $requirement] = match ($server->database_type) {
-            'mysql' => ['mysql --commands=OFF --help', 'MySQL 8.0.43 or newer'],
-            'mariadb' => ['mariadb --sandbox --help', 'MariaDB 10.11.8 or newer'],
-            'postgresql' => [
+            DatabaseType::Mysql => ['mysql --commands=OFF --help', 'MySQL 8.0.43 or newer'],
+            DatabaseType::Mariadb => ['mariadb --sandbox --help', 'MariaDB 10.11.8 or newer'],
+            DatabaseType::Postgresql => [
                 "printf '%s\\n' ".$this->escapeForShell('\\restrict flitopscheck').' | sudo -u postgres psql -X -q -v ON_ERROR_STOP=1 -d postgres',
                 'a PostgreSQL release from August 2025 or later (for example 16.10 or 17.6)',
             ],
-            default => throw new RuntimeException("Importing a dump isn't supported for {$server->database_type}."),
+            default => throw new RuntimeException("Importing a dump isn't supported for {$server->database_type?->value}."),
         };
 
         try {
@@ -81,7 +82,7 @@ trait ImportsForeignDumps
      */
     private function finishImport(SshConnection $connection, Server $server, ServerDatabase $serverDatabase): void
     {
-        if ($server->database_type !== 'postgresql') {
+        if ($server->database_type !== DatabaseType::Postgresql) {
             return;
         }
 

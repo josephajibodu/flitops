@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Actions\Backups\ImportDatabaseDump;
+use App\Enums\DatabaseType;
 use App\Http\Requests\ImportDatabaseDumpRequest;
 use App\Models\Server;
 use App\Models\ServerDatabase;
@@ -23,7 +24,7 @@ class DatabaseImportController extends Controller
         ServerDatabase $server_database,
         ImportDatabaseDump $action,
     ): RedirectResponse {
-        if ($server->database_type === 'postgresql' && ! $server_database->importOwner()) {
+        if ($server->database_type === DatabaseType::Postgresql && ! $server_database->importOwner()) {
             return redirect()
                 ->back()
                 ->with('error', "Add a database user with read-write access to {$server_database->name} first. The imported tables are handed to that user.");
