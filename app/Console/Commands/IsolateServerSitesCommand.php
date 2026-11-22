@@ -25,7 +25,8 @@ class IsolateServerSitesCommand extends Command
             return self::FAILURE;
         }
 
-        $sites = $server->sites()->whereNull('system_user')->orderBy('id')->get();
+        $sites = $server->sites()->whereNull('system_user')->orderBy('id')->get()
+            ->each->setRelation('server', $server);
 
         if ($sites->isEmpty()) {
             $this->components->info("Every site on {$server->name} is already isolated.");
