@@ -3,8 +3,23 @@
 use App\Events\RealtimeDiagnosticMessage;
 use App\Models\User;
 use App\Realtime\RealtimeDiagnosticsChannelAuthorizer;
+use Illuminate\Foundation\Http\Middleware\PreventRequestForgery;
 use Illuminate\Support\Facades\Event;
 use Inertia\Testing\AssertableInertia;
+
+beforeEach(function () {
+    // Pretending to be a local machine also switches CSRF checks back on.
+    app()['env'] = 'local';
+    $this->withoutMiddleware(PreventRequestForgery::class);
+});
+
+it('does not exist outside a local machine', function () {
+    app()['env'] = 'production';
+    $user = User::factory()->create();
+
+    $this->actingAs($user)->get(route('realtime.test'))->assertNotFound();
+    $this->actingAs($user)->post(route('realtime.test.trigger'))->assertNotFound();
+});
 
 it('allows authenticated users to access the realtime diagnostics page', function () {
     $user = User::factory()->create();

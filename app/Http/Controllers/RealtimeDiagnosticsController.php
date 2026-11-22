@@ -2,21 +2,25 @@
 
 namespace App\Http\Controllers;
 
-use App\Enums\ServerStatus;
 use App\Events\RealtimeDiagnosticMessage;
-use App\Events\ServerStatusChanged;
-use App\Models\Server;
+use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Support\Str;
 use Inertia\Inertia;
 use Inertia\Response as InertiaResponse;
 
+/**
+ * A developer tool for checking Reverb end to end, so, like the email
+ * previews, it only answers on a local machine.
+ */
 class RealtimeDiagnosticsController extends Controller
 {
     public function index(Request $request): InertiaResponse
     {
-        /** @var \App\Models\User $user */
+        abort_unless(app()->isLocal(), 404);
+
+        /** @var User $user */
         $user = $request->user();
 
         return Inertia::render('realtime/test', [
@@ -35,11 +39,13 @@ class RealtimeDiagnosticsController extends Controller
 
     public function trigger(Request $request): Response
     {
+        abort_unless(app()->isLocal(), 404);
+
         $validated = $request->validate([
             'message' => ['nullable', 'string', 'max:500'],
         ]);
 
-        /** @var \App\Models\User $user */
+        /** @var User $user */
         $user = $request->user();
 
         event(new RealtimeDiagnosticMessage(
