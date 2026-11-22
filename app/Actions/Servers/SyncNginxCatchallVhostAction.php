@@ -2,6 +2,7 @@
 
 namespace App\Actions\Servers;
 
+use App\Enums\WebServer;
 use App\Models\Server;
 use App\Services\Provisioning\CaddyService;
 use App\Services\Provisioning\NginxService;
@@ -35,7 +36,7 @@ class SyncNginxCatchallVhostAction
         $noSitePageRoot = NginxService::NO_SITE_PAGE_ROOT;
         $connection->exec("sudo mkdir -p {$noSitePageRoot}");
 
-        if ($server->web_server !== 'caddy') {
+        if ($server->web_server !== WebServer::Caddy) {
             $installed = $connection->exec('dpkg -s ssl-cert >/dev/null 2>&1 && echo INSTALLED || true');
             if (! str_contains($installed, 'INSTALLED')) {
                 $connection->exec('sudo apt-get -o DPkg::Lock::Timeout=60 install -y ssl-cert', 900);
@@ -43,7 +44,7 @@ class SyncNginxCatchallVhostAction
         }
 
         $server->webServer()->withConfigLock($server, function () use ($server, $connection): void {
-            if ($server->web_server === 'caddy') {
+            if ($server->web_server === WebServer::Caddy) {
                 $this->write($connection, NginxService::NO_SITE_PAGE, CaddyService::noSitePage());
                 $this->write($connection, CaddyService::CADDYFILE, CaddyService::buildCaddyfile());
             } else {

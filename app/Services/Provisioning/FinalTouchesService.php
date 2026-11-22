@@ -3,6 +3,7 @@
 namespace App\Services\Provisioning;
 
 use App\Enums\NodeVersion;
+use App\Enums\WebServer;
 
 class FinalTouchesService
 {
@@ -30,7 +31,7 @@ class FinalTouchesService
         $context->packages->ensureInstalled('git');
 
         // Certbot (Let's Encrypt). Caddy gets its own certificates.
-        if ($context->server->web_server !== 'caddy') {
+        if ($context->server->web_server !== WebServer::Caddy) {
             $context->packages->ensureInstalled('certbot');
         }
 
@@ -41,7 +42,7 @@ class FinalTouchesService
         $context->runner->runQuietly('ufw allow 443', 60);
 
         // Caddy serves HTTP/3, which runs over UDP.
-        if ($context->server->web_server === 'caddy') {
+        if ($context->server->web_server === WebServer::Caddy) {
             $context->runner->runQuietly('ufw allow 443/udp', 60);
         }
         $context->runner->runQuietly('ufw --force enable', 60);
