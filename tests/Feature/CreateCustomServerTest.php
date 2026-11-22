@@ -2,6 +2,7 @@
 
 use App\Actions\Servers\CreateCustomServerAction;
 use App\Data\CustomServerData;
+use App\Enums\DatabaseType;
 use App\Enums\Plan;
 use App\Enums\Provider;
 use App\Enums\ServerStatus;
@@ -45,7 +46,7 @@ it('creates a custom server in pending status with the correct attributes', func
         ->and($server->ip_address)->toBe('203.0.113.10')
         ->and($server->ssh_port)->toBe(2222)
         ->and($server->php_version)->toBe('8.4')
-        ->and($server->database_type)->toBe('postgresql')
+        ->and($server->database_type)->toBe(DatabaseType::Postgresql)
         ->and($server->size)->toBeNull()
         ->and($server->region)->toBeNull();
 });
@@ -345,7 +346,7 @@ it('records only the services a database server preset ticks', function () {
         ->type->toBe(ServerType::Database)
         ->php_version->toBeNull()
         ->web_server->toBeNull()
-        ->database_type->toBe('postgresql');
+        ->database_type->toBe(DatabaseType::Postgresql);
     expect($server->installedServices()->pluck('status', 'type')->all())
         ->toBe([ServiceType::Postgresql->value => ServiceStatus::Pending]);
 });

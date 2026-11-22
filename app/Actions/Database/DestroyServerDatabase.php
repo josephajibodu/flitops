@@ -2,6 +2,7 @@
 
 namespace App\Actions\Database;
 
+use App\Enums\DatabaseType;
 use App\Events\ServerDatabasesUpdated;
 use App\Jobs\DestroyServerDatabaseJob;
 use App\Models\ServerDatabase;
@@ -47,12 +48,12 @@ class DestroyServerDatabase
         try {
             $databaseType = $server->database_type;
 
-            if ($databaseType === 'mysql' || $databaseType === 'mariadb') {
+            if ($databaseType?->isMysqlFamily()) {
                 $this->dropMysqlDatabase($connection, $name, $rootPassword);
-            } elseif ($databaseType === 'postgresql') {
+            } elseif ($databaseType === DatabaseType::Postgresql) {
                 $this->dropPostgresDatabase($connection, $name);
             } else {
-                throw new RuntimeException("Unsupported database type: {$databaseType}");
+                throw new RuntimeException("Unsupported database type: {$databaseType?->value}");
             }
         } finally {
             $connection->disconnect();

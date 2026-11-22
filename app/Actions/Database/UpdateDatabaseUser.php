@@ -2,6 +2,7 @@
 
 namespace App\Actions\Database;
 
+use App\Enums\DatabaseType;
 use App\Jobs\UpdateDatabaseUserJob;
 use App\Models\DatabaseUser;
 use App\Services\Ssh\SshConnection;
@@ -66,12 +67,12 @@ class UpdateDatabaseUser
         try {
             $databaseType = $server->database_type;
 
-            if ($databaseType === 'mysql' || $databaseType === 'mariadb') {
+            if ($databaseType?->isMysqlFamily()) {
                 $this->updateMysqlUser($connection, $databaseUser, $rootPassword);
-            } elseif ($databaseType === 'postgresql') {
+            } elseif ($databaseType === DatabaseType::Postgresql) {
                 $this->updatePostgresUser($connection, $databaseUser);
             } else {
-                throw new RuntimeException("Unsupported database type: {$databaseType}");
+                throw new RuntimeException("Unsupported database type: {$databaseType?->value}");
             }
         } finally {
             $connection->disconnect();

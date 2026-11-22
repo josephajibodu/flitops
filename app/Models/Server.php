@@ -4,6 +4,7 @@ namespace App\Models;
 
 use App\Contracts\WebServerContract;
 use App\Enums\ConnectionStatus;
+use App\Enums\DatabaseType;
 use App\Enums\NodeVersion;
 use App\Enums\Provider;
 use App\Enums\ProvisioningStep;
@@ -87,6 +88,7 @@ class Server extends Model
             'provider' => Provider::class,
             'type' => ServerType::class,
             'web_server' => WebServer::class,
+            'database_type' => DatabaseType::class,
             'status' => ServerStatus::class,
             'provisioning_step' => ProvisioningStep::class,
             'connection_status' => ConnectionStatus::class,
@@ -286,10 +288,7 @@ class Server extends Model
      */
     public function databaseServiceType(): ServiceType
     {
-        return match ($this->database_type) {
-            'postgresql' => ServiceType::Postgresql,
-            default => ServiceType::Mysql,
-        };
+        return $this->database_type?->serviceType() ?? ServiceType::Mysql;
     }
 
     /**
@@ -503,12 +502,7 @@ class Server extends Model
         $ports = [];
 
         if ($this->hasDatabase()) {
-            $label = match ($this->database_type) {
-                'postgresql' => 'PostgreSQL',
-                'mariadb' => 'MariaDB',
-                default => 'MySQL',
-            };
-            $ports[$label] = $this->database_type === 'postgresql' ? 5432 : 3306;
+            $ports[$this->database_type->label()] = $this->database_type->port();
         }
 
         if ($this->sharesRedis()) {
@@ -579,11 +573,7 @@ class Server extends Model
         return array_values(array_filter([
             $this->web_server?->serviceType(),
             $this->hasPhp() ? ServiceType::Php : null,
-            match ($this->database_type) {
-                'mysql', 'mariadb' => ServiceType::Mysql,
-                'postgresql' => ServiceType::Postgresql,
-                default => null,
-            },
+            $this->database_type?->serviceType(),
             $this->hasRedis() ? ServiceType::Redis : null,
         ]));
     }
