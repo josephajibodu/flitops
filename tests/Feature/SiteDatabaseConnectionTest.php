@@ -1,6 +1,8 @@
 <?php
 
+use App\Actions\Sites\CreateSiteAction;
 use App\Actions\Sites\ProvisionSiteAction;
+use App\Data\SiteData;
 use App\Enums\ProjectType;
 use App\Enums\ServerStatus;
 use App\Events\ServerSitesUpdated;
@@ -15,6 +17,7 @@ use App\Models\Team;
 use App\Models\User;
 use App\Services\Ssh\SshConnection;
 use App\Services\Ssh\SshService;
+use Illuminate\Database\UniqueConstraintViolationException;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Queue;
@@ -190,6 +193,21 @@ describe('CreateSiteAction', function () {
         $site = Site::where('domain', 'with-db.com')->firstOrFail();
         expect($site->server_database_id)->toBe($database->id);
         expect($site->serverDatabase->name)->toBe($database->name);
+    });
+
+    it('saves nothing when one of the site\'s domains cannot be saved', function () {
+        Queue::fake();
+        SiteDomain::factory()->for(Site::factory()->forServer($this->server))->create(['hostname' => 'taken.com']);
+        $sitesBefore = Site::count();
+
+        expect(fn () => app(CreateSiteAction::class)->execute(
+            $this->server,
+            new SiteData(domain: 'fresh.com', aliases: ['taken.com']),
+        ))->toThrow(UniqueConstraintViolationException::class);
+
+        expect(Site::count())->toBe($sitesBefore)
+            ->and(SiteDomain::where('hostname', 'fresh.com')->exists())->toBeFalse();
+        Queue::assertNotPushed(CreateSiteJob::class);
     });
 });
 
