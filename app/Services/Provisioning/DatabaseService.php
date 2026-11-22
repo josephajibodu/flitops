@@ -4,6 +4,7 @@ namespace App\Services\Provisioning;
 
 use App\Concerns\EscapesShell;
 use App\Concerns\QuotesMysql;
+use App\Enums\DatabaseType;
 use RuntimeException;
 
 class DatabaseService
@@ -15,11 +16,11 @@ class DatabaseService
     {
         $databaseType = $context->server->database_type;
 
-        if ($databaseType === 'mysql') {
+        if ($databaseType === DatabaseType::Mysql) {
             $this->installMysql($context);
-        } elseif ($databaseType === 'postgresql') {
+        } elseif ($databaseType === DatabaseType::Postgresql) {
             $this->installPostgres($context);
-        } elseif ($databaseType === 'mariadb') {
+        } elseif ($databaseType === DatabaseType::Mariadb) {
             $this->installMariadb($context);
         }
     }

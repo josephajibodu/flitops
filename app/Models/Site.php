@@ -6,6 +6,7 @@ use App\Concerns\EscapesShell;
 use App\Enums\DeploymentStatus;
 use App\Enums\Framework;
 use App\Enums\OctaneServer;
+use App\Enums\PhpVersion;
 use App\Enums\ProjectType;
 use App\Enums\RepositoryProvider;
 use App\Enums\SiteProvisioningStep;
@@ -155,7 +156,7 @@ class Site extends Model
      */
     public function octaneCommand(): string
     {
-        $php = 'php'.($this->php_version ?: '8.4');
+        $php = 'php'.($this->php_version ?: PhpVersion::siteFallback()->value);
 
         return "{$php} artisan octane:start --server={$this->octane_server->value} --host=127.0.0.1 --port={$this->app_port}";
     }

@@ -5,6 +5,7 @@ namespace App\Actions\Sites;
 use App\Concerns\EscapesShell;
 use App\Enums\CronJobStatus;
 use App\Enums\DeploymentStatus;
+use App\Enums\PhpVersion;
 use App\Enums\ProjectType;
 use App\Enums\SiteDomainType;
 use App\Enums\SiteStatus;
@@ -479,7 +480,7 @@ class IsolateSiteAction
 
     private function phpVersion(): string
     {
-        return $this->site->php_version ?? '8.4';
+        return $this->site->php_version ?? PhpVersion::siteFallback()->value;
     }
 
     /**

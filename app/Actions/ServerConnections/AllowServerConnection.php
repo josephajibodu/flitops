@@ -7,6 +7,7 @@ use App\Actions\Database\RunsSqlPrivately;
 use App\Concerns\EscapesShell;
 use App\Concerns\QuotesMysql;
 use App\Enums\CredentialType;
+use App\Enums\DatabaseType;
 use App\Enums\ServerConnectionStatus;
 use App\Jobs\AllowServerConnectionJob;
 use App\Models\DatabaseUser;
@@ -83,13 +84,13 @@ class AllowServerConnection
 
     private function openDatabase(SshConnection $ssh, Server $host, ServerConnection $serverConnection): void
     {
-        if ($host->database_type === 'postgresql') {
+        if ($host->database_type === DatabaseType::Postgresql) {
             $this->openPostgres($ssh, $serverConnection);
 
             return;
         }
 
-        [$configPath, $unit] = $host->database_type === 'mariadb'
+        [$configPath, $unit] = $host->database_type === DatabaseType::Mariadb
             ? [self::MARIADB_NETWORK_CONFIG, 'mariadb']
             : [self::MYSQL_NETWORK_CONFIG, 'mysql'];
 

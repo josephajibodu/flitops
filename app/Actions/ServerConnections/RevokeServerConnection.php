@@ -7,6 +7,7 @@ use App\Actions\Database\RunsSqlPrivately;
 use App\Concerns\EscapesShell;
 use App\Concerns\QuotesMysql;
 use App\Enums\CredentialType;
+use App\Enums\DatabaseType;
 use App\Enums\ServerConnectionStatus;
 use App\Jobs\RevokeServerConnectionJob;
 use App\Models\DatabaseUser;
@@ -44,7 +45,7 @@ class RevokeServerConnection
                 $ssh->exec("sudo ufw delete allow from {$serverConnection->client_address} to any port {$port} proto tcp || true");
             }
 
-            if ($host->database_type === 'postgresql') {
+            if ($host->database_type === DatabaseType::Postgresql) {
                 $hbaFile = trim($ssh->exec('sudo -u postgres psql -tAc "SHOW hba_file"'));
                 $ssh->exec('sudo sed -i '.$this->escapeForShell("/# {$serverConnection->marker()}\$/d").' '.$this->escapeForShell($hbaFile));
                 $ssh->exec('sudo systemctl reload postgresql');
@@ -52,7 +53,7 @@ class RevokeServerConnection
 
             $isLastConnection = ! $host->hostedConnections()->whereKeyNot($serverConnection->getKey())->exists();
 
-            if ($isLastConnection && in_array($host->database_type, ['mysql', 'mariadb'], true)) {
+            if ($isLastConnection && ($host->database_type?->isMysqlFamily() ?? false)) {
                 $this->dropRemoteMysqlAccounts($ssh, $serverConnection);
             }
         } finally {

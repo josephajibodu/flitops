@@ -7,6 +7,7 @@ use App\Concerns\EscapesShell;
 use App\Contracts\StorageProviderContract;
 use App\Enums\BackupStatus;
 use App\Enums\CredentialType;
+use App\Enums\DatabaseType;
 use App\Events\BackupStatusChanged;
 use App\Exceptions\BackupFailedException;
 use App\Jobs\RunBackupJob;
@@ -187,19 +188,18 @@ class RunDatabaseBackup
         $credentialsOption = '--defaults-extra-file='.$this->escapeForShell($mysqlCredentials);
 
         return match ($server->database_type) {
-            'mysql' => "sudo mysqldump {$credentialsOption} --single-transaction --skip-lock-tables --routines --hex-blob -B {$dbNameEsc}",
-            'mariadb' => "sudo mariadb-dump {$credentialsOption} --single-transaction --skip-lock-tables --routines --hex-blob -B {$dbNameEsc}",
-            'postgresql' => "sudo -u postgres pg_dump --clean --create -F p {$dbNameEsc}",
-            default => throw new RuntimeException("Unsupported database type: {$server->database_type}"),
+            DatabaseType::Mysql => "sudo mysqldump {$credentialsOption} --single-transaction --skip-lock-tables --routines --hex-blob -B {$dbNameEsc}",
+            DatabaseType::Mariadb => "sudo mariadb-dump {$credentialsOption} --single-transaction --skip-lock-tables --routines --hex-blob -B {$dbNameEsc}",
+            DatabaseType::Postgresql => "sudo -u postgres pg_dump --clean --create -F p {$dbNameEsc}",
+            default => throw new RuntimeException("Unsupported database type: {$server->database_type?->value}"),
         };
     }
 
-    private function buildVerifyFilterCommand(string $databaseType): string
+    private function buildVerifyFilterCommand(DatabaseType $databaseType): string
     {
         return match ($databaseType) {
-            'mysql', 'mariadb' => "grep -Fv -e 'CREATE DATABASE' -e 'USE `'",
-            'postgresql' => "grep -Fv -e 'DROP DATABASE' -e 'CREATE DATABASE' -e '\\connect' -e 'ALTER DATABASE'",
-            default => 'cat',
+            DatabaseType::Mysql, DatabaseType::Mariadb => "grep -Fv -e 'CREATE DATABASE' -e 'USE `'",
+            DatabaseType::Postgresql => "grep -Fv -e 'DROP DATABASE' -e 'CREATE DATABASE' -e '\\connect' -e 'ALTER DATABASE'",
         };
     }
 
@@ -209,10 +209,10 @@ class RunDatabaseBackup
         $scratchEsc = $this->escapeForShell($scratchDb);
 
         return match ($server->database_type) {
-            'mysql' => "sudo mysql {$credentialsOption} {$scratchEsc}",
-            'mariadb' => "sudo mariadb {$credentialsOption} {$scratchEsc}",
-            'postgresql' => "sudo -u postgres psql {$scratchEsc}",
-            default => throw new RuntimeException("Unsupported database type: {$server->database_type}"),
+            DatabaseType::Mysql => "sudo mysql {$credentialsOption} {$scratchEsc}",
+            DatabaseType::Mariadb => "sudo mariadb {$credentialsOption} {$scratchEsc}",
+            DatabaseType::Postgresql => "sudo -u postgres psql {$scratchEsc}",
+            default => throw new RuntimeException("Unsupported database type: {$server->database_type?->value}"),
         };
     }
 
@@ -222,10 +222,10 @@ class RunDatabaseBackup
         $scratchEsc = $this->escapeForShell($scratchDb);
 
         $cmd = match ($server->database_type) {
-            'mysql' => "sudo mysql {$credentialsOption} -e ".$this->escapeForShell("CREATE DATABASE IF NOT EXISTS `{$scratchDb}`"),
-            'mariadb' => "sudo mariadb {$credentialsOption} -e ".$this->escapeForShell("CREATE DATABASE IF NOT EXISTS `{$scratchDb}`"),
-            'postgresql' => "sudo -u postgres createdb {$scratchEsc}",
-            default => throw new RuntimeException("Unsupported database type: {$server->database_type}"),
+            DatabaseType::Mysql => "sudo mysql {$credentialsOption} -e ".$this->escapeForShell("CREATE DATABASE IF NOT EXISTS `{$scratchDb}`"),
+            DatabaseType::Mariadb => "sudo mariadb {$credentialsOption} -e ".$this->escapeForShell("CREATE DATABASE IF NOT EXISTS `{$scratchDb}`"),
+            DatabaseType::Postgresql => "sudo -u postgres createdb {$scratchEsc}",
+            default => throw new RuntimeException("Unsupported database type: {$server->database_type?->value}"),
         };
 
         $connection->exec($cmd, 60);
@@ -237,9 +237,9 @@ class RunDatabaseBackup
         $scratchEsc = $this->escapeForShell($scratchDb);
 
         $cmd = match ($server->database_type) {
-            'mysql' => "sudo mysql {$credentialsOption} -e ".$this->escapeForShell("DROP DATABASE IF EXISTS `{$scratchDb}`"),
-            'mariadb' => "sudo mariadb {$credentialsOption} -e ".$this->escapeForShell("DROP DATABASE IF EXISTS `{$scratchDb}`"),
-            'postgresql' => "sudo -u postgres dropdb --if-exists {$scratchEsc}",
+            DatabaseType::Mysql => "sudo mysql {$credentialsOption} -e ".$this->escapeForShell("DROP DATABASE IF EXISTS `{$scratchDb}`"),
+            DatabaseType::Mariadb => "sudo mariadb {$credentialsOption} -e ".$this->escapeForShell("DROP DATABASE IF EXISTS `{$scratchDb}`"),
+            DatabaseType::Postgresql => "sudo -u postgres dropdb --if-exists {$scratchEsc}",
             default => 'true',
         };
 

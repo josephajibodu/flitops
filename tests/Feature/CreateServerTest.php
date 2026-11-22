@@ -2,10 +2,12 @@
 
 use App\Contracts\ProviderContract;
 use App\Data\KeyPair;
+use App\Enums\DatabaseType;
 use App\Enums\Plan;
 use App\Enums\Provider;
 use App\Enums\ServerType;
 use App\Enums\ServiceType;
+use App\Enums\WebServer;
 use App\Jobs\ProvisionServerJob;
 use App\Models\ProviderAccount;
 use App\Models\Server;
@@ -86,8 +88,8 @@ it('creates an app server with every service when no type is given', function ()
     expect($server)
         ->type->toBe(ServerType::App)
         ->php_version->toBe('8.5')
-        ->web_server->toBe('nginx')
-        ->database_type->toBe('mysql');
+        ->web_server->toBe(WebServer::Nginx)
+        ->database_type->toBe(DatabaseType::Mysql);
     expect($server->installedServices()->pluck('type')->all())->toEqualCanonicalizing([
         ServiceType::Php, ServiceType::Nginx, ServiceType::Mysql, ServiceType::Redis,
     ]);

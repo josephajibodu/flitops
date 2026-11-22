@@ -43,9 +43,10 @@ import {
     ServerTypeValue,
 } from '@/types/server';
 
-interface PhpVersionOption {
+interface ServiceOption {
     value: string;
     label: string;
+    description?: string | null;
 }
 
 interface Props {
@@ -54,22 +55,15 @@ interface Props {
     };
     generatedName: string;
     serverTypes: ServerTypeOption[];
-    phpVersions: PhpVersionOption[];
+    phpVersions: ServiceOption[];
+    webServers: ServiceOption[];
+    databaseTypes: ServiceOption[];
     defaultPhpVersion: string;
+    defaultWebServer: string;
+    defaultDatabaseType: string;
 }
 
 type Mode = 'provider' | 'custom';
-
-const webServers = [
-    { value: 'nginx', label: 'Nginx' },
-    { value: 'caddy', label: 'Caddy (automatic HTTPS)' },
-];
-
-const databaseTypes = [
-    { value: 'mysql', label: 'MySQL 8' },
-    { value: 'postgresql', label: 'PostgreSQL' },
-    { value: 'mariadb', label: 'MariaDB' },
-];
 
 /** Select value standing in for "don't install this" (Select items can't be empty). */
 const NONE = 'none';
@@ -90,29 +84,33 @@ interface Stack {
 function applyPreset(
     option: ServerTypeOption,
     current: Stack,
-    defaultPhpVersion: string,
+    defaults: Stack,
 ): Stack {
     return {
         type: option.value,
         php_version: option.services.php
-            ? (current.php_version ?? defaultPhpVersion)
+            ? (current.php_version ?? defaults.php_version)
             : null,
         web_server: option.services.web_server
-            ? (current.web_server ?? 'nginx')
+            ? (current.web_server ?? defaults.web_server)
             : null,
         database_type: option.services.database
-            ? (current.database_type ?? 'mysql')
+            ? (current.database_type ?? defaults.database_type)
             : null,
         redis: option.services.redis,
     };
 }
 
-function makeDefaultStack(defaultPhpVersion: string): Stack {
+function makeDefaultStack(
+    defaultPhpVersion: string,
+    defaultWebServer: string,
+    defaultDatabaseType: string,
+): Stack {
     return {
         type: 'app',
         php_version: defaultPhpVersion,
-        web_server: 'nginx',
-        database_type: 'mysql',
+        web_server: defaultWebServer,
+        database_type: defaultDatabaseType,
         redis: true,
     };
 }
@@ -294,10 +292,18 @@ export default function ServersCreate({
     generatedName,
     serverTypes,
     phpVersions,
+    webServers,
+    databaseTypes,
     defaultPhpVersion,
+    defaultWebServer,
+    defaultDatabaseType,
 }: Props) {
     const teamPath = useTeamPath();
-    const defaultStack = makeDefaultStack(defaultPhpVersion);
+    const defaultStack = makeDefaultStack(
+        defaultPhpVersion,
+        defaultWebServer,
+        defaultDatabaseType,
+    );
     const serverLimit = usePlan()?.serverLimit ?? null;
     const accounts = providerAccounts.data;
     const { url } = usePage();
@@ -572,7 +578,9 @@ export default function ServersCreate({
                             <StackSection
                                 serverTypes={serverTypes}
                                 phpVersions={phpVersions}
-                                defaultPhpVersion={defaultPhpVersion}
+                                webServers={webServers}
+                                databaseTypes={databaseTypes}
+                                defaults={defaultStack}
                                 stack={providerForm.data}
                                 onChange={(stack) =>
                                     providerForm.setData({
@@ -725,7 +733,9 @@ export default function ServersCreate({
                             <StackSection
                                 serverTypes={serverTypes}
                                 phpVersions={phpVersions}
-                                defaultPhpVersion={defaultPhpVersion}
+                                webServers={webServers}
+                                databaseTypes={databaseTypes}
+                                defaults={defaultStack}
                                 stack={customForm.data}
                                 onChange={(stack) =>
                                     customForm.setData({
@@ -1187,8 +1197,10 @@ function CostBreakdown({ costs }: { costs: Costs }) {
 
 interface StackSectionProps {
     serverTypes: ServerTypeOption[];
-    phpVersions: PhpVersionOption[];
-    defaultPhpVersion: string;
+    phpVersions: ServiceOption[];
+    webServers: ServiceOption[];
+    databaseTypes: ServiceOption[];
+    defaults: Stack;
     stack: Stack;
     onChange: (stack: Stack) => void;
     errors: Partial<Record<keyof Stack, string>>;
@@ -1197,7 +1209,9 @@ interface StackSectionProps {
 function StackSection({
     serverTypes,
     phpVersions,
-    defaultPhpVersion,
+    webServers,
+    databaseTypes,
+    defaults,
     stack,
     onChange,
     errors,
@@ -1226,9 +1240,7 @@ function StackSection({
                         key={option.value}
                         selected={stack.type === option.value}
                         onSelect={() =>
-                            onChange(
-                                applyPreset(option, stack, defaultPhpVersion),
-                            )
+                            onChange(applyPreset(option, stack, defaults))
                         }
                         title={option.label}
                         description={option.description}
@@ -1283,6 +1295,12 @@ function StackSection({
                                     value={server.value}
                                 >
                                     {server.label}
+                                    {server.description && (
+                                        <span className="text-muted-foreground">
+                                            {' '}
+                                            · {server.description}
+                                        </span>
+                                    )}
                                 </SelectItem>
                             ))}
                             <SelectItem value={NONE}>None</SelectItem>

@@ -3,12 +3,14 @@
 use App\Actions\Servers\CreateCustomServerAction;
 use App\Data\CustomServerData;
 use App\Enums\CredentialType;
+use App\Enums\DatabaseType;
 use App\Enums\Plan;
 use App\Enums\Provider;
 use App\Enums\ServerStatus;
 use App\Enums\ServerType;
 use App\Enums\ServiceStatus;
 use App\Enums\ServiceType;
+use App\Enums\WebServer;
 use App\Jobs\InstallStackJob;
 use App\Models\Server;
 use App\Models\Team;
@@ -45,7 +47,7 @@ it('creates a custom server in pending status with the correct attributes', func
         ->and($server->ip_address)->toBe('203.0.113.10')
         ->and($server->ssh_port)->toBe(2222)
         ->and($server->php_version)->toBe('8.4')
-        ->and($server->database_type)->toBe('postgresql')
+        ->and($server->database_type)->toBe(DatabaseType::Postgresql)
         ->and($server->size)->toBeNull()
         ->and($server->region)->toBeNull();
 });
@@ -182,7 +184,7 @@ it('shows the setup page with the public key command for a pending custom server
 
     $server->credentials()->createMany([
         ['type' => CredentialType::PrivateKey, 'value' => 'fake-private'],
-        ['type' => 'public_key', 'value' => 'ssh-ed25519 AAAA fake-key flitops-worker'],
+        ['type' => CredentialType::PublicKey, 'value' => 'ssh-ed25519 AAAA fake-key flitops-worker'],
         ['type' => CredentialType::SudoPassword, 'value' => 'secret'],
         ['type' => CredentialType::DatabasePassword, 'value' => 'secret'],
     ]);
@@ -345,7 +347,7 @@ it('records only the services a database server preset ticks', function () {
         ->type->toBe(ServerType::Database)
         ->php_version->toBeNull()
         ->web_server->toBeNull()
-        ->database_type->toBe('postgresql');
+        ->database_type->toBe(DatabaseType::Postgresql);
     expect($server->installedServices()->pluck('status', 'type')->all())
         ->toBe([ServiceType::Postgresql->value => ServiceStatus::Pending]);
 });
@@ -410,7 +412,7 @@ it('records Caddy as the web server when chosen', function () {
 
     $server = Server::where('name', 'caddy-server')->firstOrFail();
 
-    expect($server->web_server)->toBe('caddy');
+    expect($server->web_server)->toBe(WebServer::Caddy);
     expect($server->installedServices()->pluck('type')->all())
         ->toEqualCanonicalizing([ServiceType::Php, ServiceType::Caddy]);
 });

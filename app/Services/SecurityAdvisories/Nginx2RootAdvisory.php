@@ -3,6 +3,7 @@
 namespace App\Services\SecurityAdvisories;
 
 use App\Enums\ServerStatus;
+use App\Enums\WebServer;
 use App\Exceptions\SshCommandException;
 use App\Models\Server;
 use App\Services\Ssh\SshConnection;
@@ -84,7 +85,7 @@ class Nginx2RootAdvisory implements SecurityAdvisory
 
     public function appliesTo(Server $server): bool
     {
-        return $server->web_server === 'nginx'
+        return $server->web_server === WebServer::Nginx
             && $server->status === ServerStatus::Active;
     }
 
