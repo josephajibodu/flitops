@@ -124,6 +124,46 @@ describe('team plan', function () {
     });
 });
 
+describe('accepting an invitation', function () {
+    beforeEach(function () {
+        $this->invitation = $this->team->invitations()->create([
+            'email' => 'invitee@example.com',
+            'team_role_id' => TeamRole::builtIn(TeamRoleKey::Developer)->id,
+            'token' => 'join-token',
+        ]);
+    });
+
+    it('only shows the invitation when a signed-in user opens the link', function () {
+        $invitee = User::factory()->create(['email' => 'invitee@example.com']);
+
+        $this->actingAs($invitee)
+            ->get(route('team-invitations.accept', 'join-token'))
+            ->assertOk()
+            ->assertInertia(fn ($page) => $page
+                ->component('teams/accept-invitation')
+                ->where('signedInEmail', 'invitee@example.com'));
+
+        expect($this->team->hasUser($invitee))->toBeFalse()
+            ->and($this->invitation->fresh())->not->toBeNull();
+    });
+
+    it('brings a guest back to the invitation after they sign in', function () {
+        $this->get(route('team-invitations.accept', 'join-token'))
+            ->assertOk()
+            ->assertSessionHas('url.intended', route('team-invitations.accept', 'join-token'));
+    });
+
+    it('needs a verified email to join', function () {
+        $invitee = User::factory()->unverified()->create(['email' => 'invitee@example.com']);
+
+        $this->actingAs($invitee)
+            ->post(route('team-invitations.confirm', 'join-token'))
+            ->assertRedirect(route('verification.notice'));
+
+        expect($this->team->hasUser($invitee))->toBeFalse();
+    });
+});
+
 describe('changing a role', function () {
     it('lets each role change only members it outranks, and only to roles it may grant', function (string $actor, TeamRoleKey $currentRole, TeamRoleKey $newRole) {
         $member = User::factory()->memberOf($this->team, $currentRole)->create();

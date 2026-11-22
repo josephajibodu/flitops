@@ -417,7 +417,8 @@ Route::middleware([VerifyTerminalGatewaySecret::class])->prefix('internal/termin
     Route::post('{terminalSession}/end', [TerminalGatewayController::class, 'end'])->name('terminal-gateway.end');
 });
 
-// Team invitation acceptance (accessible without auth to show the page; auth required to confirm)
+// Team invitation acceptance: opening the link only shows the page; joining is the
+// confirm POST, which needs a signed-in user with a verified email
 Route::get('invitations/{token}/accept', [TeamInvitationController::class, 'accept'])->name('team-invitations.accept');
 Route::post('invitations/{token}/confirm', [TeamInvitationController::class, 'confirm'])
     ->middleware(['auth', 'verified'])
