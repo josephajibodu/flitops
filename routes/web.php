@@ -407,7 +407,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
 });
 
 // Deployment webhooks — no auth, no CSRF (exempt in bootstrap/app.php), secret in URL identifies the site
-Route::post('webhook/{secret}', [DeploymentWebhookController::class, 'handle'])->name('deployment-webhook.handle');
+Route::post('webhook/{secret}', [DeploymentWebhookController::class, 'handle'])
+    ->middleware('throttle:60,1')
+    ->name('deployment-webhook.handle');
 
 // Terminal gateway — no user session, no CSRF (exempt in bootstrap/app.php), the shared gateway secret authenticates
 Route::middleware([VerifyTerminalGatewaySecret::class])->prefix('internal/terminal-sessions')->group(function () {
