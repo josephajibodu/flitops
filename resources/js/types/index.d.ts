@@ -10,6 +10,8 @@ declare module '@inertiajs/core' {
     export interface InertiaConfig {
         flashDataType: {
             toast?: { type: 'success' | 'error'; message: string };
+            /** The command run just queued from the site commands page. */
+            commandRunId?: number;
         };
     }
 }

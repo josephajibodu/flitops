@@ -1,6 +1,7 @@
 <?php
 
 use App\Enums\ServerStatus;
+use App\Enums\SiteCommandRunStatus;
 use App\Jobs\RunSiteCommandJob;
 use App\Models\Server;
 use App\Models\Site;
@@ -72,13 +73,15 @@ it('stores a new command run and dispatches job', function () {
             'command' => 'php artisan --version',
         ]);
 
-    $response->assertRedirect();
+    $commandRun = SiteCommandRun::query()->sole();
 
-    $this->assertDatabaseHas('site_command_runs', [
-        'site_id' => $this->site->id,
-        'command' => 'php artisan --version',
-        'status' => 'pending',
-    ]);
+    $response->assertRedirect()
+        ->assertInertiaFlash('commandRunId', $commandRun->id);
+
+    expect($commandRun)
+        ->site_id->toBe($this->site->id)
+        ->command->toBe('php artisan --version')
+        ->status->toBe(SiteCommandRunStatus::Pending);
 
     Queue::assertPushed(RunSiteCommandJob::class);
 });

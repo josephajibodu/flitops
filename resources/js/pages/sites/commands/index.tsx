@@ -7,7 +7,7 @@ import {
     PlayIcon,
     TerminalWindowIcon,
 } from '@phosphor-icons/react';
-import { useCallback, useState } from 'react';
+import { useEffect, useState } from 'react';
 
 import { EmptyState } from '@/components/empty-state';
 import { StatusBadge, type StatusColor } from '@/components/status-badge';
@@ -104,9 +104,66 @@ export default function SiteCommandsIndex({
     const [commandInput, setCommandInput] = useState('');
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [logsDialogOpen, setLogsDialogOpen] = useState(false);
-    const [logsRun, setLogsRun] = useState<CommandRun | null>(null);
-    const [logsContent, setLogsContent] = useState<string>('');
-    const [logsLoading, setLogsLoading] = useState(false);
+    const [logsRunId, setLogsRunId] = useState<number | null>(null);
+    const [logsRunFromOtherPage, setLogsRunFromOtherPage] =
+        useState<CommandRun | null>(null);
+    const [logsOutput, setLogsOutput] = useState<{
+        runId: number;
+        content: string;
+    } | null>(null);
+
+    const runs = commandRuns?.data ?? [];
+    const { prevUrl, nextUrl } = getPaginationUrls(commandRuns?.links);
+
+    /**
+     * The run shown in the logs dialog. Read from the live `commandRuns` prop
+     * so its status updates while the dialog is open.
+     */
+    const logsRun =
+        runs.find((run) => run.id === logsRunId) ??
+        (logsRunFromOtherPage?.id === logsRunId ? logsRunFromOtherPage : null);
+    const isLogsRunFinished = Boolean(logsRun?.finished_at);
+    const logsOutputUrl = logsRunId
+        ? teamPath(
+              `/servers/${serverId}/sites/${siteId}/command-runs/${logsRunId}`,
+          )
+        : null;
+
+    useEffect(() => {
+        if (
+            !logsDialogOpen ||
+            !logsOutputUrl ||
+            !logsRunId ||
+            !isLogsRunFinished
+        ) {
+            return;
+        }
+
+        const runId = logsRunId;
+        const controller = new AbortController();
+        fetch(logsOutputUrl, {
+            signal: controller.signal,
+            headers: {
+                Accept: 'application/json',
+                'X-Requested-With': 'XMLHttpRequest',
+            },
+        })
+            .then((response) => response.json())
+            .then((data) =>
+                setLogsOutput({ runId, content: data.output ?? '' }),
+            )
+            .catch((error) => {
+                if (error.name !== 'AbortError') {
+                    setLogsOutput({ runId, content: 'Failed to load output.' });
+                }
+            });
+
+        return () => controller.abort();
+    }, [logsDialogOpen, logsOutputUrl, logsRunId, isLogsRunFinished]);
+
+    const logsContent =
+        logsOutput?.runId === logsRunId ? logsOutput.content : null;
+    const logsLoading = isLogsRunFinished && logsContent === null;
 
     const breadcrumbs: BreadcrumbItem[] = [
         { title: 'Servers', href: teamPath('/servers') },
@@ -124,65 +181,66 @@ export default function SiteCommandsIndex({
         },
     ];
 
-    const handleRunCommand = (e: React.FormEvent) => {
-        e.preventDefault();
-        if (!serverId || !siteId || !commandInput.trim()) return;
+    const openLogs = (run: CommandRun) => {
+        setLogsRunId(run.id);
+        setLogsRunFromOtherPage(run);
+        setLogsOutput(null);
+        setLogsDialogOpen(true);
+    };
+
+    /**
+     * Queue a command, then open the logs dialog on the new run so the output
+     * appears there as soon as the command finishes.
+     */
+    const runCommand = (command: string, onSuccess?: () => void) => {
+        if (!serverId || !siteId) return;
         setIsSubmitting(true);
         router.post(
             teamPath(`/servers/${serverId}/sites/${siteId}/command-runs`),
-            { command: commandInput.trim() },
+            { command },
             {
                 preserveScroll: true,
-                onSuccess: () => {
-                    setRunSheetOpen(false);
-                    setCommandInput('');
+                onFlash: ({ commandRunId }) => {
+                    if (canViewOutput && commandRunId) {
+                        setLogsRunId(commandRunId);
+                        setLogsRunFromOtherPage(null);
+                        setLogsOutput(null);
+                        setLogsDialogOpen(true);
+                    }
                 },
+                onSuccess,
                 onFinish: () => setIsSubmitting(false),
             },
         );
     };
 
-    const openLogs = useCallback(
-        (run: CommandRun) => {
-            setLogsRun(run);
-            setLogsDialogOpen(true);
-            setLogsContent('');
-            setLogsLoading(true);
-            fetch(
-                teamPath(
-                    `/servers/${serverId}/sites/${siteId}/command-runs/${run.id}`,
-                ),
-                {
-                    headers: {
-                        Accept: 'application/json',
-                        'X-Requested-With': 'XMLHttpRequest',
-                    },
-                },
-            )
-                .then((r) => r.json())
-                .then((data) => setLogsContent(data.output ?? ''))
-                .catch(() => setLogsContent('Failed to load output.'))
-                .finally(() => setLogsLoading(false));
-        },
-        [serverId, siteId, teamPath],
-    );
+    const handleRunCommand = (e: React.FormEvent) => {
+        e.preventDefault();
+        if (isSubmitting || !commandInput.trim()) return;
+        runCommand(commandInput.trim(), () => {
+            setRunSheetOpen(false);
+            setCommandInput('');
+        });
+    };
+
+    /** Enter runs the command; Shift+Enter adds a new line, like a terminal. */
+    const handleCommandKeyDown = (
+        e: React.KeyboardEvent<HTMLTextAreaElement>,
+    ) => {
+        if (e.key === 'Enter' && !e.shiftKey && !e.nativeEvent.isComposing) {
+            e.preventDefault();
+            e.currentTarget.form?.requestSubmit();
+        }
+    };
 
     const handleRunAgain = (run: CommandRun) => {
-        if (!serverId || !siteId) return;
-        router.post(
-            teamPath(`/servers/${serverId}/sites/${siteId}/command-runs`),
-            { command: run.command },
-            { preserveScroll: true },
-        );
+        runCommand(run.command);
     };
 
     const handleEditAndRun = (run: CommandRun) => {
         setCommandInput(run.command);
         setRunSheetOpen(true);
     };
-
-    const runs = commandRuns?.data ?? [];
-    const { prevUrl, nextUrl } = getPaginationUrls(commandRuns?.links);
 
     return (
         <AppLayout
@@ -346,10 +404,10 @@ export default function SiteCommandsIndex({
                         <SheetHeader>
                             <SheetTitle>Run command</SheetTitle>
                         </SheetHeader>
-                        <SheetBody>
+                        <SheetBody className="gap-2">
                             <label
                                 htmlFor="command-input"
-                                className="mb-2 block text-sm font-medium text-muted-foreground"
+                                className="block text-sm font-medium text-muted-foreground"
                             >
                                 Command (runs in site root on the server)
                             </label>
@@ -359,10 +417,14 @@ export default function SiteCommandsIndex({
                                 onChange={(e) =>
                                     setCommandInput(e.target.value)
                                 }
+                                onKeyDown={handleCommandKeyDown}
                                 placeholder="e.g. php artisan --version"
                                 className="min-h-[120px] w-full resize-y rounded-md border border-input bg-muted/50 px-3 py-2 font-mono text-sm focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
                                 rows={4}
                             />
+                            <p className="text-xs text-muted-foreground">
+                                Press Enter to run, Shift+Enter for a new line.
+                            </p>
                         </SheetBody>
                         <SheetFooter>
                             <Button
@@ -413,10 +475,14 @@ export default function SiteCommandsIndex({
                                 {logsRun.command}
                             </div>
                         )}
-                        {logsLoading ? (
+                        {!isLogsRunFinished || logsLoading ? (
                             <p className="mt-1 flex items-center gap-2 text-zinc-500 dark:text-zinc-400">
                                 <CircleNotchIcon className="h-4 w-4 animate-spin" />
-                                Loading…
+                                {isLogsRunFinished
+                                    ? 'Loading…'
+                                    : logsRun?.started_at
+                                      ? 'Running…'
+                                      : 'Waiting to start…'}
                             </p>
                         ) : (
                             <>
