@@ -48,7 +48,9 @@ class SiteCommandRunController extends Controller
         Site $site,
         RunSiteCommand $runSiteCommand,
     ): RedirectResponse {
-        $runSiteCommand->run($site, $request->validated('command'));
+        $commandRun = $runSiteCommand->run($site, $request->validated('command'));
+
+        Inertia::flash('commandRunId', $commandRun->id);
 
         return redirect()
             ->route('servers.sites.command-runs.index', [$team, $server, $site])
