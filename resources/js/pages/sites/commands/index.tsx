@@ -31,6 +31,7 @@ import {
 } from '@/components/ui/pagination';
 import {
     Sheet,
+    SheetBody,
     SheetContent,
     SheetFooter,
     SheetHeader,
@@ -341,11 +342,11 @@ export default function SiteCommandsIndex({
             {/* Run command sheet */}
             <Sheet open={runSheetOpen} onOpenChange={setRunSheetOpen}>
                 <SheetContent>
-                    <form onSubmit={handleRunCommand}>
+                    <form onSubmit={handleRunCommand} className="contents">
                         <SheetHeader>
                             <SheetTitle>Run command</SheetTitle>
                         </SheetHeader>
-                        <div className="px-4 py-6">
+                        <SheetBody>
                             <label
                                 htmlFor="command-input"
                                 className="mb-2 block text-sm font-medium text-muted-foreground"
@@ -362,7 +363,7 @@ export default function SiteCommandsIndex({
                                 className="min-h-[120px] w-full resize-y rounded-md border border-input bg-muted/50 px-3 py-2 font-mono text-sm focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
                                 rows={4}
                             />
-                        </div>
+                        </SheetBody>
                         <SheetFooter>
                             <Button
                                 type="button"

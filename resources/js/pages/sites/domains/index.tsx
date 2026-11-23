@@ -29,6 +29,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import {
     Sheet,
+    SheetBody,
     SheetContent,
     SheetDescription,
     SheetFooter,
@@ -229,7 +230,7 @@ export default function SiteDomainsIndex({ server: serverProp, site: siteProp, d
             </div>
 
             <Sheet open={sheetOpen} onOpenChange={setSheetOpen}>
-                <SheetContent className="flex flex-col gap-0 overflow-y-auto sm:max-w-lg">
+                <SheetContent className="gap-0 sm:max-w-lg">
                     <SheetHeader>
                         <SheetTitle>Add {addForm.data.hostname || 'domain'}</SheetTitle>
                         <SheetDescription>
@@ -237,7 +238,7 @@ export default function SiteDomainsIndex({ server: serverProp, site: siteProp, d
                         </SheetDescription>
                     </SheetHeader>
 
-                    <div className="flex flex-1 flex-col gap-6 px-4 pb-4">
+                    <SheetBody className="gap-6 pt-0">
                         <div className="space-y-3">
                             <Label className="text-base font-medium">Wildcards</Label>
                             <p className="text-muted-foreground text-sm">Allow all subdomains to accept traffic.</p>
@@ -308,7 +309,7 @@ export default function SiteDomainsIndex({ server: serverProp, site: siteProp, d
                                 <p className="text-destructive text-sm">{addForm.errors.www_redirect}</p>
                             )}
                         </div>
-                    </div>
+                    </SheetBody>
 
                     <SheetFooter>
                         <Button
