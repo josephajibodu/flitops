@@ -15,6 +15,7 @@ import {
 } from '@/components/ui/select';
 import {
     Sheet,
+    SheetBody,
     SheetContent,
     SheetDescription,
     SheetFooter,
@@ -118,7 +119,7 @@ export function ConnectStorageDrawer({
                     </Button>
                 )}
             </SheetTrigger>
-            <SheetContent className="flex flex-col gap-0 overflow-y-auto sm:max-w-lg">
+            <SheetContent className="gap-0 sm:max-w-lg">
                 <SheetHeader>
                     <SheetTitle>Connect Storage</SheetTitle>
                     <SheetDescription>
@@ -126,99 +127,101 @@ export function ConnectStorageDrawer({
                         other file storage.
                     </SheetDescription>
                 </SheetHeader>
-                <form
-                    onSubmit={handleSubmit}
-                    className="flex flex-1 flex-col gap-6 p-4"
-                >
-                    <div className="space-y-2">
-                        <Label htmlFor="type">Storage Provider</Label>
-                        <Select
-                            value={data.type}
-                            onValueChange={(value) => setData('type', value)}
-                        >
-                            <SelectTrigger id="type">
-                                <SelectValue placeholder="Select a storage provider" />
-                            </SelectTrigger>
-                            <SelectContent>
-                                {types.map((type) => (
-                                    <SelectItem
-                                        key={type.value}
-                                        value={type.value}
-                                    >
-                                        {type.label}
-                                    </SelectItem>
-                                ))}
-                            </SelectContent>
-                        </Select>
-                        <InputError message={errors.type} />
+                <form onSubmit={handleSubmit} className="contents">
+                    <SheetBody className="gap-6">
+                        <div className="space-y-2">
+                            <Label htmlFor="type">Storage Provider</Label>
+                            <Select
+                                value={data.type}
+                                onValueChange={(value) =>
+                                    setData('type', value)
+                                }
+                            >
+                                <SelectTrigger id="type">
+                                    <SelectValue placeholder="Select a storage provider" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    {types.map((type) => (
+                                        <SelectItem
+                                            key={type.value}
+                                            value={type.value}
+                                        >
+                                            {type.label}
+                                        </SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
+                            <InputError message={errors.type} />
+                            {selectedTypeInfo && (
+                                <p className="text-sm text-muted-foreground">
+                                    {selectedTypeInfo.description}
+                                </p>
+                            )}
+                        </div>
+
+                        <div className="space-y-2">
+                            <Label htmlFor="name">Account Name</Label>
+                            <Input
+                                id="name"
+                                type="text"
+                                value={data.name}
+                                onChange={(e) =>
+                                    setData('name', e.target.value)
+                                }
+                                placeholder="e.g., Production Backups"
+                            />
+                            <InputError message={errors.name} />
+                            <p className="text-sm text-muted-foreground">
+                                A friendly name to identify this account.
+                            </p>
+                        </div>
+
+                        {selectedType?.fields.map((field) => {
+                            const meta = fieldMeta[field];
+                            if (!meta) return null;
+
+                            return (
+                                <div key={field} className="space-y-2">
+                                    <Label htmlFor={field}>{meta.label}</Label>
+                                    <Input
+                                        id={field}
+                                        type={meta.secret ? 'password' : 'text'}
+                                        value={data[field as keyof typeof data]}
+                                        onChange={(e) =>
+                                            setData(
+                                                field as keyof typeof data,
+                                                e.target.value,
+                                            )
+                                        }
+                                        placeholder={meta.placeholder}
+                                        className="font-mono"
+                                        autoComplete="off"
+                                    />
+                                    <InputError
+                                        message={
+                                            errors[field as keyof typeof errors]
+                                        }
+                                    />
+                                </div>
+                            );
+                        })}
+
                         {selectedTypeInfo && (
                             <p className="text-sm text-muted-foreground">
-                                {selectedTypeInfo.description}
+                                Get your credentials from{' '}
+                                <a
+                                    href={selectedTypeInfo.helpUrl}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="text-primary underline underline-offset-4 hover:no-underline"
+                                >
+                                    {selectedType?.label} dashboard
+                                </a>
+                                .
                             </p>
                         )}
-                    </div>
-
-                    <div className="space-y-2">
-                        <Label htmlFor="name">Account Name</Label>
-                        <Input
-                            id="name"
-                            type="text"
-                            value={data.name}
-                            onChange={(e) => setData('name', e.target.value)}
-                            placeholder="e.g., Production Backups"
-                        />
-                        <InputError message={errors.name} />
-                        <p className="text-sm text-muted-foreground">
-                            A friendly name to identify this account.
-                        </p>
-                    </div>
-
-                    {selectedType?.fields.map((field) => {
-                        const meta = fieldMeta[field];
-                        if (!meta) return null;
-
-                        return (
-                            <div key={field} className="space-y-2">
-                                <Label htmlFor={field}>{meta.label}</Label>
-                                <Input
-                                    id={field}
-                                    type={meta.secret ? 'password' : 'text'}
-                                    value={data[field as keyof typeof data]}
-                                    onChange={(e) =>
-                                        setData(
-                                            field as keyof typeof data,
-                                            e.target.value,
-                                        )
-                                    }
-                                    placeholder={meta.placeholder}
-                                    className="font-mono"
-                                    autoComplete="off"
-                                />
-                                <InputError
-                                    message={
-                                        errors[field as keyof typeof errors]
-                                    }
-                                />
-                            </div>
-                        );
-                    })}
-
-                    {selectedTypeInfo && (
-                        <p className="text-sm text-muted-foreground">
-                            Get your credentials from{' '}
-                            <a
-                                href={selectedTypeInfo.helpUrl}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="text-primary underline underline-offset-4 hover:no-underline"
-                            >
-                                {selectedType?.label} dashboard
-                            </a>
-                            .
-                        </p>
-                    )}
-
-                    <SheetFooter className="-mx-4 -mb-4">
+                    </SheetBody>
+                    <SheetFooter>
                         <Button
                             type="button"
                             variant="outline"

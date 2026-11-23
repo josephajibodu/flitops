@@ -89,6 +89,22 @@ function SheetHeader({ className, ...props }: React.ComponentProps<"div">) {
   )
 }
 
+/**
+ * The scrollable middle of a sheet. Grows to fill the space between the header
+ * and footer, so the footer always sits flush against the bottom edge.
+ * When the sheet holds a form, wrap the body and footer in
+ * `<form className="contents">` so they stay direct flex children of the sheet.
+ */
+function SheetBody({ className, ...props }: React.ComponentProps<"div">) {
+  return (
+    <div
+      data-slot="sheet-body"
+      className={cn("flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto p-4", className)}
+      {...props}
+    />
+  )
+}
+
 function SheetFooter({ className, ...props }: React.ComponentProps<"div">) {
   return (
     <div
@@ -131,6 +147,7 @@ export {
   SheetClose,
   SheetContent,
   SheetHeader,
+  SheetBody,
   SheetFooter,
   SheetTitle,
   SheetDescription,

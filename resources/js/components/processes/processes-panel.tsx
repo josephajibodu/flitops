@@ -42,6 +42,7 @@ import {
 } from '@/components/ui/select';
 import {
     Sheet,
+    SheetBody,
     SheetContent,
     SheetFooter,
     SheetHeader,
@@ -809,197 +810,208 @@ export function ProcessesPanel({
                     <SheetHeader>
                         <SheetTitle>Create worker</SheetTitle>
                     </SheetHeader>
-                    <form
-                        onSubmit={handleCreateWorker}
-                        className="flex flex-1 flex-col gap-4 p-4 pt-4"
-                    >
-                        <div className="space-y-2">
-                            <Label htmlFor="worker-name">Name</Label>
-                            <Input
-                                id="worker-name"
-                                value={workerForm.name}
-                                onChange={(e) =>
-                                    setWorkerForm((p) => ({
-                                        ...p,
-                                        name: e.target.value,
-                                    }))
-                                }
-                                placeholder="worker-1"
-                                autoComplete="off"
-                            />
-                            {errors?.name && (
-                                <p className="text-sm text-destructive">
-                                    {errors.name}
-                                </p>
-                            )}
-                        </div>
-                        <div className="space-y-2">
-                            <Label htmlFor="worker-command">Command</Label>
-                            <Input
-                                id="worker-command"
-                                value={workerForm.command}
-                                onChange={(e) =>
-                                    setWorkerForm((p) => ({
-                                        ...p,
-                                        command: e.target.value,
-                                    }))
-                                }
-                                placeholder="php artisan queue:work"
-                                className="font-mono"
-                            />
-                            <p className="text-xs text-muted-foreground">
-                                <code>php</code> will use default PHP CLI. For a
-                                specific version use a path like{' '}
-                                <code className="font-mono">
-                                    /usr/bin/php8.4
-                                </code>
-                                .
-                            </p>
-                            {errors?.command && (
-                                <p className="text-sm text-destructive">
-                                    {errors.command}
-                                </p>
-                            )}
-                        </div>
-                        {showSitePicker ? (
+                    <form onSubmit={handleCreateWorker} className="contents">
+                        <SheetBody>
                             <div className="space-y-2">
-                                <Label>Site</Label>
-                                <Select
-                                    value={
-                                        workerForm.site_id === ''
-                                            ? 'server'
-                                            : String(workerForm.site_id)
-                                    }
-                                    onValueChange={(v) =>
+                                <Label htmlFor="worker-name">Name</Label>
+                                <Input
+                                    id="worker-name"
+                                    value={workerForm.name}
+                                    onChange={(e) =>
                                         setWorkerForm((p) => ({
                                             ...p,
-                                            site_id:
-                                                v === 'server' ? '' : Number(v),
-                                            user: userForSite(
-                                                v === 'server' ? '' : Number(v),
+                                            name: e.target.value,
+                                        }))
+                                    }
+                                    placeholder="worker-1"
+                                    autoComplete="off"
+                                />
+                                {errors?.name && (
+                                    <p className="text-sm text-destructive">
+                                        {errors.name}
+                                    </p>
+                                )}
+                            </div>
+                            <div className="space-y-2">
+                                <Label htmlFor="worker-command">Command</Label>
+                                <Input
+                                    id="worker-command"
+                                    value={workerForm.command}
+                                    onChange={(e) =>
+                                        setWorkerForm((p) => ({
+                                            ...p,
+                                            command: e.target.value,
+                                        }))
+                                    }
+                                    placeholder="php artisan queue:work"
+                                    className="font-mono"
+                                />
+                                <p className="text-xs text-muted-foreground">
+                                    <code>php</code> will use default PHP CLI.
+                                    For a specific version use a path like{' '}
+                                    <code className="font-mono">
+                                        /usr/bin/php8.4
+                                    </code>
+                                    .
+                                </p>
+                                {errors?.command && (
+                                    <p className="text-sm text-destructive">
+                                        {errors.command}
+                                    </p>
+                                )}
+                            </div>
+                            {showSitePicker ? (
+                                <div className="space-y-2">
+                                    <Label>Site</Label>
+                                    <Select
+                                        value={
+                                            workerForm.site_id === ''
+                                                ? 'server'
+                                                : String(workerForm.site_id)
+                                        }
+                                        onValueChange={(v) =>
+                                            setWorkerForm((p) => ({
+                                                ...p,
+                                                site_id:
+                                                    v === 'server'
+                                                        ? ''
+                                                        : Number(v),
+                                                user: userForSite(
+                                                    v === 'server'
+                                                        ? ''
+                                                        : Number(v),
+                                                ),
+                                            }))
+                                        }
+                                    >
+                                        <SelectTrigger>
+                                            <SelectValue placeholder="Server (no site)" />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            <SelectItem value="server">
+                                                Server (no site)
+                                            </SelectItem>
+                                            {sites.map((s) => (
+                                                <SelectItem
+                                                    key={s.id}
+                                                    value={String(s.id)}
+                                                >
+                                                    {s.domain}
+                                                </SelectItem>
+                                            ))}
+                                        </SelectContent>
+                                    </Select>
+                                </div>
+                            ) : (
+                                <div className="space-y-2">
+                                    <Label>Site</Label>
+                                    <Input
+                                        value={site!.domain}
+                                        disabled
+                                        readOnly
+                                    />
+                                </div>
+                            )}
+                            <div className="space-y-2">
+                                <Label htmlFor="worker-user">User</Label>
+                                <Input
+                                    id="worker-user"
+                                    value={workerForm.user}
+                                    onChange={(e) =>
+                                        setWorkerForm((p) => ({
+                                            ...p,
+                                            user: e.target.value,
+                                        }))
+                                    }
+                                    placeholder={defaultUser}
+                                    className="font-mono"
+                                />
+                                {errors?.user && (
+                                    <p className="text-sm text-destructive">
+                                        {errors.user}
+                                    </p>
+                                )}
+                            </div>
+                            <div className="space-y-2">
+                                <Label htmlFor="worker-numprocs">
+                                    Numprocs
+                                </Label>
+                                <Input
+                                    id="worker-numprocs"
+                                    type="number"
+                                    min={1}
+                                    max={64}
+                                    value={workerForm.numprocs}
+                                    onChange={(e) =>
+                                        setWorkerForm((p) => ({
+                                            ...p,
+                                            numprocs: Math.max(
+                                                1,
+                                                parseInt(e.target.value, 10) ||
+                                                    1,
                                             ),
                                         }))
                                     }
-                                >
-                                    <SelectTrigger>
-                                        <SelectValue placeholder="Server (no site)" />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        <SelectItem value="server">
-                                            Server (no site)
-                                        </SelectItem>
-                                        {sites.map((s) => (
-                                            <SelectItem
-                                                key={s.id}
-                                                value={String(s.id)}
-                                            >
-                                                {s.domain}
-                                            </SelectItem>
-                                        ))}
-                                    </SelectContent>
-                                </Select>
+                                />
                             </div>
-                        ) : (
-                            <div className="space-y-2">
-                                <Label>Site</Label>
-                                <Input value={site!.domain} disabled readOnly />
-                            </div>
-                        )}
-                        <div className="space-y-2">
-                            <Label htmlFor="worker-user">User</Label>
-                            <Input
-                                id="worker-user"
-                                value={workerForm.user}
-                                onChange={(e) =>
-                                    setWorkerForm((p) => ({
-                                        ...p,
-                                        user: e.target.value,
-                                    }))
-                                }
-                                placeholder={defaultUser}
-                                className="font-mono"
-                            />
-                            {errors?.user && (
-                                <p className="text-sm text-destructive">
-                                    {errors.user}
-                                </p>
-                            )}
-                        </div>
-                        <div className="space-y-2">
-                            <Label htmlFor="worker-numprocs">Numprocs</Label>
-                            <Input
-                                id="worker-numprocs"
-                                type="number"
-                                min={1}
-                                max={64}
-                                value={workerForm.numprocs}
-                                onChange={(e) =>
-                                    setWorkerForm((p) => ({
-                                        ...p,
-                                        numprocs: Math.max(
-                                            1,
-                                            parseInt(e.target.value, 10) || 1,
-                                        ),
-                                    }))
-                                }
-                            />
-                        </div>
-                        <div className="flex items-center gap-2">
-                            <Checkbox
-                                id="worker-auto-start"
-                                checked={workerForm.auto_start}
-                                onCheckedChange={(checked) =>
-                                    setWorkerForm((p) => ({
-                                        ...p,
-                                        auto_start: checked === true,
-                                    }))
-                                }
-                            />
-                            <Label
-                                htmlFor="worker-auto-start"
-                                className="font-normal"
-                            >
-                                Auto start
-                            </Label>
-                        </div>
-                        <div className="flex items-center gap-2">
-                            <Checkbox
-                                id="worker-auto-restart"
-                                checked={workerForm.auto_restart}
-                                onCheckedChange={(checked) =>
-                                    setWorkerForm((p) => ({
-                                        ...p,
-                                        auto_restart: checked === true,
-                                    }))
-                                }
-                            />
-                            <Label
-                                htmlFor="worker-auto-restart"
-                                className="font-normal"
-                            >
-                                Auto restart
-                            </Label>
-                        </div>
-                        {resolveSiteId(workerForm.site_id) !== null && (
                             <div className="flex items-center gap-2">
                                 <Checkbox
-                                    id="worker-restart-on-deploy"
-                                    checked={workerForm.restart_on_deploy}
+                                    id="worker-auto-start"
+                                    checked={workerForm.auto_start}
                                     onCheckedChange={(checked) =>
                                         setWorkerForm((p) => ({
                                             ...p,
-                                            restart_on_deploy: checked === true,
+                                            auto_start: checked === true,
                                         }))
                                     }
                                 />
                                 <Label
-                                    htmlFor="worker-restart-on-deploy"
+                                    htmlFor="worker-auto-start"
                                     className="font-normal"
                                 >
-                                    Restart after each deployment
+                                    Auto start
                                 </Label>
                             </div>
-                        )}
+                            <div className="flex items-center gap-2">
+                                <Checkbox
+                                    id="worker-auto-restart"
+                                    checked={workerForm.auto_restart}
+                                    onCheckedChange={(checked) =>
+                                        setWorkerForm((p) => ({
+                                            ...p,
+                                            auto_restart: checked === true,
+                                        }))
+                                    }
+                                />
+                                <Label
+                                    htmlFor="worker-auto-restart"
+                                    className="font-normal"
+                                >
+                                    Auto restart
+                                </Label>
+                            </div>
+                            {resolveSiteId(workerForm.site_id) !== null && (
+                                <div className="flex items-center gap-2">
+                                    <Checkbox
+                                        id="worker-restart-on-deploy"
+                                        checked={workerForm.restart_on_deploy}
+                                        onCheckedChange={(checked) =>
+                                            setWorkerForm((p) => ({
+                                                ...p,
+                                                restart_on_deploy:
+                                                    checked === true,
+                                            }))
+                                        }
+                                    />
+                                    <Label
+                                        htmlFor="worker-restart-on-deploy"
+                                        className="font-normal"
+                                    >
+                                        Restart after each deployment
+                                    </Label>
+                                </div>
+                            )}
+                        </SheetBody>
                         <SheetFooter>
                             <Button
                                 type="button"
@@ -1024,188 +1036,199 @@ export function ProcessesPanel({
                             Edit worker {workerToEdit?.name}
                         </SheetTitle>
                     </SheetHeader>
-                    <form
-                        onSubmit={handleUpdateWorker}
-                        className="flex flex-1 flex-col gap-4 p-4 pt-4"
-                    >
-                        <div className="space-y-2">
-                            <Label htmlFor="edit-worker-name">Name</Label>
-                            <Input
-                                id="edit-worker-name"
-                                value={workerForm.name}
-                                onChange={(e) =>
-                                    setWorkerForm((p) => ({
-                                        ...p,
-                                        name: e.target.value,
-                                    }))
-                                }
-                                autoComplete="off"
-                            />
-                            {errors?.name && (
-                                <p className="text-sm text-destructive">
-                                    {errors.name}
-                                </p>
-                            )}
-                        </div>
-                        <div className="space-y-2">
-                            <Label htmlFor="edit-worker-command">Command</Label>
-                            <Input
-                                id="edit-worker-command"
-                                value={workerForm.command}
-                                onChange={(e) =>
-                                    setWorkerForm((p) => ({
-                                        ...p,
-                                        command: e.target.value,
-                                    }))
-                                }
-                                className="font-mono"
-                            />
-                            {errors?.command && (
-                                <p className="text-sm text-destructive">
-                                    {errors.command}
-                                </p>
-                            )}
-                        </div>
-                        {showSitePicker ? (
+                    <form onSubmit={handleUpdateWorker} className="contents">
+                        <SheetBody>
                             <div className="space-y-2">
-                                <Label>Site</Label>
-                                <Select
-                                    value={
-                                        workerForm.site_id === ''
-                                            ? 'server'
-                                            : String(workerForm.site_id)
-                                    }
-                                    onValueChange={(v) =>
+                                <Label htmlFor="edit-worker-name">Name</Label>
+                                <Input
+                                    id="edit-worker-name"
+                                    value={workerForm.name}
+                                    onChange={(e) =>
                                         setWorkerForm((p) => ({
                                             ...p,
-                                            site_id:
-                                                v === 'server' ? '' : Number(v),
-                                            user: userForSite(
-                                                v === 'server' ? '' : Number(v),
+                                            name: e.target.value,
+                                        }))
+                                    }
+                                    autoComplete="off"
+                                />
+                                {errors?.name && (
+                                    <p className="text-sm text-destructive">
+                                        {errors.name}
+                                    </p>
+                                )}
+                            </div>
+                            <div className="space-y-2">
+                                <Label htmlFor="edit-worker-command">
+                                    Command
+                                </Label>
+                                <Input
+                                    id="edit-worker-command"
+                                    value={workerForm.command}
+                                    onChange={(e) =>
+                                        setWorkerForm((p) => ({
+                                            ...p,
+                                            command: e.target.value,
+                                        }))
+                                    }
+                                    className="font-mono"
+                                />
+                                {errors?.command && (
+                                    <p className="text-sm text-destructive">
+                                        {errors.command}
+                                    </p>
+                                )}
+                            </div>
+                            {showSitePicker ? (
+                                <div className="space-y-2">
+                                    <Label>Site</Label>
+                                    <Select
+                                        value={
+                                            workerForm.site_id === ''
+                                                ? 'server'
+                                                : String(workerForm.site_id)
+                                        }
+                                        onValueChange={(v) =>
+                                            setWorkerForm((p) => ({
+                                                ...p,
+                                                site_id:
+                                                    v === 'server'
+                                                        ? ''
+                                                        : Number(v),
+                                                user: userForSite(
+                                                    v === 'server'
+                                                        ? ''
+                                                        : Number(v),
+                                                ),
+                                            }))
+                                        }
+                                    >
+                                        <SelectTrigger>
+                                            <SelectValue placeholder="Server (no site)" />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            <SelectItem value="server">
+                                                Server (no site)
+                                            </SelectItem>
+                                            {sites.map((s) => (
+                                                <SelectItem
+                                                    key={s.id}
+                                                    value={String(s.id)}
+                                                >
+                                                    {s.domain}
+                                                </SelectItem>
+                                            ))}
+                                        </SelectContent>
+                                    </Select>
+                                </div>
+                            ) : (
+                                <div className="space-y-2">
+                                    <Label>Site</Label>
+                                    <Input
+                                        value={site!.domain}
+                                        disabled
+                                        readOnly
+                                    />
+                                </div>
+                            )}
+                            <div className="space-y-2">
+                                <Label htmlFor="edit-worker-user">User</Label>
+                                <Input
+                                    id="edit-worker-user"
+                                    value={workerForm.user}
+                                    onChange={(e) =>
+                                        setWorkerForm((p) => ({
+                                            ...p,
+                                            user: e.target.value,
+                                        }))
+                                    }
+                                    className="font-mono"
+                                />
+                                {errors?.user && (
+                                    <p className="text-sm text-destructive">
+                                        {errors.user}
+                                    </p>
+                                )}
+                            </div>
+                            <div className="space-y-2">
+                                <Label htmlFor="edit-worker-numprocs">
+                                    Numprocs
+                                </Label>
+                                <Input
+                                    id="edit-worker-numprocs"
+                                    type="number"
+                                    min={1}
+                                    max={64}
+                                    value={workerForm.numprocs}
+                                    onChange={(e) =>
+                                        setWorkerForm((p) => ({
+                                            ...p,
+                                            numprocs: Math.max(
+                                                1,
+                                                parseInt(e.target.value, 10) ||
+                                                    1,
                                             ),
                                         }))
                                     }
-                                >
-                                    <SelectTrigger>
-                                        <SelectValue placeholder="Server (no site)" />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        <SelectItem value="server">
-                                            Server (no site)
-                                        </SelectItem>
-                                        {sites.map((s) => (
-                                            <SelectItem
-                                                key={s.id}
-                                                value={String(s.id)}
-                                            >
-                                                {s.domain}
-                                            </SelectItem>
-                                        ))}
-                                    </SelectContent>
-                                </Select>
+                                />
                             </div>
-                        ) : (
-                            <div className="space-y-2">
-                                <Label>Site</Label>
-                                <Input value={site!.domain} disabled readOnly />
-                            </div>
-                        )}
-                        <div className="space-y-2">
-                            <Label htmlFor="edit-worker-user">User</Label>
-                            <Input
-                                id="edit-worker-user"
-                                value={workerForm.user}
-                                onChange={(e) =>
-                                    setWorkerForm((p) => ({
-                                        ...p,
-                                        user: e.target.value,
-                                    }))
-                                }
-                                className="font-mono"
-                            />
-                            {errors?.user && (
-                                <p className="text-sm text-destructive">
-                                    {errors.user}
-                                </p>
-                            )}
-                        </div>
-                        <div className="space-y-2">
-                            <Label htmlFor="edit-worker-numprocs">
-                                Numprocs
-                            </Label>
-                            <Input
-                                id="edit-worker-numprocs"
-                                type="number"
-                                min={1}
-                                max={64}
-                                value={workerForm.numprocs}
-                                onChange={(e) =>
-                                    setWorkerForm((p) => ({
-                                        ...p,
-                                        numprocs: Math.max(
-                                            1,
-                                            parseInt(e.target.value, 10) || 1,
-                                        ),
-                                    }))
-                                }
-                            />
-                        </div>
-                        <div className="flex items-center gap-2">
-                            <Checkbox
-                                id="edit-worker-auto-start"
-                                checked={workerForm.auto_start}
-                                onCheckedChange={(checked) =>
-                                    setWorkerForm((p) => ({
-                                        ...p,
-                                        auto_start: checked === true,
-                                    }))
-                                }
-                            />
-                            <Label
-                                htmlFor="edit-worker-auto-start"
-                                className="font-normal"
-                            >
-                                Auto start
-                            </Label>
-                        </div>
-                        <div className="flex items-center gap-2">
-                            <Checkbox
-                                id="edit-worker-auto-restart"
-                                checked={workerForm.auto_restart}
-                                onCheckedChange={(checked) =>
-                                    setWorkerForm((p) => ({
-                                        ...p,
-                                        auto_restart: checked === true,
-                                    }))
-                                }
-                            />
-                            <Label
-                                htmlFor="edit-worker-auto-restart"
-                                className="font-normal"
-                            >
-                                Auto restart
-                            </Label>
-                        </div>
-                        {resolveSiteId(workerForm.site_id) !== null && (
                             <div className="flex items-center gap-2">
                                 <Checkbox
-                                    id="edit-worker-restart-on-deploy"
-                                    checked={workerForm.restart_on_deploy}
+                                    id="edit-worker-auto-start"
+                                    checked={workerForm.auto_start}
                                     onCheckedChange={(checked) =>
                                         setWorkerForm((p) => ({
                                             ...p,
-                                            restart_on_deploy: checked === true,
+                                            auto_start: checked === true,
                                         }))
                                     }
                                 />
                                 <Label
-                                    htmlFor="edit-worker-restart-on-deploy"
+                                    htmlFor="edit-worker-auto-start"
                                     className="font-normal"
                                 >
-                                    Restart after each deployment
+                                    Auto start
                                 </Label>
                             </div>
-                        )}
+                            <div className="flex items-center gap-2">
+                                <Checkbox
+                                    id="edit-worker-auto-restart"
+                                    checked={workerForm.auto_restart}
+                                    onCheckedChange={(checked) =>
+                                        setWorkerForm((p) => ({
+                                            ...p,
+                                            auto_restart: checked === true,
+                                        }))
+                                    }
+                                />
+                                <Label
+                                    htmlFor="edit-worker-auto-restart"
+                                    className="font-normal"
+                                >
+                                    Auto restart
+                                </Label>
+                            </div>
+                            {resolveSiteId(workerForm.site_id) !== null && (
+                                <div className="flex items-center gap-2">
+                                    <Checkbox
+                                        id="edit-worker-restart-on-deploy"
+                                        checked={workerForm.restart_on_deploy}
+                                        onCheckedChange={(checked) =>
+                                            setWorkerForm((p) => ({
+                                                ...p,
+                                                restart_on_deploy:
+                                                    checked === true,
+                                            }))
+                                        }
+                                    />
+                                    <Label
+                                        htmlFor="edit-worker-restart-on-deploy"
+                                        className="font-normal"
+                                    >
+                                        Restart after each deployment
+                                    </Label>
+                                </div>
+                            )}
+                        </SheetBody>
                         <SheetFooter>
                             <Button
                                 type="button"
@@ -1228,155 +1251,162 @@ export function ProcessesPanel({
                     <SheetHeader>
                         <SheetTitle>Create cron job</SheetTitle>
                     </SheetHeader>
-                    <form
-                        onSubmit={handleCreateCron}
-                        className="flex flex-1 flex-col gap-4 p-4 pt-4"
-                    >
-                        <div className="space-y-2">
-                            <Label htmlFor="cron-command">Command</Label>
-                            <Input
-                                id="cron-command"
-                                value={cronForm.command}
-                                onChange={(e) =>
-                                    setCronForm((p) => ({
-                                        ...p,
-                                        command: e.target.value,
-                                    }))
-                                }
-                                placeholder="php artisan schedule:run"
-                                className="font-mono"
-                            />
-                            {errors?.command && (
-                                <p className="text-sm text-destructive">
-                                    {errors.command}
-                                </p>
-                            )}
-                        </div>
-                        {showSitePicker ? (
+                    <form onSubmit={handleCreateCron} className="contents">
+                        <SheetBody>
                             <div className="space-y-2">
-                                <Label>Site</Label>
-                                <Select
-                                    value={
-                                        cronForm.site_id === ''
-                                            ? 'server'
-                                            : String(cronForm.site_id)
-                                    }
-                                    onValueChange={(v) =>
-                                        setCronForm((p) => ({
-                                            ...p,
-                                            site_id:
-                                                v === 'server' ? '' : Number(v),
-                                            user: userForSite(
-                                                v === 'server' ? '' : Number(v),
-                                            ),
-                                        }))
-                                    }
-                                >
-                                    <SelectTrigger>
-                                        <SelectValue placeholder="Server (no site)" />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        <SelectItem value="server">
-                                            Server (no site)
-                                        </SelectItem>
-                                        {sites.map((s) => (
-                                            <SelectItem
-                                                key={s.id}
-                                                value={String(s.id)}
-                                            >
-                                                {s.domain}
-                                            </SelectItem>
-                                        ))}
-                                    </SelectContent>
-                                </Select>
-                            </div>
-                        ) : (
-                            <div className="space-y-2">
-                                <Label>Site</Label>
-                                <Input value={site!.domain} disabled readOnly />
-                            </div>
-                        )}
-                        <div className="space-y-2">
-                            <Label>Frequency</Label>
-                            <Select
-                                value={
-                                    customCronFreq
-                                        ? 'custom'
-                                        : cronForm.frequency
-                                }
-                                onValueChange={(v) => {
-                                    if (v === 'custom') {
-                                        setCustomCronFreq(true);
-                                        setCronForm((p) => ({
-                                            ...p,
-                                            frequency: '',
-                                        }));
-                                    } else {
-                                        setCustomCronFreq(false);
-                                        setCronForm((p) => ({
-                                            ...p,
-                                            frequency: v,
-                                        }));
-                                    }
-                                }}
-                            >
-                                <SelectTrigger>
-                                    <SelectValue />
-                                </SelectTrigger>
-                                <SelectContent>
-                                    {CRON_FREQUENCIES.map((f) => (
-                                        <SelectItem
-                                            key={f.value}
-                                            value={f.value}
-                                        >
-                                            {f.label}
-                                        </SelectItem>
-                                    ))}
-                                    <SelectItem value="custom">
-                                        Custom…
-                                    </SelectItem>
-                                </SelectContent>
-                            </Select>
-                            {customCronFreq && (
+                                <Label htmlFor="cron-command">Command</Label>
                                 <Input
-                                    value={cronForm.frequency}
+                                    id="cron-command"
+                                    value={cronForm.command}
                                     onChange={(e) =>
                                         setCronForm((p) => ({
                                             ...p,
-                                            frequency: e.target.value,
+                                            command: e.target.value,
                                         }))
                                     }
-                                    placeholder="0 2 * * 1-5"
+                                    placeholder="php artisan schedule:run"
                                     className="font-mono"
-                                    autoFocus
                                 />
+                                {errors?.command && (
+                                    <p className="text-sm text-destructive">
+                                        {errors.command}
+                                    </p>
+                                )}
+                            </div>
+                            {showSitePicker ? (
+                                <div className="space-y-2">
+                                    <Label>Site</Label>
+                                    <Select
+                                        value={
+                                            cronForm.site_id === ''
+                                                ? 'server'
+                                                : String(cronForm.site_id)
+                                        }
+                                        onValueChange={(v) =>
+                                            setCronForm((p) => ({
+                                                ...p,
+                                                site_id:
+                                                    v === 'server'
+                                                        ? ''
+                                                        : Number(v),
+                                                user: userForSite(
+                                                    v === 'server'
+                                                        ? ''
+                                                        : Number(v),
+                                                ),
+                                            }))
+                                        }
+                                    >
+                                        <SelectTrigger>
+                                            <SelectValue placeholder="Server (no site)" />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            <SelectItem value="server">
+                                                Server (no site)
+                                            </SelectItem>
+                                            {sites.map((s) => (
+                                                <SelectItem
+                                                    key={s.id}
+                                                    value={String(s.id)}
+                                                >
+                                                    {s.domain}
+                                                </SelectItem>
+                                            ))}
+                                        </SelectContent>
+                                    </Select>
+                                </div>
+                            ) : (
+                                <div className="space-y-2">
+                                    <Label>Site</Label>
+                                    <Input
+                                        value={site!.domain}
+                                        disabled
+                                        readOnly
+                                    />
+                                </div>
                             )}
-                            {errors?.frequency && (
-                                <p className="text-sm text-destructive">
-                                    {errors.frequency}
-                                </p>
-                            )}
-                        </div>
-                        <div className="space-y-2">
-                            <Label htmlFor="cron-user">User</Label>
-                            <Input
-                                id="cron-user"
-                                value={cronForm.user}
-                                onChange={(e) =>
-                                    setCronForm((p) => ({
-                                        ...p,
-                                        user: e.target.value,
-                                    }))
-                                }
-                                placeholder={defaultUser}
-                                className="font-mono"
-                            />
-                            {errors?.user && (
-                                <p className="text-sm text-destructive">
-                                    {errors.user}
-                                </p>
-                            )}
-                        </div>
+                            <div className="space-y-2">
+                                <Label>Frequency</Label>
+                                <Select
+                                    value={
+                                        customCronFreq
+                                            ? 'custom'
+                                            : cronForm.frequency
+                                    }
+                                    onValueChange={(v) => {
+                                        if (v === 'custom') {
+                                            setCustomCronFreq(true);
+                                            setCronForm((p) => ({
+                                                ...p,
+                                                frequency: '',
+                                            }));
+                                        } else {
+                                            setCustomCronFreq(false);
+                                            setCronForm((p) => ({
+                                                ...p,
+                                                frequency: v,
+                                            }));
+                                        }
+                                    }}
+                                >
+                                    <SelectTrigger>
+                                        <SelectValue />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        {CRON_FREQUENCIES.map((f) => (
+                                            <SelectItem
+                                                key={f.value}
+                                                value={f.value}
+                                            >
+                                                {f.label}
+                                            </SelectItem>
+                                        ))}
+                                        <SelectItem value="custom">
+                                            Custom…
+                                        </SelectItem>
+                                    </SelectContent>
+                                </Select>
+                                {customCronFreq && (
+                                    <Input
+                                        value={cronForm.frequency}
+                                        onChange={(e) =>
+                                            setCronForm((p) => ({
+                                                ...p,
+                                                frequency: e.target.value,
+                                            }))
+                                        }
+                                        placeholder="0 2 * * 1-5"
+                                        className="font-mono"
+                                        autoFocus
+                                    />
+                                )}
+                                {errors?.frequency && (
+                                    <p className="text-sm text-destructive">
+                                        {errors.frequency}
+                                    </p>
+                                )}
+                            </div>
+                            <div className="space-y-2">
+                                <Label htmlFor="cron-user">User</Label>
+                                <Input
+                                    id="cron-user"
+                                    value={cronForm.user}
+                                    onChange={(e) =>
+                                        setCronForm((p) => ({
+                                            ...p,
+                                            user: e.target.value,
+                                        }))
+                                    }
+                                    placeholder={defaultUser}
+                                    className="font-mono"
+                                />
+                                {errors?.user && (
+                                    <p className="text-sm text-destructive">
+                                        {errors.user}
+                                    </p>
+                                )}
+                            </div>
+                        </SheetBody>
                         <SheetFooter>
                             <Button
                                 type="button"
@@ -1405,148 +1435,157 @@ export function ProcessesPanel({
                     <SheetHeader>
                         <SheetTitle>Edit cron job</SheetTitle>
                     </SheetHeader>
-                    <form
-                        onSubmit={handleUpdateCron}
-                        className="flex flex-1 flex-col gap-4 p-4 pt-4"
-                    >
-                        <div className="space-y-2">
-                            <Label htmlFor="edit-cron-command">Command</Label>
-                            <Input
-                                id="edit-cron-command"
-                                value={cronForm.command}
-                                onChange={(e) =>
-                                    setCronForm((p) => ({
-                                        ...p,
-                                        command: e.target.value,
-                                    }))
-                                }
-                                className="font-mono"
-                            />
-                            {errors?.command && (
-                                <p className="text-sm text-destructive">
-                                    {errors.command}
-                                </p>
-                            )}
-                        </div>
-                        {showSitePicker ? (
+                    <form onSubmit={handleUpdateCron} className="contents">
+                        <SheetBody>
                             <div className="space-y-2">
-                                <Label>Site</Label>
-                                <Select
-                                    value={
-                                        cronForm.site_id === ''
-                                            ? 'server'
-                                            : String(cronForm.site_id)
-                                    }
-                                    onValueChange={(v) =>
-                                        setCronForm((p) => ({
-                                            ...p,
-                                            site_id:
-                                                v === 'server' ? '' : Number(v),
-                                            user: userForSite(
-                                                v === 'server' ? '' : Number(v),
-                                            ),
-                                        }))
-                                    }
-                                >
-                                    <SelectTrigger>
-                                        <SelectValue placeholder="Server (no site)" />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        <SelectItem value="server">
-                                            Server (no site)
-                                        </SelectItem>
-                                        {sites.map((s) => (
-                                            <SelectItem
-                                                key={s.id}
-                                                value={String(s.id)}
-                                            >
-                                                {s.domain}
-                                            </SelectItem>
-                                        ))}
-                                    </SelectContent>
-                                </Select>
-                            </div>
-                        ) : (
-                            <div className="space-y-2">
-                                <Label>Site</Label>
-                                <Input value={site!.domain} disabled readOnly />
-                            </div>
-                        )}
-                        <div className="space-y-2">
-                            <Label>Frequency</Label>
-                            <Select
-                                value={
-                                    customCronFreq
-                                        ? 'custom'
-                                        : cronForm.frequency
-                                }
-                                onValueChange={(v) => {
-                                    if (v === 'custom') {
-                                        setCustomCronFreq(true);
-                                        setCronForm((p) => ({
-                                            ...p,
-                                            frequency: '',
-                                        }));
-                                    } else {
-                                        setCustomCronFreq(false);
-                                        setCronForm((p) => ({
-                                            ...p,
-                                            frequency: v,
-                                        }));
-                                    }
-                                }}
-                            >
-                                <SelectTrigger>
-                                    <SelectValue />
-                                </SelectTrigger>
-                                <SelectContent>
-                                    {CRON_FREQUENCIES.map((f) => (
-                                        <SelectItem
-                                            key={f.value}
-                                            value={f.value}
-                                        >
-                                            {f.label}
-                                        </SelectItem>
-                                    ))}
-                                    <SelectItem value="custom">
-                                        Custom…
-                                    </SelectItem>
-                                </SelectContent>
-                            </Select>
-                            {customCronFreq && (
+                                <Label htmlFor="edit-cron-command">
+                                    Command
+                                </Label>
                                 <Input
-                                    value={cronForm.frequency}
+                                    id="edit-cron-command"
+                                    value={cronForm.command}
                                     onChange={(e) =>
                                         setCronForm((p) => ({
                                             ...p,
-                                            frequency: e.target.value,
+                                            command: e.target.value,
                                         }))
                                     }
-                                    placeholder="0 2 * * 1-5"
                                     className="font-mono"
-                                    autoFocus
                                 />
+                                {errors?.command && (
+                                    <p className="text-sm text-destructive">
+                                        {errors.command}
+                                    </p>
+                                )}
+                            </div>
+                            {showSitePicker ? (
+                                <div className="space-y-2">
+                                    <Label>Site</Label>
+                                    <Select
+                                        value={
+                                            cronForm.site_id === ''
+                                                ? 'server'
+                                                : String(cronForm.site_id)
+                                        }
+                                        onValueChange={(v) =>
+                                            setCronForm((p) => ({
+                                                ...p,
+                                                site_id:
+                                                    v === 'server'
+                                                        ? ''
+                                                        : Number(v),
+                                                user: userForSite(
+                                                    v === 'server'
+                                                        ? ''
+                                                        : Number(v),
+                                                ),
+                                            }))
+                                        }
+                                    >
+                                        <SelectTrigger>
+                                            <SelectValue placeholder="Server (no site)" />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            <SelectItem value="server">
+                                                Server (no site)
+                                            </SelectItem>
+                                            {sites.map((s) => (
+                                                <SelectItem
+                                                    key={s.id}
+                                                    value={String(s.id)}
+                                                >
+                                                    {s.domain}
+                                                </SelectItem>
+                                            ))}
+                                        </SelectContent>
+                                    </Select>
+                                </div>
+                            ) : (
+                                <div className="space-y-2">
+                                    <Label>Site</Label>
+                                    <Input
+                                        value={site!.domain}
+                                        disabled
+                                        readOnly
+                                    />
+                                </div>
                             )}
-                        </div>
-                        <div className="space-y-2">
-                            <Label htmlFor="edit-cron-user">User</Label>
-                            <Input
-                                id="edit-cron-user"
-                                value={cronForm.user}
-                                onChange={(e) =>
-                                    setCronForm((p) => ({
-                                        ...p,
-                                        user: e.target.value,
-                                    }))
-                                }
-                                className="font-mono"
-                            />
-                            {errors?.user && (
-                                <p className="text-sm text-destructive">
-                                    {errors.user}
-                                </p>
-                            )}
-                        </div>
+                            <div className="space-y-2">
+                                <Label>Frequency</Label>
+                                <Select
+                                    value={
+                                        customCronFreq
+                                            ? 'custom'
+                                            : cronForm.frequency
+                                    }
+                                    onValueChange={(v) => {
+                                        if (v === 'custom') {
+                                            setCustomCronFreq(true);
+                                            setCronForm((p) => ({
+                                                ...p,
+                                                frequency: '',
+                                            }));
+                                        } else {
+                                            setCustomCronFreq(false);
+                                            setCronForm((p) => ({
+                                                ...p,
+                                                frequency: v,
+                                            }));
+                                        }
+                                    }}
+                                >
+                                    <SelectTrigger>
+                                        <SelectValue />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        {CRON_FREQUENCIES.map((f) => (
+                                            <SelectItem
+                                                key={f.value}
+                                                value={f.value}
+                                            >
+                                                {f.label}
+                                            </SelectItem>
+                                        ))}
+                                        <SelectItem value="custom">
+                                            Custom…
+                                        </SelectItem>
+                                    </SelectContent>
+                                </Select>
+                                {customCronFreq && (
+                                    <Input
+                                        value={cronForm.frequency}
+                                        onChange={(e) =>
+                                            setCronForm((p) => ({
+                                                ...p,
+                                                frequency: e.target.value,
+                                            }))
+                                        }
+                                        placeholder="0 2 * * 1-5"
+                                        className="font-mono"
+                                        autoFocus
+                                    />
+                                )}
+                            </div>
+                            <div className="space-y-2">
+                                <Label htmlFor="edit-cron-user">User</Label>
+                                <Input
+                                    id="edit-cron-user"
+                                    value={cronForm.user}
+                                    onChange={(e) =>
+                                        setCronForm((p) => ({
+                                            ...p,
+                                            user: e.target.value,
+                                        }))
+                                    }
+                                    className="font-mono"
+                                />
+                                {errors?.user && (
+                                    <p className="text-sm text-destructive">
+                                        {errors.user}
+                                    </p>
+                                )}
+                            </div>
+                        </SheetBody>
                         <SheetFooter>
                             <Button
                                 type="button"

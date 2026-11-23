@@ -43,6 +43,7 @@ import {
 } from '@/components/ui/select';
 import {
     Sheet,
+    SheetBody,
     SheetContent,
     SheetFooter,
     SheetHeader,
@@ -660,44 +661,43 @@ export default function ServerDatabasesIndex({
                     <SheetHeader>
                         <SheetTitle>Create database</SheetTitle>
                     </SheetHeader>
-                    <form
-                        onSubmit={handleCreateDatabase}
-                        className="flex flex-1 flex-col gap-4 p-4 pt-4"
-                    >
-                        <div className="space-y-2">
-                            <Label htmlFor="db-name">Name</Label>
-                            <Input
-                                id="db-name"
-                                value={dbForm.name}
-                                onChange={(e) =>
-                                    setDbForm((p) => ({
-                                        ...p,
-                                        name: e.target.value,
-                                    }))
+                    <form onSubmit={handleCreateDatabase} className="contents">
+                        <SheetBody>
+                            <div className="space-y-2">
+                                <Label htmlFor="db-name">Name</Label>
+                                <Input
+                                    id="db-name"
+                                    value={dbForm.name}
+                                    onChange={(e) =>
+                                        setDbForm((p) => ({
+                                            ...p,
+                                            name: e.target.value,
+                                        }))
+                                    }
+                                    placeholder="mydb"
+                                    className="font-mono"
+                                    autoComplete="off"
+                                />
+                                {errors?.name && (
+                                    <p className="text-sm text-destructive">
+                                        {errors.name}
+                                    </p>
+                                )}
+                            </div>
+                            <NewDatabaseFields
+                                idPrefix="db"
+                                values={dbForm}
+                                onChange={(changes) =>
+                                    setDbForm((p) => ({ ...p, ...changes }))
                                 }
-                                placeholder="mydb"
-                                className="font-mono"
-                                autoComplete="off"
+                                databaseType={server.database_type}
+                                defaultUsername={sshUser}
+                                existingUsernames={userList.map(
+                                    (user) => user.username,
+                                )}
+                                errors={errors}
                             />
-                            {errors?.name && (
-                                <p className="text-sm text-destructive">
-                                    {errors.name}
-                                </p>
-                            )}
-                        </div>
-                        <NewDatabaseFields
-                            idPrefix="db"
-                            values={dbForm}
-                            onChange={(changes) =>
-                                setDbForm((p) => ({ ...p, ...changes }))
-                            }
-                            databaseType={server.database_type}
-                            defaultUsername={sshUser}
-                            existingUsernames={userList.map(
-                                (user) => user.username,
-                            )}
-                            errors={errors}
-                        />
+                        </SheetBody>
                         <SheetFooter>
                             <Button
                                 type="button"
@@ -719,130 +719,134 @@ export default function ServerDatabasesIndex({
                     <SheetHeader>
                         <SheetTitle>Create database user</SheetTitle>
                     </SheetHeader>
-                    <form
-                        onSubmit={handleCreateUser}
-                        className="flex flex-1 flex-col gap-4 p-4 pt-4"
-                    >
-                        <div className="space-y-2">
-                            <Label htmlFor="user-username">Username</Label>
-                            <Input
-                                id="user-username"
-                                value={userForm.username}
-                                onChange={(e) =>
-                                    setUserForm((p) => ({
-                                        ...p,
-                                        username: e.target.value,
-                                    }))
-                                }
-                                placeholder="myuser"
-                                className="font-mono"
-                                autoComplete="off"
-                            />
-                            {errors?.username && (
-                                <p className="text-sm text-destructive">
-                                    {errors.username}
-                                </p>
-                            )}
-                        </div>
-                        <div className="space-y-2">
-                            <Label htmlFor="user-password">Password</Label>
-                            <Input
-                                id="user-password"
-                                type="password"
-                                value={userForm.password}
-                                onChange={(e) =>
-                                    setUserForm((p) => ({
-                                        ...p,
-                                        password: e.target.value,
-                                    }))
-                                }
-                                placeholder="••••••••"
-                                autoComplete="new-password"
-                            />
-                            {errors?.password && (
-                                <p className="text-sm text-destructive">
-                                    {errors.password}
-                                </p>
-                            )}
-                        </div>
-                        <div className="space-y-2">
-                            <Label>Databases</Label>
-                            <div className="flex flex-col gap-2 rounded-md border p-3">
-                                {dbList.map((db) => (
-                                    <label
-                                        key={db.id}
-                                        className="flex cursor-pointer items-center gap-2"
-                                    >
-                                        <Checkbox
-                                            checked={userForm.databases.includes(
-                                                db.name,
-                                            )}
-                                            onCheckedChange={() =>
-                                                setUserForm((p) => ({
-                                                    ...p,
-                                                    databases: toggleDbInList(
-                                                        p.databases,
-                                                        db.name,
-                                                    ),
-                                                }))
-                                            }
-                                        />
-                                        <span className="font-mono text-sm">
-                                            {db.name}
-                                        </span>
-                                    </label>
-                                ))}
+                    <form onSubmit={handleCreateUser} className="contents">
+                        <SheetBody>
+                            <div className="space-y-2">
+                                <Label htmlFor="user-username">Username</Label>
+                                <Input
+                                    id="user-username"
+                                    value={userForm.username}
+                                    onChange={(e) =>
+                                        setUserForm((p) => ({
+                                            ...p,
+                                            username: e.target.value,
+                                        }))
+                                    }
+                                    placeholder="myuser"
+                                    className="font-mono"
+                                    autoComplete="off"
+                                />
+                                {errors?.username && (
+                                    <p className="text-sm text-destructive">
+                                        {errors.username}
+                                    </p>
+                                )}
                             </div>
-                            {errors?.databases && (
-                                <p className="text-sm text-destructive">
-                                    {errors.databases}
-                                </p>
-                            )}
-                        </div>
-                        <div className="space-y-2">
-                            <Label htmlFor="user-permission">Permission</Label>
-                            <Select
-                                value={userForm.permission}
-                                onValueChange={(value) =>
-                                    setUserForm((p) => ({
-                                        ...p,
-                                        permission: value,
-                                    }))
-                                }
-                            >
-                                <SelectTrigger id="user-permission">
-                                    <SelectValue />
-                                </SelectTrigger>
-                                <SelectContent>
-                                    <SelectItem value="readwrite">
-                                        Read-write
-                                    </SelectItem>
-                                    <SelectItem value="readonly">
-                                        Read-only
-                                    </SelectItem>
-                                </SelectContent>
-                            </Select>
-                            {errors?.permission && (
-                                <p className="text-sm text-destructive">
-                                    {errors.permission}
-                                </p>
-                            )}
-                        </div>
-                        <div className="space-y-2">
-                            <Label htmlFor="user-host">Host (optional)</Label>
-                            <Input
-                                id="user-host"
-                                value={userForm.host}
-                                onChange={(e) =>
-                                    setUserForm((p) => ({
-                                        ...p,
-                                        host: e.target.value,
-                                    }))
-                                }
-                                placeholder="localhost"
-                                className="font-mono"
-                            />
-                        </div>
+                            <div className="space-y-2">
+                                <Label htmlFor="user-password">Password</Label>
+                                <Input
+                                    id="user-password"
+                                    type="password"
+                                    value={userForm.password}
+                                    onChange={(e) =>
+                                        setUserForm((p) => ({
+                                            ...p,
+                                            password: e.target.value,
+                                        }))
+                                    }
+                                    placeholder="••••••••"
+                                    autoComplete="new-password"
+                                />
+                                {errors?.password && (
+                                    <p className="text-sm text-destructive">
+                                        {errors.password}
+                                    </p>
+                                )}
+                            </div>
+                            <div className="space-y-2">
+                                <Label>Databases</Label>
+                                <div className="flex flex-col gap-2 rounded-md border p-3">
+                                    {dbList.map((db) => (
+                                        <label
+                                            key={db.id}
+                                            className="flex cursor-pointer items-center gap-2"
+                                        >
+                                            <Checkbox
+                                                checked={userForm.databases.includes(
+                                                    db.name,
+                                                )}
+                                                onCheckedChange={() =>
+                                                    setUserForm((p) => ({
+                                                        ...p,
+                                                        databases:
+                                                            toggleDbInList(
+                                                                p.databases,
+                                                                db.name,
+                                                            ),
+                                                    }))
+                                                }
+                                            />
+                                            <span className="font-mono text-sm">
+                                                {db.name}
+                                            </span>
+                                        </label>
+                                    ))}
+                                </div>
+                                {errors?.databases && (
+                                    <p className="text-sm text-destructive">
+                                        {errors.databases}
+                                    </p>
+                                )}
+                            </div>
+                            <div className="space-y-2">
+                                <Label htmlFor="user-permission">
+                                    Permission
+                                </Label>
+                                <Select
+                                    value={userForm.permission}
+                                    onValueChange={(value) =>
+                                        setUserForm((p) => ({
+                                            ...p,
+                                            permission: value,
+                                        }))
+                                    }
+                                >
+                                    <SelectTrigger id="user-permission">
+                                        <SelectValue />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem value="readwrite">
+                                            Read-write
+                                        </SelectItem>
+                                        <SelectItem value="readonly">
+                                            Read-only
+                                        </SelectItem>
+                                    </SelectContent>
+                                </Select>
+                                {errors?.permission && (
+                                    <p className="text-sm text-destructive">
+                                        {errors.permission}
+                                    </p>
+                                )}
+                            </div>
+                            <div className="space-y-2">
+                                <Label htmlFor="user-host">
+                                    Host (optional)
+                                </Label>
+                                <Input
+                                    id="user-host"
+                                    value={userForm.host}
+                                    onChange={(e) =>
+                                        setUserForm((p) => ({
+                                            ...p,
+                                            host: e.target.value,
+                                        }))
+                                    }
+                                    placeholder="localhost"
+                                    className="font-mono"
+                                />
+                            </div>
+                        </SheetBody>
                         <SheetFooter>
                             <Button
                                 type="button"
@@ -872,102 +876,102 @@ export default function ServerDatabasesIndex({
                             Edit user {userToEdit?.username}
                         </SheetTitle>
                     </SheetHeader>
-                    <form
-                        onSubmit={handleUpdateUser}
-                        className="flex flex-1 flex-col gap-4 p-4 pt-4"
-                    >
-                        <div className="space-y-2">
-                            <Label>Databases</Label>
-                            <div className="flex flex-col gap-2 rounded-md border p-3">
-                                {dbList.map((db) => (
-                                    <label
-                                        key={db.id}
-                                        className="flex cursor-pointer items-center gap-2"
-                                    >
-                                        <Checkbox
-                                            checked={editUserForm.databases.includes(
-                                                db.name,
-                                            )}
-                                            onCheckedChange={() =>
-                                                setEditUserForm((p) => ({
-                                                    ...p,
-                                                    databases: toggleDbInList(
-                                                        p.databases,
-                                                        db.name,
-                                                    ),
-                                                }))
-                                            }
-                                        />
-                                        <span className="font-mono text-sm">
-                                            {db.name}
-                                        </span>
-                                    </label>
-                                ))}
+                    <form onSubmit={handleUpdateUser} className="contents">
+                        <SheetBody>
+                            <div className="space-y-2">
+                                <Label>Databases</Label>
+                                <div className="flex flex-col gap-2 rounded-md border p-3">
+                                    {dbList.map((db) => (
+                                        <label
+                                            key={db.id}
+                                            className="flex cursor-pointer items-center gap-2"
+                                        >
+                                            <Checkbox
+                                                checked={editUserForm.databases.includes(
+                                                    db.name,
+                                                )}
+                                                onCheckedChange={() =>
+                                                    setEditUserForm((p) => ({
+                                                        ...p,
+                                                        databases:
+                                                            toggleDbInList(
+                                                                p.databases,
+                                                                db.name,
+                                                            ),
+                                                    }))
+                                                }
+                                            />
+                                            <span className="font-mono text-sm">
+                                                {db.name}
+                                            </span>
+                                        </label>
+                                    ))}
+                                </div>
                             </div>
-                        </div>
-                        <div className="space-y-2">
-                            <Label htmlFor="edit-user-permission">
-                                Permission
-                            </Label>
-                            <Select
-                                value={editUserForm.permission}
-                                onValueChange={(value) =>
-                                    setEditUserForm((p) => ({
-                                        ...p,
-                                        permission: value,
-                                    }))
-                                }
-                            >
-                                <SelectTrigger id="edit-user-permission">
-                                    <SelectValue />
-                                </SelectTrigger>
-                                <SelectContent>
-                                    <SelectItem value="readwrite">
-                                        Read-write
-                                    </SelectItem>
-                                    <SelectItem value="readonly">
-                                        Read-only
-                                    </SelectItem>
-                                </SelectContent>
-                            </Select>
-                            {errors?.permission && (
-                                <p className="text-sm text-destructive">
-                                    {errors.permission}
-                                </p>
-                            )}
-                        </div>
-                        <div className="space-y-2">
-                            <Label htmlFor="edit-user-password">
-                                New password (optional)
-                            </Label>
-                            <Input
-                                id="edit-user-password"
-                                type="password"
-                                value={editUserForm.password}
-                                onChange={(e) =>
-                                    setEditUserForm((p) => ({
-                                        ...p,
-                                        password: e.target.value,
-                                    }))
-                                }
-                                placeholder="Leave blank to keep current"
-                                autoComplete="new-password"
-                            />
-                        </div>
-                        <div className="space-y-2">
-                            <Label htmlFor="edit-user-host">Host</Label>
-                            <Input
-                                id="edit-user-host"
-                                value={editUserForm.host}
-                                onChange={(e) =>
-                                    setEditUserForm((p) => ({
-                                        ...p,
-                                        host: e.target.value,
-                                    }))
-                                }
-                                className="font-mono"
-                            />
-                        </div>
+                            <div className="space-y-2">
+                                <Label htmlFor="edit-user-permission">
+                                    Permission
+                                </Label>
+                                <Select
+                                    value={editUserForm.permission}
+                                    onValueChange={(value) =>
+                                        setEditUserForm((p) => ({
+                                            ...p,
+                                            permission: value,
+                                        }))
+                                    }
+                                >
+                                    <SelectTrigger id="edit-user-permission">
+                                        <SelectValue />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem value="readwrite">
+                                            Read-write
+                                        </SelectItem>
+                                        <SelectItem value="readonly">
+                                            Read-only
+                                        </SelectItem>
+                                    </SelectContent>
+                                </Select>
+                                {errors?.permission && (
+                                    <p className="text-sm text-destructive">
+                                        {errors.permission}
+                                    </p>
+                                )}
+                            </div>
+                            <div className="space-y-2">
+                                <Label htmlFor="edit-user-password">
+                                    New password (optional)
+                                </Label>
+                                <Input
+                                    id="edit-user-password"
+                                    type="password"
+                                    value={editUserForm.password}
+                                    onChange={(e) =>
+                                        setEditUserForm((p) => ({
+                                            ...p,
+                                            password: e.target.value,
+                                        }))
+                                    }
+                                    placeholder="Leave blank to keep current"
+                                    autoComplete="new-password"
+                                />
+                            </div>
+                            <div className="space-y-2">
+                                <Label htmlFor="edit-user-host">Host</Label>
+                                <Input
+                                    id="edit-user-host"
+                                    value={editUserForm.host}
+                                    onChange={(e) =>
+                                        setEditUserForm((p) => ({
+                                            ...p,
+                                            host: e.target.value,
+                                        }))
+                                    }
+                                    className="font-mono"
+                                />
+                            </div>
+                        </SheetBody>
                         <SheetFooter>
                             <Button
                                 type="button"

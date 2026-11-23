@@ -43,6 +43,7 @@ import {
 } from '@/components/ui/select';
 import {
     Sheet,
+    SheetBody,
     SheetContent,
     SheetFooter,
     SheetHeader,
@@ -1286,34 +1287,36 @@ export default function SitesCreate({
                         </SheetHeader>
                         <form
                             onSubmit={handleCreateDatabase}
-                            className="flex flex-1 flex-col gap-4 p-4 pt-4"
+                            className="contents"
                         >
-                            <div className="space-y-2">
-                                <Label htmlFor="new-db-name">Name</Label>
-                                <Input
-                                    id="new-db-name"
-                                    value={dbForm.name}
-                                    onChange={(e) =>
-                                        setDbForm((p) => ({
-                                            ...p,
-                                            name: e.target.value,
-                                        }))
+                            <SheetBody>
+                                <div className="space-y-2">
+                                    <Label htmlFor="new-db-name">Name</Label>
+                                    <Input
+                                        id="new-db-name"
+                                        value={dbForm.name}
+                                        onChange={(e) =>
+                                            setDbForm((p) => ({
+                                                ...p,
+                                                name: e.target.value,
+                                            }))
+                                        }
+                                        placeholder="mydb"
+                                        className="font-mono"
+                                        autoComplete="off"
+                                    />
+                                </div>
+                                <NewDatabaseFields
+                                    idPrefix="new-db"
+                                    values={dbForm}
+                                    onChange={(changes) =>
+                                        setDbForm((p) => ({ ...p, ...changes }))
                                     }
-                                    placeholder="mydb"
-                                    className="font-mono"
-                                    autoComplete="off"
+                                    databaseType={serverData.database_type}
+                                    defaultUsername={defaultDatabaseUser}
+                                    existingUsernames={databaseUsernames}
                                 />
-                            </div>
-                            <NewDatabaseFields
-                                idPrefix="new-db"
-                                values={dbForm}
-                                onChange={(changes) =>
-                                    setDbForm((p) => ({ ...p, ...changes }))
-                                }
-                                databaseType={serverData.database_type}
-                                defaultUsername={defaultDatabaseUser}
-                                existingUsernames={databaseUsernames}
-                            />
+                            </SheetBody>
                             <SheetFooter>
                                 <Button
                                     type="button"
