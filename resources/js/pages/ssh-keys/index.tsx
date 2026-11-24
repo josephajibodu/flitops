@@ -1,4 +1,4 @@
-import { Head, router, usePage } from '@inertiajs/react';
+import { Head, router } from '@inertiajs/react';
 import { useState } from 'react';
 
 import { ConfirmDialog } from '@/components/confirm-dialog';
@@ -26,12 +26,15 @@ interface Props {
     sshKeys: {
         data: SshKey[];
     };
-    servers?: Server[];
+    servers: {
+        data: Server[];
+    };
     isolatedSites: IsolatedSiteTarget[];
 }
 
 export default function SshKeysIndex({
     sshKeys: sshKeysData,
+    servers: { data: servers },
     isolatedSites,
 }: Props) {
     const teamPath = useTeamPath();
@@ -51,9 +54,6 @@ export default function SshKeysIndex({
     const detailsKey =
         sshKeysData.data.find((key) => key.id === detailsKeyId) ?? null;
     const [isDeleting, setIsDeleting] = useState(false);
-
-    // Get servers from page props if available (loaded via deferred props)
-    const { servers = [] } = usePage<{ servers?: Server[] }>().props;
 
     const handleDelete = (sshKey: SshKey) => {
         setSelectedKey(sshKey);
