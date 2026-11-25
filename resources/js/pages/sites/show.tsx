@@ -44,6 +44,7 @@ import { getSiteSubNavItems } from '@/config/sub-nav-items';
 import { usePermission } from '@/hooks/use-permission';
 import { usePlansHref } from '@/hooks/use-plan';
 import { useRealtimeFallback } from '@/hooks/use-realtime-fallback';
+import { useRefreshWhile } from '@/hooks/use-refresh-while';
 import { useTeamPath } from '@/hooks/use-team-path';
 import AppLayout from '@/layouts/app-layout';
 import { cn } from '@/lib/utils';
@@ -88,6 +89,12 @@ export default function SitesShow({
         siteData?.status ?? '',
     );
     useRealtimeFallback(['site'], isProvisioning);
+    useRefreshWhile(
+        ['site'],
+        ['pending', 'running'].includes(
+            siteData?.latest_deployment?.status ?? '',
+        ),
+    );
     const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
     const [isDeleting, setIsDeleting] = useState(false);
     const [isDeploying, setIsDeploying] = useState(false);
