@@ -33,6 +33,7 @@ import {
 } from '@/components/ui/table';
 import { getSiteSubNavItems } from '@/config/sub-nav-items';
 import { usePermission } from '@/hooks/use-permission';
+import { useRefreshWhile } from '@/hooks/use-refresh-while';
 import { useTeamPath } from '@/hooks/use-team-path';
 import AppLayout from '@/layouts/app-layout';
 import { type BreadcrumbItem, type SharedData } from '@/types';
@@ -117,6 +118,12 @@ export default function SiteDeploymentsIndex({
     };
 
     const deploymentList = deployments.data ?? [];
+    useRefreshWhile(
+        ['deployments'],
+        deploymentList.some((deployment) =>
+            ['pending', 'running'].includes(deployment.status),
+        ),
+    );
     const { prevUrl, nextUrl } = getPaginationUrls(deployments.links);
 
     return (
